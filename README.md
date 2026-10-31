@@ -97,7 +97,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/AUDIT_SCOPE.md](docs/
 
 | Product | What it does |
 | --- | --- |
-| **Polypad** | Token launchpad on Robinhood Chain. Projects go through [@bevourAI](https://x.com/bevourAI) pre-launch checks and must have a doxxed lead. Includes automated staking and AI agents built on the [@swarmsAI](https://x.com/swarmsAI) stack. Contract addresses and ABIs in [polypad](polypad). |
+| **Polypad** | Token launchpad on Robinhood Chain. Projects go through [@Bevor_io](https://x.com/Bevor_io) pre-launch checks and must have a doxxed lead. Includes automated staking and AI agents built on the [@swarmsAI](https://x.com/swarmsAI) stack. Contract addresses and ABIs in [polypad](polypad). |
 | **Polypredict** | Prediction markets inside Telegram. |
 | **Polytrade** | AI-assisted trading. |
 | **Staking-as-a-Service** | Permissionless, automated staking pools for any ERC-20. **This repository.** |
