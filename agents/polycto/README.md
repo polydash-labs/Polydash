@@ -41,4 +41,4 @@ No price predictions, ROI promises or financial advice; never asks for seed phra
 - Regex heuristics can miss obfuscated logic or flag harmless code.
 - Routing is keyword-based; ambiguous questions go to the Community Manager.
 
-Links: https://dasheco.xyz · https://dasheco.xyz/staking · https://x.com/Polydash_ · https://t.me/defidashofficial
+Links: https://dasheco.xyz · https://dasheco.xyz/staking · https://x.com/Polydash_ · https://t.me/polydashofficial

@@ -42,4 +42,4 @@ python poly_agent.py           # ask the agent about Polypad staking
 ```
 
 ## Links
-[Website](https://dasheco.xyz) · [Staking](https://dasheco.xyz/staking) · [X](https://x.com/Polydash_) · [Telegram](https://t.me/defidashofficial)
+[Website](https://dasheco.xyz) · [Staking](https://dasheco.xyz/staking) · [X](https://x.com/Polydash_) · [Telegram](https://t.me/polydashofficial)

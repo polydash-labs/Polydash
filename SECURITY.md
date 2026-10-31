@@ -1,14 +1,20 @@
 # Security Policy
 
+Polydash contracts are **not audited**. Source code is public and verified on Sourcify where applicable. Automated scans are not audits.
+
+## Supported versions
+
+Security reports are accepted for the currently deployed contracts listed at [polypad.family/contracts](https://polypad.family/contracts) and in the [README](README.md#deployed-contracts-robinhood-chain-chain-id-4663). Staking factory v1 is legacy; reports are still welcome, but fixes ship in newer versions.
+
 ## Reporting a vulnerability
 
 Please **do not** open public issues for security problems. Report privately:
 
-- Email: Jon.wier@gmail.com (subject: `[SECURITY] Polydash`)
+- Email: jon@dasheco.xyz (subject: `Security report`)
 - Telegram: [@Johhnnylaw31](https://t.me/Johhnnylaw31)
 - Or a private advisory: GitHub, Security tab, "Report a vulnerability"
 
-Include the affected contract and address, the impact, and a proof of concept (a failing Foundry test is ideal).
+Please follow responsible disclosure. Include the affected contract and address, the impact, and a proof of concept (a failing Foundry test is ideal).
 
 We aim to acknowledge reports within 72 hours and keep you updated until resolution. Please allow reasonable time
 for a fix before public disclosure.
@@ -29,7 +35,7 @@ report of each issue. Severity and reward amounts are decided by the Polydash te
 
 ### In scope
 
-Contracts on Robinhood Chain:
+Contracts on Robinhood Chain (bug bounty covers staking contracts; reports on Polypad launchpad and NFT contracts listed at polypad.family/contracts are also welcome):
 
 - Staking factory v2: `0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0` (verified source, `PolydashStakingFactoryV2` / `PolydashStakingPoolV2`: [explorer](https://robinhoodchain.blockscout.com/address/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0?tab=contract))
 - Staking factory v1: `0x0aAEa47d2e7303EC5a809062eafa59e7F011D857` (source in [`src/`](src); [explorer](https://robinhoodchain.blockscout.com/address/0x0aAEa47d2e7303EC5a809062eafa59e7F011D857))

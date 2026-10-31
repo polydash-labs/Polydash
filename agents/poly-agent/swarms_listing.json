@@ -8,7 +8,7 @@
     {"title": "Live APR lookup", "description": "Gives current APRs and total staked for every active pool."},
     {"title": "Staking opportunities", "description": "Surfaces new and active pools on Polypad with their terms."}
   ],
-  "links": {"website": "https://dasheco.xyz", "staking": "https://dasheco.xyz/staking", "x": "https://x.com/Polydash_", "telegram": "https://t.me/defidashofficial"},
+  "links": {"website": "https://dasheco.xyz", "staking": "https://dasheco.xyz/staking", "x": "https://x.com/Polydash_", "telegram": "https://t.me/polydashofficial"},
   "pricing": "free",
   "listing_url": "https://swarms.world/agent/fbd6fcd5-8187-4bc7-98b2-59c9fc93a271"
 }

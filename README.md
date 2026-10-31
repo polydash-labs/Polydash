@@ -5,7 +5,7 @@
 <h1 align="center">Polydash</h1>
 
 <p align="center">
-  Open-source DeFi infrastructure on Robinhood Chain: permissionless staking pools, the Polypad launchpad and on-chain AI agents.
+  Polydash builds Polypad, a token launchpad with staking pools and AI agents on Robinhood Chain (chain ID 4663).
 </p>
 
 <p align="center">
@@ -16,10 +16,12 @@
 </p>
 
 <p align="center">
+  <a href="https://polypad.family">Polypad</a> ·
   <a href="https://dasheco.xyz">Website</a> ·
-  <a href="https://polypad.abacusai.app">Polypad</a> ·
   <a href="https://x.com/Polydash_">X @Polydash_</a> ·
-  <a href="https://t.me/defidashofficial">Telegram</a>
+  <a href="https://t.me/polydashofficial">Telegram</a> ·
+  <a href="https://polypad.family/contracts">Contracts</a> ·
+  <a href="https://polypad.family/brand">Brand kit</a>
 </p>
 
 <p align="center"><img src="assets/polydash_banner_1360x430.png" alt="Polydash banner" width="100%"></p>
@@ -33,7 +35,31 @@
 | **PolydashStakingFactoryV2** | [`src/v2/PolydashStakingFactoryV2.sol`](src/v2/PolydashStakingFactoryV2.sol) | Deployed V2 factory (recommended for new pools). Creator-chosen claim fee of 1-5% taken from rewards, 30% of it to the platform. The owner can only set the fee recipient and the verified badge. |
 | **PolydashStakingPoolV2** | [`src/v2/PolydashStakingPoolV2.sol`](src/v2/PolydashStakingPoolV2.sol) | Deployed V2 pool. 1e36-scaled reward accumulator with a carried division remainder; principal never charged a fee; fees accrue in the pool and are collected separately. |
 
-## Deployments: Robinhood Chain (chain ID 4663)
+## Deployed contracts (Robinhood Chain, chain ID 4663)
+
+The canonical list is [polypad.family/contracts](https://polypad.family/contracts). Always check an address there before you interact.
+
+| Group | Contract | Address |
+| --- | --- | --- |
+| Token | $POLYDASH token | [`0x319525528f42167eF7fC18b77b889958080568e4`](https://robinhoodchain.blockscout.com/address/0x319525528f42167eF7fC18b77b889958080568e4) |
+| Polypad launchpad (current) | Factory | [`0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2`](https://robinhoodchain.blockscout.com/address/0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2) |
+| Polypad launchpad (current) | Launch implementation | [`0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad`](https://robinhoodchain.blockscout.com/address/0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad) |
+| Polypad launchpad (current) | Uniswap V4 hook | [`0x4d3066bBfF889023def912D2fDe36c44357fA0cC`](https://robinhoodchain.blockscout.com/address/0x4d3066bBfF889023def912D2fDe36c44357fA0cC) |
+| Polypad launchpad (current) | Commit vault | [`0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4`](https://robinhoodchain.blockscout.com/address/0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4) |
+| NFTs | NFT factory | [`0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd`](https://robinhoodchain.blockscout.com/address/0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd) |
+| NFTs | NFT bonding-curve factory | [`0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94`](https://robinhoodchain.blockscout.com/address/0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94) |
+| NFTs | NFT marketplace | [`0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A`](https://robinhoodchain.blockscout.com/address/0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A) |
+| NFTs | NFT token rewards | [`0xCD96D8e10a82b41A08342c03a176c20336bD0b38`](https://robinhoodchain.blockscout.com/address/0xCD96D8e10a82b41A08342c03a176c20336bD0b38) |
+| Polypad launchpad (earlier version, launches still listed) | Earlier factory | [`0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2`](https://robinhoodchain.blockscout.com/address/0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2) |
+| Polypad launchpad (earlier version, launches still listed) | Earlier launch implementation | [`0xef7684268f13bc06cb02755642ceabef422b8b70`](https://robinhoodchain.blockscout.com/address/0xef7684268f13bc06cb02755642ceabef422b8b70) |
+| Polypad launchpad (earlier version, launches still listed) | Earlier Uniswap V4 hook | [`0x04990E6671C98e1B43034E52366Af11396d960CC`](https://robinhoodchain.blockscout.com/address/0x04990E6671C98e1B43034E52366Af11396d960CC) |
+| Polypad launchpad (earlier version, launches still listed) | Earlier commit vault | [`0x8f125c9ec7acd52b9cd39f2a7441085559d84104`](https://robinhoodchain.blockscout.com/address/0x8f125c9ec7acd52b9cd39f2a7441085559d84104) |
+| Staking v2 | Staking factory v2 (recommended) | [`0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0`](https://robinhoodchain.blockscout.com/address/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0) |
+| Staking v1 (legacy) | Staking factory v1 (legacy, do not use for new pools) | [`0x0aAEa47d2e7303EC5a809062eafa59e7F011D857`](https://robinhoodchain.blockscout.com/address/0x0aAEa47d2e7303EC5a809062eafa59e7F011D857) |
+
+Verification and source details for each deployment are below.
+
+## Deployment details
 
 | Contract | Address | Source |
 | --- | --- | --- |
@@ -115,12 +141,19 @@ Prefer a hardware wallet or encrypted keystore (`--account`) over a raw `PRIVATE
 
 ## Security
 
-Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
-Staking involves smart-contract risk. Nothing in this repository is financial advice or a promise of returns.
+- Polydash contracts are **not audited**.
+- Source code is public in this repository and verified on Sourcify where noted above.
+- Automated security scans were run and findings fixed. Scans are not audits, and they do not remove all risk.
 
-## History
+**Reporting a vulnerability:** email [jon@dasheco.xyz](mailto:jon@dasheco.xyz) with the subject "Security report", or use a private GitHub security advisory. Please follow responsible disclosure and do not open public issues for vulnerabilities. See [SECURITY.md](SECURITY.md) for scope and process.
 
-Polydash was previously known as Defidash. The community Telegram keeps its original handle.
+## Brand
+
+Logos, colors and naming guidelines: [polypad.family/brand](https://polypad.family/brand). Use "Polydash" for the company, "Polypad" for the launchpad and "$POLYDASH" for the token ticker only.
+
+## Disclaimer
+
+Using smart contracts involves risk. See the [risk disclosure](https://polypad.family/risk). Not financial advice. Scans are not audits.
 
 ## License
 
