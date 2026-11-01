@@ -57,11 +57,13 @@ The canonical list is [polypad.family/contracts](https://polypad.family/contract
 | Polypad creator contracts | NFT staking factory | [`0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1`](https://robinhoodchain.blockscout.com/address/0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1) |
 | Polypad creator contracts | Creator vesting factory | [`0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022`](https://robinhoodchain.blockscout.com/address/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022) |
 | Polypad creator contracts | Creator bond factory | [`0x876170251e30F99E27119AF0e90648A88D508f97`](https://robinhoodchain.blockscout.com/address/0x876170251e30F99E27119AF0e90648A88D508f97) |
+| Polypad creator contracts | Treasury rules factory | [`0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f`](https://robinhoodchain.blockscout.com/address/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f) |
+| Polypad creator contracts | Treasury rules implementation | [`0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb`](https://robinhoodchain.blockscout.com/address/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb) |
 | Polypad creator contracts | Token-gated NFT factory | [`0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d`](https://robinhoodchain.blockscout.com/address/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d) |
 | Staking v2 | Staking factory v2 (recommended) | [`0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0`](https://robinhoodchain.blockscout.com/address/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0) |
 | Staking v1 (legacy) | Staking factory v1 (legacy, do not use for new pools) | [`0x0aAEa47d2e7303EC5a809062eafa59e7F011D857`](https://robinhoodchain.blockscout.com/address/0x0aAEa47d2e7303EC5a809062eafa59e7F011D857) |
 
-Verification and source details for each deployment are below Creator contract details, including the not-yet-deployed treasury rules module, are in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md).
+Verification and source details for each deployment are below. Creator contract details are in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md).
 
 ## Deployment details
 

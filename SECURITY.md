@@ -21,7 +21,7 @@ for a fix before public disclosure.
 
 ## Polypad creator contracts
 
-The creator contracts in `src/nftstaking`, `src/vesting`, `src/bond`, `src/gatedmint` and `src/treasury` are **not audited**. They were deployed before an external audit, and an outside review is planned. Their source is verified on Sourcify (addresses in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md)); the treasury rules module is not yet deployed. Scans are not audits. Reports on these contracts are welcome through the channels above.
+The creator contracts in `src/nftstaking`, `src/vesting`, `src/bond`, `src/gatedmint` and `src/treasury` are **not audited**. They were deployed before an external audit, and an outside review is planned. Their source is verified on Sourcify (addresses in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md)). Scans are not audits. Reports on these contracts are welcome through the channels above.
 
 ## Bug bounty
 

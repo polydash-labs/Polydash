@@ -23,9 +23,10 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | `CreatorVestingFactory` | [`0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022`](https://robinhoodchain.blockscout.com/address/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022) | [Sourcify exact match](https://repo.sourcify.dev/4663/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022) |
 | `CreatorBondFactory` | [`0x876170251e30F99E27119AF0e90648A88D508f97`](https://robinhoodchain.blockscout.com/address/0x876170251e30F99E27119AF0e90648A88D508f97) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x876170251e30F99E27119AF0e90648A88D508f97) |
 | `PolypadGatedNFTFactory` | [`0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d`](https://robinhoodchain.blockscout.com/address/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d) |
-| `TreasuryRulesFactory` | Not yet deployed | |
+| `TreasuryRulesFactory` | [`0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f`](https://robinhoodchain.blockscout.com/address/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f) |
+| `TreasuryRules` (implementation, created by the factory) | [`0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb`](https://robinhoodchain.blockscout.com/address/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb) |
 
-Pools, vaults, bonds and collections are deployed by these factories from the verified source.
+Pools, vaults, bonds and collections are deployed by these factories from the verified source. Treasury vaults are EIP-1167 minimal proxies (clones) of the `TreasuryRules` implementation.
 
 ## Architecture
 
