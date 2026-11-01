@@ -33,3 +33,8 @@ quote_style = "double"
 number_underscore = "thousands"
 # src/ is kept byte-identical to the verified deployed source (metadata hash).
 ignore = ["src/**/*.sol"]
+
+# Fork tests for the creator contracts: deployed Robinhood Chain contracts use PUSH0, so run with cancun.
+# FORK_RPC=https://rpc.mainnet.chain.robinhood.com FOUNDRY_PROFILE=fork forge test --match-contract Fork
+[profile.fork]
+evm_version = "cancun"
