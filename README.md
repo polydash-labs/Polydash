@@ -54,10 +54,14 @@ The canonical list is [polypad.family/contracts](https://polypad.family/contract
 | Polypad launchpad (earlier version, launches still listed) | Earlier launch implementation | [`0xef7684268f13bc06cb02755642ceabef422b8b70`](https://robinhoodchain.blockscout.com/address/0xef7684268f13bc06cb02755642ceabef422b8b70) |
 | Polypad launchpad (earlier version, launches still listed) | Earlier Uniswap V4 hook | [`0x04990E6671C98e1B43034E52366Af11396d960CC`](https://robinhoodchain.blockscout.com/address/0x04990E6671C98e1B43034E52366Af11396d960CC) |
 | Polypad launchpad (earlier version, launches still listed) | Earlier commit vault | [`0x8f125c9ec7acd52b9cd39f2a7441085559d84104`](https://robinhoodchain.blockscout.com/address/0x8f125c9ec7acd52b9cd39f2a7441085559d84104) |
+| Polypad creator contracts | NFT staking factory | [`0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1`](https://robinhoodchain.blockscout.com/address/0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1) |
+| Polypad creator contracts | Creator vesting factory | [`0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022`](https://robinhoodchain.blockscout.com/address/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022) |
+| Polypad creator contracts | Creator bond factory | [`0x876170251e30F99E27119AF0e90648A88D508f97`](https://robinhoodchain.blockscout.com/address/0x876170251e30F99E27119AF0e90648A88D508f97) |
+| Polypad creator contracts | Token-gated NFT factory | [`0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d`](https://robinhoodchain.blockscout.com/address/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d) |
 | Staking v2 | Staking factory v2 (recommended) | [`0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0`](https://robinhoodchain.blockscout.com/address/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0) |
 | Staking v1 (legacy) | Staking factory v1 (legacy, do not use for new pools) | [`0x0aAEa47d2e7303EC5a809062eafa59e7F011D857`](https://robinhoodchain.blockscout.com/address/0x0aAEa47d2e7303EC5a809062eafa59e7F011D857) |
 
-Verification and source details for each deployment are below.
+Verification and source details for each deployment are below Creator contract details, including the not-yet-deployed treasury rules module, are in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md).
 
 ## Deployment details
 
@@ -108,6 +112,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/AUDIT_SCOPE.md](docs/
 
 ```
 ├── src/                     # Production contracts (v1; runtime code matches deployment)
+│   ├── v2/                  # Staking V2 (verified source)
+│   └── nftstaking/ vesting/ bond/ gatedmint/ treasury/   # Polypad creator contracts
 ├── test/                    # Foundry unit + fuzz tests, mocks/
 ├── script/Deploy.s.sol      # Env-driven deployment script
 ├── polypad/                 # Polypad launchpad: contracts, ABIs, deployments, web app

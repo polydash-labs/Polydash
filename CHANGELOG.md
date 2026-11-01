@@ -4,6 +4,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 
 ## [Unreleased]
 ### Added
+- Polypad creator contracts with tests: `src/nftstaking` (NFT staking with optional boosts), `src/vesting` (creator vesting vaults), `src/bond` (creator bonds), `src/gatedmint` (token-gated NFT mints) and `src/treasury` (treasury rules, not yet deployed). Source is byte-identical to the Sourcify-verified deployments. Overview in `docs/CREATOR_CONTRACTS.md`. Not audited.
+- `fork` Foundry profile and a CI job for the creator fork tests.
 - `src/v2/`: verified source of the deployed `PolydashStakingFactoryV2` and `PolydashStakingPoolV2` (byte-for-byte, no source changes), with provenance and compiler settings in `src/v2/README.md`.
 - `script/v2/compare_bytecode.py`: compares locally compiled V2 runtime bytecode with on-chain code for the factory and two pools (match, ignoring metadata hash and immutables).
 - `test/v2/`: unit, precision and fuzz tests for V2 (stake, withdraw, claim, claim fee bounds 1-5%, owner cannot move pool funds, reward period end, 6-decimal reward precision, conservation fuzzing).
