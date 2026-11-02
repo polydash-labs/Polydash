@@ -4,8 +4,7 @@ test = "test"
 script = "script"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.24"
-evm_version = "paris"
+evm_version = "cancun"
 optimizer = true
 optimizer_runs = 200
 via_ir = true
@@ -13,6 +12,24 @@ bytecode_hash = "ipfs"
 remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
     "forge-std/=lib/forge-std/src/",
+    "@uniswap/v4-core/=lib/v4-core/",
+]
+# The floor vault and buyback modules were deployed with solc 0.8.26 (exact pragma) and evm cancun, and they
+# integrate with Uniswap V4 (transient storage), so tests execute on cancun. The pre-existing modules keep the
+# paris target they have always been compiled with. The compiler version follows each file's exact pragma.
+additional_compiler_profiles = [{name = "paris", evm_version = "paris"}]
+compilation_restrictions = [
+    {paths = "src/PolydashStakingFactory.sol", evm_version = "paris"},
+    {paths = "src/PolydashStakingPool.sol", evm_version = "paris"},
+    {paths = "src/v2/**", evm_version = "paris"},
+    {paths = "src/nftstaking/**", evm_version = "paris"},
+    {paths = "src/vesting/**", evm_version = "paris"},
+    {paths = "src/bond/**", evm_version = "paris"},
+    {paths = "src/gatedmint/**", evm_version = "paris"},
+    {paths = "src/treasury/**", evm_version = "paris"},
+    {paths = "src/floorvault/**", min_evm_version = "cancun"},
+    {paths = "src/buyback/**", min_evm_version = "cancun"},
+    {paths = "lib/v4-core/**", min_evm_version = "cancun"},
 ]
 
 [profile.default.fuzz]
