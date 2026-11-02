@@ -1,6 +1,6 @@
 # Polypad creator contracts
 
-Contracts that Polypad token creators use after launch: NFT staking, creator vesting, creator bonds, token-gated NFT mints and treasury rules. They live alongside the staking contracts in this repository and share its toolchain (solc 0.8.24, via-IR, optimizer 200 runs, EVM `paris`, OpenZeppelin v5.0.2).
+Contracts that Polypad token creators use after launch: NFT staking, creator vesting, creator bonds, token-gated NFT mints, treasury rules and token-backed NFT collections, plus the POLYDASH buyback vault and rewards pool. They live alongside the staking contracts in this repository and share its toolchain (via-IR, optimizer 200 runs, OpenZeppelin v5.0.2). The first five modules use solc 0.8.24 and EVM `paris`; `src/floorvault` and `src/buyback` use solc 0.8.26 and EVM `cancun` because they integrate with Uniswap V4 (v4-core v4.0.0). `foundry.toml` pins the EVM version per module with `compilation_restrictions`.
 
 > **Not audited.** These contracts were deployed before an external audit; an outside review is planned. Automated scans are not audits. See [SECURITY.md](../SECURITY.md).
 
@@ -13,7 +13,9 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | [`src/bond`](../src/bond) | `CreatorBondFactory`, `CreatorBond` | ETH bond backing a creator's commitment to hold a floor balance | 31 |
 | [`src/gatedmint`](../src/gatedmint) | `PolypadGatedNFTFactory`, `PolypadGatedCollection` | Creator-only NFT collections with an optional token-holder phase | 27 |
 | [`src/treasury`](../src/treasury) | `TreasuryRulesFactory`, `TreasuryRules` | Per-token treasury with on-chain rules and a timelock for operator-run tasks | 30 |
-| [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 5 |
+| [`src/floorvault`](../src/floorvault) | `PolypadTokenFloorFactory`, `PolypadTokenFloorCollection` | Fixed-price NFT collections whose mint share funds an ETH + launch-token vault redeemable pro rata by burning | 115 |
+| [`src/buyback`](../src/buyback) | `PolydashBuybackVault`, `PolydashRewardsPool` | Capped on-chain POLYDASH buys from the fee share: 62.5% burned, 37.5% streamed to stakers | 70 |
+| [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 10 |
 
 ## Deployed addresses (Robinhood Chain, chain ID 4663)
 
@@ -25,8 +27,14 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | `PolypadGatedNFTFactory` | [`0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d`](https://robinhoodchain.blockscout.com/address/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d) |
 | `TreasuryRulesFactory` | [`0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f`](https://robinhoodchain.blockscout.com/address/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f) |
 | `TreasuryRules` (implementation, created by the factory) | [`0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb`](https://robinhoodchain.blockscout.com/address/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb) | [Sourcify exact match](https://repo.sourcify.dev/4663/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb) |
+| `PolypadTokenFloorFactory` | [`0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c`](https://robinhoodchain.blockscout.com/address/0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c) | [Sourcify match](https://repo.sourcify.dev/4663/0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c) |
+| `PolypadTokenFloorCollection` (implementation, created by the factory) | [`0xFa23E496f7244d1674fA8bE5C42556bd054140EA`](https://robinhoodchain.blockscout.com/address/0xFa23E496f7244d1674fA8bE5C42556bd054140EA) | [Sourcify match](https://repo.sourcify.dev/4663/0xFa23E496f7244d1674fA8bE5C42556bd054140EA) |
+| `PolydashRewardsPool` | [`0x608d106Bb58A804fcd45823e0C6087801dee2aCa`](https://robinhoodchain.blockscout.com/address/0x608d106Bb58A804fcd45823e0C6087801dee2aCa) | [Sourcify match](https://repo.sourcify.dev/4663/0x608d106Bb58A804fcd45823e0C6087801dee2aCa) |
+| `PolydashBuybackVault` | [`0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193`](https://robinhoodchain.blockscout.com/address/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193) | [Sourcify match](https://repo.sourcify.dev/4663/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193) |
 
-Pools, vaults, bonds and collections are deployed by these factories from the verified source. Treasury vaults are EIP-1167 minimal proxies (clones) of the `TreasuryRules` implementation.
+Pools, vaults, bonds and collections are deployed by these factories from the verified source. Treasury vaults and token-backed collections are EIP-1167 minimal proxies (clones) of their implementations. "Match" means Sourcify matched the creation and runtime bytecode but not the metadata hash.
+
+Routing fees to a project treasury is handled by the Polypad site and has no dedicated contract.
 
 ## Architecture
 
@@ -45,7 +53,7 @@ The `.sol` files in these modules are byte-identical to the source verified on S
 ```bash
 git submodule update --init --recursive
 forge build
-forge test --match-path "test/{nftstaking,vesting,bond,gatedmint,treasury}/*"
+forge test --match-path "test/{nftstaking,vesting,bond,gatedmint,treasury,floorvault,buyback}/*"
 
 # Fork tests (read-only against mainnet state, executed in a local fork)
 FORK_RPC=https://rpc.mainnet.chain.robinhood.com FOUNDRY_PROFILE=fork forge test --match-contract Fork
