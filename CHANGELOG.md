@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- `test_fork_rewards_pool_path` credits its staker on the fork instead of transferring POLYDASH from a live wallet whose balance can be zero. The fork CI job skips when the Robinhood Chain RPC is unreachable, and a reachable RPC with a failing test fails the check.
 ### Added
 - `deployments/robinhood-chain.json` and `docs/DEPLOYMENTS.md`: one address list for Robinhood Chain, taken from addresses already recorded in the repo. Notes the current and earlier Polypad sets, including both commit vaults.
 - `docs/README.md` index of the docs.

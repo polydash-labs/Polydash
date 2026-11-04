@@ -45,8 +45,6 @@ jobs:
   fork:
     name: Fork tests (creator contracts)
     runs-on: ubuntu-latest
-    # Depends on a public RPC endpoint; failures here do not block merges.
-    continue-on-error: true
     env:
       FOUNDRY_PROFILE: fork
       FORK_RPC: https://rpc.mainnet.chain.robinhood.com
@@ -56,7 +54,12 @@ jobs:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
       - name: Fork tests
-        run: forge test --match-path "test/fork/*" -vvv
+        run: |
+          if ! cast block-number --rpc-url "$FORK_RPC" >/dev/null 2>&1; then
+            echo "Robinhood Chain RPC is not reachable. Skipping fork tests."
+            exit 0
+          fi
+          forge test --match-path "test/fork/*" -vvv
 
   slither:
     name: Slither (advisory)
