@@ -18,6 +18,18 @@ Deployed instance: StakingFactory v1 `0x0aAEa47d2e7303EC5a809062eafa59e7F011D857
 
 > **Legacy v1 factory.** StakingFactory v1 (`0x0aAEa47d2e7303EC5a809062eafa59e7F011D857`) is legacy. Its reward accumulator uses 1e18 precision, so a reward token with few decimals (for example 6-decimal USDC) streamed to a large 18-decimal stake supply can round to zero on every update and those rewards are lost. Do not create v1 pools with 6-decimal reward tokens. New pools should use StakingFactory v2.
 
+## Known issues
+
+### V1 fee recipient can freeze exits
+
+Reported by r00k, Hey Research Lab.
+
+`PolydashStakingPool._sendPrincipal` transfers a non-zero unstake fee to the factory `feeRecipient` before principal is sent to the staker. If the stake token reverts on that transfer (a blocklist on USDC or USDT, or any token that refuses the recipient), `withdraw`, `exit`, and `emergencyWithdraw` revert. Principal stays in the pool until the factory owner sets `feeRecipient` to an address the stake token accepts.
+
+V1 is legacy and has a single third-party pool. The deployed source is not modified. The factory owner can rotate `feeRecipient` to unfreeze exits. V2 is not affected: it does not push fees on exit. `collectPlatformFees` pulls platform fees, so a reverting fee recipient does not block v2 principal exits.
+
+`test/PolydashStakingPoolFeeRecipient.t.sol` demonstrates the revert and the rotation. It is test-only.
+
 ## Out of scope
 
 - `lib/openzeppelin-contracts` (v5.0.2) and `lib/forge-std`

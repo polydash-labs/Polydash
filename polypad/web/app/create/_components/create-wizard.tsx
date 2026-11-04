@@ -80,12 +80,20 @@ export function CreateWizard() {
       const res = await fetch('/api/upload/logo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: file.type, size: file.size }),
+        body: JSON.stringify({ contentType: file.type }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? 'Upload failed');
-      const put = await fetch(data.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
-      if (!put.ok) throw new Error(`Upload failed (${put.status})`);
+      // Presigned POST: policy fields first, file last. The browser sets the multipart boundary.
+      const formData = new FormData();
+      const fields = data?.fields;
+      if (!data?.uploadUrl || !fields || typeof fields !== 'object') throw new Error('Upload failed');
+      for (const [key, value] of Object.entries(fields)) {
+        formData.append(key, String(value));
+      }
+      formData.append('file', file);
+      const upload = await fetch(data.uploadUrl, { method: 'POST', body: formData });
+      if (!upload.ok) throw new Error(`Upload failed (${upload.status})`);
       updateField('imageUri', data.publicUrl);
       toast.success('Logo uploaded');
     } catch (e: any) {

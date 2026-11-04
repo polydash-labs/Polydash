@@ -19,6 +19,20 @@ Please follow responsible disclosure. Include the affected contract and address,
 We aim to acknowledge reports within 72 hours and keep you updated until resolution. Please allow reasonable time
 for a fix before public disclosure.
 
+## Known issues
+
+### V1 staking pool: fee recipient can freeze exits
+
+Reported by r00k, Hey Research Lab.
+
+In `PolydashStakingPool._sendPrincipal` (`src/PolydashStakingPool.sol`), a non-zero unstake fee is transferred to `IPolydashStakingFactory(factory).feeRecipient()` before the staker's principal is returned. If that transfer reverts, `withdraw`, `exit`, and `emergencyWithdraw` all revert. A stake token that refuses the current recipient — for example a blocklist token such as USDC or USDT, or any token that rejects that address — leaves staked principal in the pool until a transfer to the recipient succeeds.
+
+Staking factory v1 (`0x0aAEa47d2e7303EC5a809062eafa59e7F011D857`) is legacy and has a single third-party pool. The deployed v1 source is unchanged. Mitigation: the factory owner keeps `feeRecipient` set to an address the stake token will transfer to, and can rotate `feeRecipient` to unfreeze exits.
+
+Staking factory v2 is not affected. V2 does not push a fee during exit. Platform fees are accounted separately and paid by `collectPlatformFees` (a pull). A reverting fee recipient does not block v2 principal withdrawals, including `emergencyWithdraw`.
+
+A local demonstration is `test/PolydashStakingPoolFeeRecipient.t.sol` (test double only; it does not change `src/`).
+
 ## Polypad creator contracts
 
 The creator contracts in `src/nftstaking`, `src/vesting`, `src/bond`, `src/gatedmint`, `src/treasury`, `src/floorvault` and `src/buyback` are **not audited**. They were deployed before an external audit, and an outside review is planned. Their source is verified on Sourcify (addresses in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md)). Scans are not audits. Reports on these contracts are welcome through the channels above.

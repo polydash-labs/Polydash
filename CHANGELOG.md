@@ -3,6 +3,9 @@
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Security
+- Polypad logo upload (`polypad/web/app/api/upload/logo`) no longer returns an unbounded S3 PUT URL. It returns a presigned POST with a 1 byte–5 MB `content-length-range`, an exact image `Content-Type` (png, jpeg, webp, gif), a server-chosen key under `token-logos/<uuid>.<ext>`, and a 5-minute expiry. The route rate-limits by IP in memory (10 requests / 10 minutes per process; a shared store is required across instances). The web app has no session or wallet-auth helper, so the route requires `Origin` or `Referer` to match the app host.
+- Documented a v1 staking-pool issue: `_sendPrincipal` pushes the unstake fee to `feeRecipient`, so a stake token that reverts on that transfer (blocklist or a refusing recipient) reverts `withdraw`, `exit`, and `emergencyWithdraw` until the factory owner rotates the recipient. V1 is legacy, with a single third-party pool. Deployed Solidity is unchanged. V2 uses a pull for platform fees and is not affected. Reported by r00k, Hey Research Lab. Demonstration: `test/PolydashStakingPoolFeeRecipient.t.sol`.
 ### Fixed
 - `test_fork_rewards_pool_path` credits its staker on the fork instead of transferring POLYDASH from a live wallet whose balance can be zero. The fork CI job skips when the Robinhood Chain RPC is unreachable, and a reachable RPC with a failing test fails the check.
 ### Added
