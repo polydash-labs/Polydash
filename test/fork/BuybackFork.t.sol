@@ -80,7 +80,6 @@ contract ForkBuyback is Test {
     address constant HOOK = 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc;
     address constant STAKING_V2 = 0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0;
     address constant FEES = 0x9a21c75aC263cC43125E70200636f6397f8776d0;
-    address constant ADMIN = 0x89df38Df79C0a7E96214c596ceF5773d2ac353F1;
     address constant DEAD = 0x000000000000000000000000000000000000dEaD;
     address constant POLY_POOL_V2 = 0x0F50043E172B8652bb786C4F14f30c415E5760AB;
 
@@ -179,10 +178,10 @@ contract ForkBuyback is Test {
 
     function test_fork_rewards_pool_path() public {
         _config();
-        // a staker with real POLYDASH (from the admin wallet's balance on the fork)
+        // Credit the staker on this fork. A live wallet's balance can be zero, which
+        // made this test fail even though the RPC and the deployed contracts were fine.
         address staker = address(0x5A4E);
-        vm.prank(ADMIN);
-        IERC20(POLYDASH).transfer(staker, 10_000_000 ether);
+        deal(POLYDASH, staker, 10_000_000 ether);
         vm.startPrank(staker);
         IERC20(POLYDASH).approve(address(pool), type(uint256).max);
         pool.stake(10_000_000 ether);
