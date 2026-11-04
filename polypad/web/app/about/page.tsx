@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const steps = [
   {
     title: 'Create',
-    body: 'Anyone can launch a token from the Create page: name, ticker, logo, description and links, plus a creator fee between 0% and 2%. The full fixed supply is minted once to the token’s own launch contract. The token has no owner, mint, pause, blacklist or transfer tax.',
+    body: 'Anyone can launch a token from the Create page: name, ticker, logo, description and links, plus a creator fee between 0% and 5% on the current factory (0% to 2% on the earlier factory). The full fixed supply is minted once to the token’s own launch contract. The token has no owner, mint, pause, blacklist or transfer tax.',
   },
   {
     title: 'Commitment window (optional)',
@@ -22,27 +22,31 @@ const steps = [
   },
   {
     title: 'Bonding curve',
-    body: '80% of the supply is sold on a constant-product bonding curve priced in ETH. The price rises as tokens are bought and falls as they are sold, so there is always a quote to buy or sell. The token page shows the curve as market cap against tokens sold, with the current position marked.',
+    body: '80% of the supply is sold on a constant-product bonding curve priced in ETH. Buys and sells are quoted from that curve. The token page shows the curve as market cap against tokens sold, with the current position marked.',
   },
   {
     title: 'Graduation to Uniswap V4',
-    body: 'When the ETH raised reaches the graduation threshold, the launch graduates automatically in the same transaction. The raised ETH and the reserved 20% of supply are added as full-range liquidity to a Uniswap V4 pool at the final curve price. That liquidity is held by the Polypad hook contract, which has no code path to remove it, so it is locked permanently.',
+    body: 'When the ETH raised reaches the graduation threshold, the launch graduates in the same transaction. The raised ETH and the reserved 20% of supply are added as full-range liquidity to a Uniswap V4 pool at the final curve price. That liquidity is held by the Polypad hook contract, which has no function that removes it.',
   },
 ];
 
 const facts = [
   { label: 'Network', value: 'Robinhood Chain (chain ID 4663)' },
-  { label: 'Creator fee', value: '0% to 2%, set at launch, in ETH' },
+  { label: 'Creator fee', value: '0% to 5% on the current factory (0% to 2% on the earlier factory), set at launch, in ETH' },
   { label: 'Curve supply', value: '80% of total supply' },
   { label: 'Liquidity reserve', value: '20% of total supply' },
   { label: 'After graduation', value: 'Uniswap V4 pool, fees enforced by the hook' },
 ];
 
 const contracts = [
-  { label: 'Factory', address: '0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2' },
-  { label: 'Launch implementation', address: '0xEf7684268f13BC06CB02755642CeAbEf422b8B70' },
-  { label: 'Uniswap V4 hook', address: '0x04990E6671C98e1B43034E52366Af11396d960CC' },
-  { label: 'Commit vault', address: '0x8F125c9eC7acD52B9cd39f2a7441085559d84104' },
+  { label: 'Factory (current)', address: '0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2' },
+  { label: 'Launch implementation (current)', address: '0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad' },
+  { label: 'Uniswap V4 hook (current)', address: '0x4d3066bBfF889023def912D2fDe36c44357fA0cC' },
+  { label: 'Commit vault (current)', address: '0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4' },
+  { label: 'Factory (earlier)', address: '0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2' },
+  { label: 'Launch implementation (earlier)', address: '0xEf7684268f13BC06CB02755642CeAbEf422b8B70' },
+  { label: 'Uniswap V4 hook (earlier)', address: '0x04990E6671C98e1B43034E52366Af11396d960CC' },
+  { label: 'Commit vault (earlier)', address: '0x8F125c9eC7acD52B9cd39f2a7441085559d84104' },
 ];
 
 export default function AboutPage() {
@@ -55,8 +59,8 @@ export default function AboutPage() {
             <h1 className="text-[28px] sm:text-[40px] font-semibold tracking-tight leading-tight">About Polypad</h1>
             <p className="mt-4 text-[15px] leading-relaxed text-white/60">
               Polypad is a token launchpad on Robinhood Chain. It lets anyone create an ERC-20 token, sell it on a bonding
-              curve, and move it to a Uniswap V4 pool with permanently locked liquidity once enough ETH has been raised.
-              Every step runs on smart contracts; the site reads launches directly from the chain.
+              curve, and move it to a Uniswap V4 pool once enough ETH has been raised. The hook contract has no function
+              that removes that liquidity. Every step runs on smart contracts; the site reads launches directly from the chain.
             </p>
           </section>
 
@@ -113,9 +117,8 @@ export default function AboutPage() {
           <section>
             <h2 className="text-[15px] font-semibold mb-3">Risks</h2>
             <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
-              Tokens launched on Polypad are created by their users, not by Polypad. Prices on a bonding curve can move
-              quickly and most new tokens lose value. The contracts have not yet completed an external security audit.
-              Only commit or trade what you can afford to lose.
+              Tokens launched on Polypad are created by their users, not by Polypad. The contracts are unaudited. An
+              outside review is planned. Using these contracts can result in loss of funds.
             </p>
           </section>
 

@@ -4,6 +4,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 
 ## [Unreleased]
 ### Added
+- `deployments/robinhood-chain.json` and `docs/DEPLOYMENTS.md`: one address list for Robinhood Chain, taken from addresses already recorded in the repo. Notes the current and earlier Polypad sets, including both commit vaults.
+- `docs/README.md` index of the docs.
+- Agent CI: Ruff and pytest for Poly Agent and PolyCTO, plus offline tests for routing, scam scoring, and reward-rate math.
+- `script/scan_secrets.py` and a CI job that runs it.
+- `agents/polycto/.env.example`, which the PolyCTO README already told readers to copy.
 - Polypad creator contracts with tests: `src/nftstaking` (NFT staking with optional boosts), `src/vesting` (creator vesting vaults), `src/bond` (creator bonds), `src/gatedmint` (token-gated NFT mints) and `src/treasury` (treasury rules). Source is byte-identical to the Sourcify-verified deployments. Overview in `docs/CREATOR_CONTRACTS.md`. Not audited.
 - `fork` Foundry profile and a CI job for the creator fork tests.
 - `src/floorvault`: token-backed NFT collections (`PolypadTokenFloorFactory`, `PolypadTokenFloorCollection`) with unit, fuzz, hardening and invariant tests and a fork test against the deployed factory. Sourcify match. Not audited.
@@ -13,6 +18,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 - `script/v2/compare_bytecode.py`: compares locally compiled V2 runtime bytecode with on-chain code for the factory and two pools (match, ignoring metadata hash and immutables).
 - `test/v2/`: unit, precision and fuzz tests for V2 (stake, withdraw, claim, claim fee bounds 1-5%, owner cannot move pool funds, reward period end, 6-decimal reward precision, conservation fuzzing).
 ### Changed
+- README: architecture diagram, module overview, quickstart, build and test, security posture, and roadmap. Clone URL and CI badge point at `polydash-labs/Polydash`.
+- Security wording states that the contracts are unaudited and that an outside review is planned.
+- Poly Agent public copy no longer presents reward rates as a promised return.
+- Polypad web example env and About page use the current factory (creator fee cap 5%) and the current commit vault. The earlier set stays documented.
+- `polypad/contracts/README.md` no longer says the Robinhood Chain deployment does not exist.
 - README and `docs/AUDIT_SCOPE.md`: V2 source now in `src/v2/`; v1 factory marked legacy with a warning against 6-decimal reward tokens.
 
 ## [1.1.0] - 2026-10-29

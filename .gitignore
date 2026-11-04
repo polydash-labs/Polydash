@@ -14,9 +14,32 @@ coverage/
 *.pem
 keystore/
 
+# Python
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Web
+polypad/web/.next/
+polypad/web/out/
+
 # OS / editors
 .DS_Store
 .idea/
 .vscode/
+*.swp
+*~
 node_modules/
 __pycache__/
+
+# Local secrets
+*.secret
+secrets/

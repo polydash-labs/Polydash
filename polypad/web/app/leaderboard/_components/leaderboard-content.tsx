@@ -107,7 +107,7 @@ export function LeaderboardContent() {
 
           <div className="px-4 py-3 text-center text-xs text-muted-foreground">
             {isLoading ? 'Loading live rankings…' : sorted.length === 0 ? (
-              <>No tokens launched yet. <Link href="/create" className="text-primary hover:underline">Create the first one</Link></>
+              <>No tokens launched yet. <Link href="/create" className="text-primary hover:underline">Create one</Link></>
             ) : 'Live data from Robinhood Chain'}
           </div>
         </div>

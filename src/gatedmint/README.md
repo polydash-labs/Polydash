@@ -1,5 +1,7 @@
 # Token-gated NFT mints
 
+These contracts are unaudited. An outside review is planned.
+
 `PolypadGatedNFTFactory` lets the launch creator of a Polypad token deploy a `PolypadGatedCollection` linked to that token.
 
 - Only the token's launch creator can create a collection (`launch.creator()` on either launch factory).

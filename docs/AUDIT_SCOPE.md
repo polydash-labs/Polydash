@@ -28,5 +28,5 @@ Deployed instance: StakingFactory v1 `0x0aAEa47d2e7303EC5a809062eafa59e7F011D857
 
 - Reward accounting correctness and rounding (`rewardPerToken`, `unallocatedRewards`, emergency forfeits)
 - Fee-on-transfer handling for stake and reward tokens; same token used for stake and reward
-- Guarantee that no privileged role can move staker principal
+- Whether any privileged role can move staker principal
 - Fee cap enforcement and immutability per pool

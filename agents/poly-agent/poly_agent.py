@@ -211,12 +211,12 @@ def _apr(s: Dict[str, Any]) -> Dict[str, Any]:
     if s["seconds_remaining"] == 0:
         return {**base, "apr_pct": 0.0, "note": "Pool ended; no rewards accruing."}
     if s["total_staked"] <= 0:
-        return {**base, "apr_pct": None, "note": "Nothing staked; APR undefined (first staker gets the full reward rate)."}
+        return {**base, "apr_pct": None, "note": "Nothing staked, so a percentage rate is undefined."}
     if s["stake_token"]["address"] != s["reward_token"]["address"]:
         return {**base, "apr_pct": None,
                 "reward_per_staked_token_per_year": s["reward_rate_per_second"] * SECONDS_PER_YEAR / s["total_staked"],
                 "note": f"Stake token {s['stake_token']['symbol']} differs from reward token "
-                        f"{s['reward_token']['symbol']}; no price feed, so % APR not computable. "
+                        f"{s['reward_token']['symbol']}; no price feed, so a percentage rate is not computable. "
                         "Figure shown is token-denominated."}
     apr = s["reward_rate_per_second"] * SECONDS_PER_YEAR / s["total_staked"] * 100
     return {**base, "apr_pct": round(apr, 4),
@@ -225,13 +225,16 @@ def _apr(s: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_apr(pool: str) -> str:
-    """Compute current APR for a pool from on-chain rewardRate vs totalStaked.
+    """Token-denominated reward rate from on-chain rewardRate and totalStaked.
+
+    The JSON field is still named apr_pct so existing tool calls keep working.
+    The figure is not a promised return.
 
     Args:
         pool: Pool contract address.
 
     Returns:
-        JSON with apr_pct (or null with explanation if not computable).
+        JSON with apr_pct, or null when a percentage is not computable.
     """
     return json.dumps(_apr(_stats(pool)), indent=2)
 
@@ -286,7 +289,7 @@ def find_opportunities() -> str:
     """List pools currently accepting stake (active, not ended, not full), newest end first.
 
     Returns:
-        JSON list with total staked, APR info and time remaining. Informational only.
+        JSON list with total staked, reward-rate info and time remaining. Informational only.
     """
     out = []
     for p in _discover():
@@ -305,12 +308,14 @@ def find_opportunities() -> str:
 
 SYSTEM_PROMPT = """You are Poly Agent, the Polydash staking analyst for Polypad on Robinhood Chain.
 You monitor Polydash staking pools (v1 and v2 factories), detect stake inflows and withdraw
-outflows, and report live staking data: total staked, reward rates, APRs, pool end times and
+outflows, and report on-chain staking data: total staked, reward rates, pool end times and
 open pools.
 Rules:
 - Always call your tools for numbers; cite on-chain figures with pool addresses and token symbols.
-- APRs are token-denominated and change with total stake. If a tool says APR is not computable, say so.
-- $POLYDASH has no USD price feed; never invent prices or USD values.
+- If a tool returns apr_pct or reward_per_staked_token_per_year, describe it as a token-denominated
+  rate at the current stake. It changes when stake changes. It is not a promised return.
+  If the tool says a percentage is not computable, say so.
+- The POLYDASH token has no price feed in this agent; never invent prices or fiat values.
 - Never promise returns, never give financial advice, never tell users to buy, sell or stake.
 - Never name or compare other launchpads or tokens.
 - You are read-only: you cannot and must not sign or send transactions.
@@ -357,10 +362,11 @@ if __name__ == "__main__":
         print("chain id:", w3.eth.chain_id)
         print(list_pools())
         for p in _discover():
-            print(get_pool_stats(p)); print(get_apr(p))
+            print(get_pool_stats(p))
+            print(get_apr(p))
         f = json.loads(get_staking_flows("all", 200000))
         print({k: f[k] for k in ("event_count", "inflow", "outflow", "net")})
         print(find_opportunities())
     else:
-        q = " ".join(args) or "List all Polypad staking pools with total staked, APR and time remaining, and summarize recent inflows/outflows."
+        q = " ".join(args) or "List Polypad staking pools with total staked, reward rate and time remaining, and summarize recent inflows and outflows."
         print(build_agent().run(q))

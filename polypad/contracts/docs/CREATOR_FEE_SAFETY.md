@@ -1,13 +1,13 @@
-# Creator Fee Safety — in plain English
+# Creator fees
 
-If you launch a token on Polydash, you earn a **creator fee** (0% – 2%, you choose; UIs default to 1%) on every
-trade of your token — first on the bonding curve, and after graduation on the Uniswap V4 pool. This document explains
-who can touch that money (only you) and why claiming it is safe.
+If you launch a token on Polypad, you set a **creator fee** on trades of that token. The current factory accepts 0% to 5%. The earlier factory accepts 0% to 2%. The launch UI defaults to 1%. The fee applies on the bonding curve and, after graduation, on the Uniswap V4 pool. This document explains where the code sends that fee.
+
+These contracts are unaudited. An outside review is planned.
 
 ## The short version
 
-* Your fee rate is **locked when you launch**. Nobody — not you, not Polydash — can change it later.
-* Your fees can **only ever be sent to your payout wallet**. There is no other destination in the code.
+* Your fee rate is **fixed at launch**. The factory owner cannot change it later.
+* The code sends accrued creator fees to the payout wallet. It has no other destination for that balance.
 * Polydash (the factory owner/multisig) has **no function** that can pause, redirect, seize or reduce your fees.
 * Changing your payout wallet takes **48 hours**, and your current payout wallet can **veto** the change.
 * Claiming is **pull-based**: the contract *sends you ETH*. It never asks for approvals, signatures or tokens.

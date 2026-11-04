@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+pythonpath = ["agents/polycto", "agents/poly-agent"]
+testpaths = ["agents/tests"]
+
+[tool.ruff]
+line-length = 120
+src = ["agents", "script"]
+extend-exclude = ["lib", "out", "cache", "polypad/web"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = ["E501"]
