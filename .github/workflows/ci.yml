@@ -42,6 +42,22 @@ jobs:
             gas-report.txt
             .gas-snapshot
 
+  fork:
+    name: Fork tests (creator contracts)
+    runs-on: ubuntu-latest
+    # Depends on a public RPC endpoint; failures here do not block merges.
+    continue-on-error: true
+    env:
+      FOUNDRY_PROFILE: fork
+      FORK_RPC: https://rpc.mainnet.chain.robinhood.com
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: Fork tests
+        run: forge test --match-path "test/fork/*" -vvv
+
   slither:
     name: Slither (advisory)
     runs-on: ubuntu-latest

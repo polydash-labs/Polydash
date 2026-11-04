@@ -4,6 +4,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 
 ## [Unreleased]
 ### Added
+- Polypad creator contracts with tests: `src/nftstaking` (NFT staking with optional boosts), `src/vesting` (creator vesting vaults), `src/bond` (creator bonds), `src/gatedmint` (token-gated NFT mints) and `src/treasury` (treasury rules). Source is byte-identical to the Sourcify-verified deployments. Overview in `docs/CREATOR_CONTRACTS.md`. Not audited.
+- `fork` Foundry profile and a CI job for the creator fork tests.
+- `src/floorvault`: token-backed NFT collections (`PolypadTokenFloorFactory`, `PolypadTokenFloorCollection`) with unit, fuzz, hardening and invariant tests and a fork test against the deployed factory. Sourcify match. Not audited.
+- `src/buyback`: `PolydashBuybackVault` (capped POLYDASH buys, 62.5% burned, 37.5% to stakers, 48-hour timelocked rewards target) and `PolydashRewardsPool` (ongoing POLYDASH staking with reward top-ups), with unit, fuzz and invariant tests and fork tests against the deployed contracts. Sourcify match. Not audited.
+- Uniswap v4-core v4.0.0 submodule; per-module EVM targets in `foundry.toml` (`paris` for existing modules, `cancun` for the V4 modules).
 - `src/v2/`: verified source of the deployed `PolydashStakingFactoryV2` and `PolydashStakingPoolV2` (byte-for-byte, no source changes), with provenance and compiler settings in `src/v2/README.md`.
 - `script/v2/compare_bytecode.py`: compares locally compiled V2 runtime bytecode with on-chain code for the factory and two pools (match, ignoring metadata hash and immutables).
 - `test/v2/`: unit, precision and fuzz tests for V2 (stake, withdraw, claim, claim fee bounds 1-5%, owner cannot move pool funds, reward period end, 6-decimal reward precision, conservation fuzzing).

@@ -19,6 +19,10 @@ Please follow responsible disclosure. Include the affected contract and address,
 We aim to acknowledge reports within 72 hours and keep you updated until resolution. Please allow reasonable time
 for a fix before public disclosure.
 
+## Polypad creator contracts
+
+The creator contracts in `src/nftstaking`, `src/vesting`, `src/bond`, `src/gatedmint`, `src/treasury`, `src/floorvault` and `src/buyback` are **not audited**. They were deployed before an external audit, and an outside review is planned. Their source is verified on Sourcify (addresses in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md)). Scans are not audits. Reports on these contracts are welcome through the channels above.
+
 ## Bug bounty
 
 Polydash runs a small self-hosted bug bounty for its staking contracts.
