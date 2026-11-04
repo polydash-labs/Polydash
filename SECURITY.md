@@ -1,6 +1,6 @@
 # Security Policy
 
-Polydash contracts are **not audited**. Source code is public and verified on Sourcify where applicable. Automated scans are not audits.
+Polydash contracts are **unaudited**. An outside review is planned. Source code is public and verified on Sourcify where applicable. Automated scans are not a review, and they do not remove risk.
 
 ## Supported versions
 

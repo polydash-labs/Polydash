@@ -1,5 +1,7 @@
 # NFT staking
 
+These contracts are unaudited. An outside review is planned.
+
 `NftStakingFactory` deploys one `NftStakingPool` per collection and reward token. Stakers deposit ERC-721 tokens and earn an ERC-20 reward streamed over a fixed window.
 
 - Fixed window `[start, end)`. `fund()` can only raise the reward rate over the remaining window; it cannot extend the window or dilute existing stakers.

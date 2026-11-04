@@ -1,5 +1,9 @@
 # Architecture
 
+This document describes staking v1 in detail, then how v2 differs. The wider system (Polypad, creator contracts, buybacks, agents) is diagrammed in the [README](../README.md#architecture). Creator modules are in [CREATOR_CONTRACTS.md](CREATOR_CONTRACTS.md).
+
+The contracts are unaudited. An outside review is planned.
+
 ## Overview
 
 Staking-as-a-Service is two contracts:
@@ -16,7 +20,7 @@ Neither contract is upgradeable or uses proxies.
 1. **Create**: `createPool(stake, reward, amount, start, duration, cap, name, desc)`.
    Bounds: duration 1 day to 3650 days; start ≤ now + 365 days (past/0 = now); name 1–64 bytes; description ≤ 280 bytes.
    The factory transfers `amount` to the pool, then calls `initializeRewards()`, which records the **actual balance received**
-   (fee-on-transfer safe) and sets `rewardRate = received * 1e18 / duration`.
+   (fee-on-transfer aware) and sets `rewardRate = received * 1e18 / duration`.
 2. **Stake**: allowed until `endTime`. Credits the amount actually received. Optional `maxTotalStake` cap (0 = unlimited).
 3. **Accrue**: Synthetix-style `rewardPerToken`. While `totalStaked == 0`, emissions go to `unallocatedRewards`.
 4. **Withdraw / claim / exit**: principal returned minus the pool's `unstakeFeeBps`; rewards claimable at any time.

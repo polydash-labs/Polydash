@@ -1,5 +1,7 @@
 # POLYDASH buybacks
 
+These contracts are unaudited. An outside review is planned. Sourcify verification is not a review.
+
 Two contracts that turn the buyback share of Polypad launch fees into POLYDASH burns and staker rewards.
 
 - `PolydashBuybackVault` receives ETH from the launch factories' buyback hook (`buyback()`), from labelled manual top-ups (`topUp()`) and from plain transfers, and buys POLYDASH on its Uniswap V4 POLYDASH/WETH pool.

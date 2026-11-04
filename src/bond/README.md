@@ -1,5 +1,7 @@
 # Creator bond
 
+These contracts are unaudited. An outside review is planned.
+
 `CreatorBondFactory` lets the launch creator of a Polypad token post an ETH bond for a fixed period, committing that a set of registered wallets keeps at least a floor balance of the token.
 
 - Only tokens launched through the Polypad launch factories are accepted (`launchOfToken` lookup on either factory), and only the launch creator can open a bond.

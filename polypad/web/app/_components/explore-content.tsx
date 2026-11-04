@@ -126,7 +126,7 @@ export function ExploreContent() {
         ) : (launches?.length ?? 0) === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <p className="text-lg">No tokens launched yet</p>
-            <p className="text-sm mt-1 mb-4">Be the first to launch a token on Polypad.</p>
+            <p className="text-sm mt-1 mb-4">Launch a token on Polypad.</p>
             <Link href="/create"><Button>Create a token</Button></Link>
           </div>
         ) : (filtered?.length ?? 0) === 0 ? (

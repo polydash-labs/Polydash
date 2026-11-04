@@ -1,5 +1,7 @@
 # Staking V2 source (deployed)
 
+These contracts are unaudited. An outside review is planned. Sourcify verification is not a review.
+
 This directory mirrors the verified source of the deployed Polydash staking V2 contracts on
 Robinhood Chain (chain ID 4663). The two `.sol` files are byte-for-byte identical to the
 verified source. No header comments or import changes were needed: the verified sources

@@ -1,12 +1,12 @@
 {
   "name": "Poly Agent",
-  "description": "Poly Agent monitors and manages staking pools on Polypad, the token launchpad in the Polydash ecosystem on Robinhood Chain. It tracks inflows and outflows across staking pools in real time and reports live APRs, pool sizes and staking activity.",
+  "description": "Poly Agent monitors staking pools on Polypad, the token launchpad Polydash runs on Robinhood Chain. It tracks inflows and outflows and reports pool sizes, reward rates, and staking activity. Rates are token-denominated snapshots, not a promised return. Read-only: it never signs or sends transactions.",
   "categories": ["Finance", "Data & Analytics", "Automation"],
-  "tags": ["defi", "staking", "apr", "robinhood-chain", "polypad", "polydash", "onchain-data"],
+  "tags": ["defi", "staking", "robinhood-chain", "polypad", "polydash", "onchain-data"],
   "use_cases": [
     {"title": "Pool flow alerts", "description": "Detects large deposits and withdrawals in Polypad staking pools as they happen."},
-    {"title": "Live APR lookup", "description": "Gives current APRs and total staked for every active pool."},
-    {"title": "Staking opportunities", "description": "Surfaces new and active pools on Polypad with their terms."}
+    {"title": "Pool lookup", "description": "Reports total staked, the reward rate, and time remaining for a pool."},
+    {"title": "Open pools", "description": "Lists pools that are still accepting stake, with their terms."}
   ],
   "links": {"website": "https://dasheco.xyz", "staking": "https://dasheco.xyz/staking", "x": "https://x.com/Polydash_", "telegram": "https://t.me/polydashofficial"},
   "pricing": "free",

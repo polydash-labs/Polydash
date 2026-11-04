@@ -6,7 +6,10 @@ Masks immutable references (from the forge artifact) and CBOR metadata blobs
 source file paths, then requires an exact match of everything else.
 Usage: forge build && python3 script/v2/compare_bytecode.py [RPC_URL]
 """
-import json, re, sys, urllib.request
+import json
+import re
+import sys
+import urllib.request
 
 RPC = sys.argv[1] if len(sys.argv) > 1 else "https://rpc.mainnet.chain.robinhood.com"
 TARGETS = [

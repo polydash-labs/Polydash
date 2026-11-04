@@ -1,5 +1,7 @@
 # Token-backed NFT collections (floor vault)
 
+These contracts are unaudited. An outside review is planned. Sourcify verification is not a review.
+
 `PolypadTokenFloorFactory` lets the creator of a Polypad launch token deploy a fixed-price ERC-721 collection linked to that token. Each collection is an EIP-1167 clone of one `PolypadTokenFloorCollection` implementation, created in the factory constructor.
 
 ## Design

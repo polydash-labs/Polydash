@@ -1,5 +1,7 @@
 # Creator vesting
 
+These contracts are unaudited. An outside review is planned.
+
 `CreatorVestingFactory` creates one `CreatorVestingVault` per allocation. Tokens move straight from the depositor into the vault and vest linearly with a cliff.
 
 - Ownerless: no admin withdraw, no pause. The beneficiary can only extend the cliff or duration, never shorten them.

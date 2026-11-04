@@ -232,7 +232,7 @@ export function CreateWizard() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-medium">{form.imageUri ? 'Logo uploaded' : 'Upload a logo'}</p>
-                  <p className="text-[11px] text-muted-foreground">PNG, JPG, WEBP or GIF, up to 5 MB. Square works best.</p>
+                  <p className="text-[11px] text-muted-foreground">PNG, JPG, WEBP or GIF, up to 5 MB. A square image fits the preview.</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <Button type="button" size="sm" variant="secondary" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
@@ -303,14 +303,14 @@ export function CreateWizard() {
               <Slider
                 value={[form?.creatorFeeBps ?? 100]}
                 onValueChange={(v: number[]) => updateField('creatorFeeBps', v?.[0] ?? 100)}
-                min={0} max={200} step={10}
+                min={0} max={500} step={10}
                 className="w-full"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
                 <span>0%</span>
-                <span>1% (default)</span>
-                <span>2% (max)</span>
+                <span>5% (max on the current factory)</span>
               </div>
+              <p className="text-[10px] text-muted-foreground mt-1">The earlier factory accepts at most 2%. The default here is 1%.</p>
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Dev Buy (optional ETH to buy at launch)</label>

@@ -41,7 +41,7 @@ RPC_URL = os.getenv("ROBINHOOD_RPC_URL", "https://rpc.mainnet.chain.robinhood.co
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 PROJECT_NAME = os.getenv("PROJECT_NAME", "this project")
 PROJECT_TOKEN = os.getenv("PROJECT_TOKEN_ADDRESS", "")
-PROJECT_LINKS = [l.strip() for l in os.getenv("PROJECT_LINKS", "").split(",") if l.strip()]
+PROJECT_LINKS = [item.strip() for item in os.getenv("PROJECT_LINKS", "").split(",") if item.strip()]
 AUTO_MODERATE = os.getenv("POLYCTO_AUTO_MODERATE", "false").lower() == "true"
 LOOKBACK = int(os.getenv("POLYCTO_LOOKBACK", "200000"))
 LOG_CHUNK = int(os.getenv("POLYCTO_LOG_CHUNK", "10000"))
@@ -340,7 +340,9 @@ def telegram_bot() -> None:
         try:
             ups = requests.get(f"{api}/getUpdates", params={"offset": offset, "timeout": 50}, timeout=60).json().get("result", [])
         except Exception as e:
-            print("poll error:", e); time.sleep(5); continue
+            print("poll error:", e)
+            time.sleep(5)
+            continue
         for u in ups:
             offset = u["update_id"] + 1
             m = u.get("message") or {}
@@ -388,19 +390,24 @@ def main(argv: List[str]) -> None:
         if not addr:
             sys.exit("Usage: --analyze <token_address> (or set PROJECT_TOKEN_ADDRESS)")
         if tools_only:
-            print(raw_report(addr)); return
+            print(raw_report(addr))
+            return
         _need_llm()
         print(build_agent("security").run(
             f"Write a plain-English token and security report for {addr}. Use analyze_token and security_scan. "
             "End with: 'Heuristic scan, not an audit. DYOR.'"))
         return
     if tools_only:
-        print(project_context()); return
+        print(project_context())
+        return
     if "--telegram" in argv:
-        telegram_bot(); return
+        telegram_bot()
+        return
     if "--task" in argv:
         i = argv.index("--task")
-        _need_llm(); print(ask(" ".join(argv[i + 1:]))); return
+        _need_llm()
+        print(ask(" ".join(argv[i + 1:])))
+        return
     _need_llm()
     print(f"PolyCTO for {PROJECT_NAME}. Ask anything (community, marketing, token, security). Ctrl+C to quit.")
     while True:

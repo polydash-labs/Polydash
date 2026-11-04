@@ -1,0 +1,315 @@
+{
+  "name": "Polydash",
+  "description": "Addresses recorded in this repository for Robinhood Chain. This file does not add deployments that are not already documented elsewhere in the repo. Contracts are unaudited. An outside review is planned.",
+  "chain": {
+    "name": "Robinhood Chain",
+    "chainId": 4663,
+    "rpc": "https://rpc.mainnet.chain.robinhood.com",
+    "explorer": "https://robinhoodchain.blockscout.com"
+  },
+  "contracts": [
+    {
+      "name": "POLYDASH token",
+      "group": "token",
+      "role": "token",
+      "address": "0x319525528f42167eF7fC18b77b889958080568e4",
+      "sourceInRepo": false,
+      "notes": "Deployed via Clanker. Not in this repository. LP is described as locked in the README.",
+      "documentedIn": ["README.md", "docs/AUDIT_SCOPE.md", "SECURITY.md"]
+    },
+    {
+      "name": "PolydashFactory",
+      "group": "polypad-launchpad",
+      "role": "current",
+      "address": "0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2",
+      "verification": "match",
+      "source": "polypad/contracts/src/PolydashFactory.sol",
+      "notes": "Current launch factory. Permissionless createLaunch. Creator fee cap 500 bps.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json", "docs/AGENTS_LAUNCH.md"]
+    },
+    {
+      "name": "PolydashLaunch",
+      "group": "polypad-launchpad",
+      "role": "current-implementation",
+      "address": "0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad",
+      "verification": "match",
+      "source": "polypad/contracts/src/PolydashLaunch.sol",
+      "notes": "Current launch implementation. Launches are EIP-1167 clones.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
+    },
+    {
+      "name": "PolydashHook",
+      "group": "polypad-launchpad",
+      "role": "current",
+      "address": "0x4d3066bBfF889023def912D2fDe36c44357fA0cC",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x4d3066bBfF889023def912D2fDe36c44357fA0cC",
+      "verification": "match",
+      "source": "polypad/contracts/src/PolydashHook.sol",
+      "notes": "Current Uniswap V4 hook used after graduation.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
+    },
+    {
+      "name": "PolydashCommitVault",
+      "group": "polypad-launchpad",
+      "role": "current",
+      "address": "0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4",
+      "verification": "match",
+      "sourcifyName": "PolydashCommitVault",
+      "notes": "Listed in the root README as the current commit vault. Sourcify contract name is PolydashCommitVault (solc 0.8.26, match). This address is not the commit-vault entry in polypad/deployments.json.",
+      "documentedIn": ["README.md"]
+    },
+    {
+      "name": "PolydashFactory",
+      "group": "polypad-launchpad",
+      "role": "earlier",
+      "address": "0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2",
+      "sourcify": "https://repo.sourcify.dev/4663/0x2c84cfcd8d283ef750e09fbed735d67f67845db2",
+      "verification": "match",
+      "notes": "Earlier launch factory. Creator fee cap 200 bps. Launches created here stay listed.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
+    },
+    {
+      "name": "PolydashLaunch",
+      "group": "polypad-launchpad",
+      "role": "earlier-implementation",
+      "address": "0xef7684268f13bc06cb02755642ceabef422b8b70",
+      "sourcify": "https://repo.sourcify.dev/4663/0xef7684268f13bc06cb02755642ceabef422b8b70",
+      "verification": "match",
+      "notes": "Earlier launch implementation.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
+    },
+    {
+      "name": "PolydashHook",
+      "group": "polypad-launchpad",
+      "role": "earlier",
+      "address": "0x04990E6671C98e1B43034E52366Af11396d960CC",
+      "sourcify": "https://repo.sourcify.dev/4663/0x04990e6671c98e1b43034e52366af11396d960cc",
+      "verification": "match",
+      "notes": "Earlier Uniswap V4 hook.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
+    },
+    {
+      "name": "PolydashCommitVault",
+      "group": "polypad-launchpad",
+      "role": "earlier",
+      "address": "0x8f125c9ec7acd52b9cd39f2a7441085559d84104",
+      "sourcify": "https://repo.sourcify.dev/4663/0x8f125c9ec7acd52b9cd39f2a7441085559d84104",
+      "verification": "match",
+      "notes": "Commit vault deployed with the earlier factory. This is the PolydashCommitVault entry in polypad/deployments.json. Constructor argument is the earlier factory.",
+      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
+    },
+    {
+      "name": "PolypadNFTFactory",
+      "group": "nfts",
+      "role": "factory",
+      "address": "0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd",
+      "verification": "match",
+      "sourcifyName": "PolypadNFTFactory",
+      "notes": "Listed in the README as the NFT factory. Source is not in this repository.",
+      "documentedIn": ["README.md", "test/fork/CreatorFork.t.sol"]
+    },
+    {
+      "name": "PolypadCurveFactory",
+      "group": "nfts",
+      "role": "factory",
+      "address": "0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94",
+      "verification": "match",
+      "sourcifyName": "PolypadCurveFactory",
+      "notes": "Listed in the README as the NFT bonding-curve factory. Source is not in this repository.",
+      "documentedIn": ["README.md", "test/fork/CreatorFork.t.sol"]
+    },
+    {
+      "name": "PolypadNFTMarket",
+      "group": "nfts",
+      "role": "marketplace",
+      "address": "0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A",
+      "verification": "match",
+      "sourcifyName": "PolypadNFTMarket",
+      "notes": "Listed in the README as the NFT marketplace. Source is not in this repository.",
+      "documentedIn": ["README.md"]
+    },
+    {
+      "name": "PolypadTokenLink",
+      "group": "nfts",
+      "role": "token-link",
+      "address": "0xCD96D8e10a82b41A08342c03a176c20336bD0b38",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xCD96D8e10a82b41A08342c03a176c20336bD0b38",
+      "verification": "match",
+      "sourcifyName": "PolypadTokenLink",
+      "notes": "Listed in the README as NFT token rewards. Sourcify contract name is PolypadTokenLink. Source is not in this repository.",
+      "documentedIn": ["README.md"]
+    },
+    {
+      "name": "PolydashStakingFactoryV2",
+      "group": "staking",
+      "role": "current",
+      "address": "0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0",
+      "sourcify": "https://repo.sourcify.dev/4663/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0",
+      "verification": "exact match",
+      "source": "src/v2/PolydashStakingFactoryV2.sol",
+      "notes": "Recommended factory for new pools. Source is byte-for-byte the verified source. See src/v2/README.md.",
+      "documentedIn": ["README.md", "src/v2/README.md", "docs/ARCHITECTURE.md"]
+    },
+    {
+      "name": "PolydashStakingPoolV2",
+      "group": "staking",
+      "role": "example-pool",
+      "address": "0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518",
+      "source": "src/v2/PolydashStakingPoolV2.sol",
+      "notes": "Example pool deployed by the V2 factory, not a proxy. Pools are not individually verified on the explorer. Runtime bytecode check is described in src/v2/README.md. The factory can have more pools than this list.",
+      "documentedIn": ["src/v2/README.md"]
+    },
+    {
+      "name": "PolydashStakingPoolV2",
+      "group": "staking",
+      "role": "example-pool",
+      "address": "0x0F50043E172B8652bb786C4F14f30c415E5760AB",
+      "source": "src/v2/PolydashStakingPoolV2.sol",
+      "notes": "Example pool deployed by the V2 factory. See src/v2/README.md.",
+      "documentedIn": ["src/v2/README.md", "test/fork/BuybackFork.t.sol"]
+    },
+    {
+      "name": "PolydashStakingFactory",
+      "group": "staking",
+      "role": "legacy",
+      "address": "0x0aAEa47d2e7303EC5a809062eafa59e7F011D857",
+      "source": "src/PolydashStakingFactory.sol",
+      "notes": "Legacy v1 factory. Do not use for new pools, and do not use it with 6-decimal reward tokens. Not yet verified on the explorer. See the warning in the README.",
+      "documentedIn": ["README.md", "docs/AUDIT_SCOPE.md", "SECURITY.md"]
+    },
+    {
+      "name": "NftStakingFactory",
+      "group": "creator",
+      "role": "factory",
+      "address": "0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1",
+      "sourcify": "https://repo.sourcify.dev/4663/0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1",
+      "verification": "exact match",
+      "source": "src/nftstaking/",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/nftstaking/README.md"]
+    },
+    {
+      "name": "CreatorVestingFactory",
+      "group": "creator",
+      "role": "factory",
+      "address": "0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022",
+      "sourcify": "https://repo.sourcify.dev/4663/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022",
+      "verification": "exact match",
+      "source": "src/vesting/",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/vesting/README.md"]
+    },
+    {
+      "name": "CreatorBondFactory",
+      "group": "creator",
+      "role": "factory",
+      "address": "0x876170251e30F99E27119AF0e90648A88D508f97",
+      "sourcify": "https://repo.sourcify.dev/4663/0x876170251e30F99E27119AF0e90648A88D508f97",
+      "verification": "exact match",
+      "source": "src/bond/",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/bond/README.md"]
+    },
+    {
+      "name": "PolypadGatedNFTFactory",
+      "group": "creator",
+      "role": "factory",
+      "address": "0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d",
+      "sourcify": "https://repo.sourcify.dev/4663/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d",
+      "verification": "exact match",
+      "source": "src/gatedmint/",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/gatedmint/README.md"]
+    },
+    {
+      "name": "TreasuryRulesFactory",
+      "group": "creator",
+      "role": "factory",
+      "address": "0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f",
+      "sourcify": "https://repo.sourcify.dev/4663/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f",
+      "verification": "exact match",
+      "source": "src/treasury/",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/treasury/README.md"]
+    },
+    {
+      "name": "TreasuryRules",
+      "group": "creator",
+      "role": "implementation",
+      "address": "0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb",
+      "sourcify": "https://repo.sourcify.dev/4663/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb",
+      "verification": "exact match",
+      "source": "src/treasury/",
+      "notes": "Implementation created by TreasuryRulesFactory. Treasury vaults are EIP-1167 clones.",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/treasury/README.md"]
+    },
+    {
+      "name": "PolypadTokenFloorFactory",
+      "group": "floor-vault",
+      "role": "factory",
+      "address": "0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c",
+      "sourcify": "https://repo.sourcify.dev/4663/0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c",
+      "verification": "match",
+      "source": "src/floorvault/",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/floorvault/README.md"]
+    },
+    {
+      "name": "PolypadTokenFloorCollection",
+      "group": "floor-vault",
+      "role": "implementation",
+      "address": "0xFa23E496f7244d1674fA8bE5C42556bd054140EA",
+      "sourcify": "https://repo.sourcify.dev/4663/0xFa23E496f7244d1674fA8bE5C42556bd054140EA",
+      "verification": "match",
+      "source": "src/floorvault/",
+      "notes": "Implementation created by PolypadTokenFloorFactory. Collections are EIP-1167 clones.",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/floorvault/README.md"]
+    },
+    {
+      "name": "PolydashBuybackVault",
+      "group": "buybacks",
+      "role": "vault",
+      "address": "0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193",
+      "sourcify": "https://repo.sourcify.dev/4663/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193",
+      "verification": "match",
+      "source": "src/buyback/PolydashBuybackVault.sol",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/buyback/README.md"]
+    },
+    {
+      "name": "PolydashRewardsPool",
+      "group": "buybacks",
+      "role": "rewards-pool",
+      "address": "0x608d106Bb58A804fcd45823e0C6087801dee2aCa",
+      "sourcify": "https://repo.sourcify.dev/4663/0x608d106Bb58A804fcd45823e0C6087801dee2aCa",
+      "verification": "match",
+      "source": "src/buyback/PolydashRewardsPool.sol",
+      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/buyback/README.md"]
+    }
+  ],
+  "referenced": [
+    {
+      "name": "Uniswap V4 PoolManager",
+      "address": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+      "notes": "Third-party contract on Robinhood Chain, recorded in polypad/contracts/README.md. Not a Polydash deployment.",
+      "documentedIn": ["polypad/contracts/README.md"]
+    },
+    {
+      "name": "Uniswap V4 PositionManager",
+      "address": "0x58daec3116aae6D93017bAAea7749052E8a04fA7",
+      "notes": "Third-party contract on Robinhood Chain, recorded in polypad/contracts/README.md. Not a Polydash deployment.",
+      "documentedIn": ["polypad/contracts/README.md"]
+    },
+    {
+      "name": "Platform fee wallet",
+      "address": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+      "notes": "Wallet recorded as a constructor argument of the launch factories in polypad/README.md. Not a product contract.",
+      "documentedIn": ["polypad/README.md", "src/buyback/README.md"]
+    },
+    {
+      "name": "POLYDASH/WETH pool hook",
+      "address": "0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc",
+      "notes": "Hook address recorded for the buyback vault's POLYDASH/WETH pool in src/buyback/README.md.",
+      "documentedIn": ["src/buyback/README.md", "test/fork/BuybackFork.t.sol"]
+    }
+  ]
+}

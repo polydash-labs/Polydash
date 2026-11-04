@@ -1,5 +1,7 @@
 # Treasury rules
 
+These contracts are unaudited. An outside review is planned.
+
 `TreasuryRulesFactory` deploys a `TreasuryRules` implementation in its constructor and creates one EIP-1167 clone per Polypad token (salt = token). A treasury holds a project's funds under published, on-chain rules so that scheduled tasks (buybacks, reward-pool funding, airdrops) can be executed by an operator only within those rules.
 
 - Only tokens launched through the Polypad launch factories are supported.
