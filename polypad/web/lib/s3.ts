@@ -1,20 +1,28 @@
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { createS3Client, getBucketConfig } from './aws-config';
+import {
+  LOGO_POST_EXPIRES_SECONDS,
+  logoObjectKey,
+  logoPostConditions,
+  type LogoPresignInput,
+  type LogoPresignResult,
+} from './logo-upload';
 
 const s3 = createS3Client();
 
-export async function generatePresignedUploadUrl(fileName: string, contentType: string, isPublic = true) {
+export async function generatePresignedLogoPost(input: LogoPresignInput): Promise<LogoPresignResult> {
   const { bucketName, folderPrefix } = getBucketConfig();
-  const cloud_storage_path = isPublic
-    ? `${folderPrefix}public/uploads/${Date.now()}-${fileName}`
-    : `${folderPrefix}uploads/${Date.now()}-${fileName}`;
-  const uploadUrl = await getSignedUrl(
-    s3,
-    new PutObjectCommand({ Bucket: bucketName, Key: cloud_storage_path, ContentType: contentType }),
-    { expiresIn: 3600 },
-  );
-  return { uploadUrl, cloud_storage_path };
+  const cloud_storage_path = logoObjectKey(folderPrefix, input.id, input.ext);
+  const { url, fields } = await createPresignedPost(s3, {
+    Bucket: bucketName,
+    Key: cloud_storage_path,
+    Conditions: logoPostConditions(input.contentType),
+    Fields: {
+      'Content-Type': input.contentType,
+    },
+    Expires: LOGO_POST_EXPIRES_SECONDS,
+  });
+  return { uploadUrl: url, fields, cloud_storage_path };
 }
 
 export async function getPublicFileUrl(cloud_storage_path: string) {

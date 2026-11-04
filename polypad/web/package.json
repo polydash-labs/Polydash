@@ -5,7 +5,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --import tsx --test lib/logo-upload.test.ts"
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "16.4.1",
@@ -32,7 +33,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1105.0",
-    "@aws-sdk/s3-request-presigner": "3.1105.0",
+    "@aws-sdk/s3-presigned-post": "3.1105.0",
     "@azure/storage-blob": "12.33.0",
     "@floating-ui/react": "0.26.0",
     "@headlessui/react": "2.2.10",
