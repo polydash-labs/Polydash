@@ -33,7 +33,7 @@ jobs:
       - name: Coverage
         run: |
           forge coverage --ir-minimum --no-match-coverage "test|script" --report summary --report lcov | tee coverage-summary.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: reports
           path: |
@@ -75,7 +75,7 @@ jobs:
           fail-on: none
           target: .
           sarif: results.sarif
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: slither-sarif
