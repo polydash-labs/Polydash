@@ -20,6 +20,8 @@ contract FundFactoryInvest is ReentrancyGuard {
     uint256 public constant MIN_MINT_PRICE = 0.00001 ether;
     uint256 public constant MAX_MINT_PRICE = 100 ether;
     uint256 public constant MAX_ASSETS = 16;
+    uint256 public constant MIN_RAISE_DURATION = 1 hours;
+    uint256 public constant MAX_RAISE_DURATION = 30 days;
 
     struct Params {
         string name;
@@ -30,6 +32,7 @@ contract FundFactoryInvest is ReentrancyGuard {
         uint256 raiseCap;
         uint256 entryFeeBps;
         uint256 minSkinBps;
+        uint256 raiseDuration;
         bytes32 mandateHash;
         address[] assets;
     }
@@ -75,7 +78,9 @@ contract FundFactoryInvest is ReentrancyGuard {
             revert InvalidParams();
         }
         if (_swapFacet.code.length == 0) revert InvalidParams();
-        if (!IFundAllowlist(_allowlist).assetAllowed(_weth)) revert InvalidParams();
+        if (!IFundAllowlist(_allowlist).assetAllowed(_weth) || IFundAllowlist(_allowlist).quoteAsset() != _weth) {
+            revert InvalidParams();
+        }
         owner = msg.sender;
         feeRecipient = _feeRecipient;
         allowlist = IFundAllowlist(_allowlist);
@@ -105,6 +110,7 @@ contract FundFactoryInvest is ReentrancyGuard {
         if (p.mintPrice < MIN_MINT_PRICE || p.mintPrice > MAX_MINT_PRICE) revert InvalidParams();
         if (p.raiseCap < p.mintPrice || p.entryFeeBps > MAX_ENTRY_FEE_BPS) revert InvalidParams();
         if (p.mandateHash == bytes32(0) || p.assets.length > MAX_ASSETS) revert InvalidParams();
+        if (p.raiseDuration < MIN_RAISE_DURATION || p.raiseDuration > MAX_RAISE_DURATION) revert InvalidParams();
 
         uint256 maxSupply = p.raiseCap / p.mintPrice;
         if (maxSupply == 0 || maxSupply > MAX_SUPPLY) revert InvalidParams();
@@ -125,7 +131,8 @@ contract FundFactoryInvest is ReentrancyGuard {
             weth,
             p.mandateHash,
             p.assets,
-            swapFacet
+            swapFacet,
+            uint64(block.timestamp + p.raiseDuration)
         );
         FundNFTInvest nft = new FundNFTInvest(
             FundNFTInvest.Init({
@@ -198,6 +205,8 @@ contract FundFactoryInvest is ReentrancyGuard {
             address asset = assets[i];
             if (asset == address(0) || asset == weth || asset == address(allowlist)) revert InvalidParams();
             if (!allowlist.assetAllowed(asset)) revert InvalidParams();
+            (address feed,,,) = allowlist.feedOf(asset);
+            if (feed == address(0)) revert InvalidParams();
             for (uint256 j; j < i; ++j) {
                 if (assets[j] == asset) revert InvalidParams();
             }

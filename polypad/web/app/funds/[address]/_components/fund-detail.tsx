@@ -150,7 +150,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
 
       <p className="max-w-2xl text-[13px] leading-relaxed text-white/60">
         Each NFT is one equal unit. {fund.invest
-          ? 'Swaps stay in the vault and use the allowlist. The NAV figure is not a market price.'
+          ? 'Swaps stay in the vault and use the allowlist. NAV uses the feed and is blank when that feed cannot be used.'
           : 'It is the ownership claim on the ETH held in the vault. This page covers the raise and the mint.'}
       </p>
 

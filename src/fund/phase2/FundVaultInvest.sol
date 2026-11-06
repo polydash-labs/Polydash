@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IFundAllowlist, IFundUnit} from "./Interfaces.sol";
 import {NAVReader} from "./NAVReader.sol";
@@ -10,14 +11,15 @@ import {FundVaultStore} from "./FundVaultStore.sol";
 
 /// @title FundVaultInvest (not reviewed, not deployed)
 /// @notice Raise vault plus an investing step. Phase 1a `FundVault` is unchanged and stays raise-only.
-///         Status moves Raising → RaisingClosed → Investing. Principal has no withdraw function.
-///         After Investing, the manager or an executor can swap through an allowlisted router.
-///         The swap body lives in `FundSwapFacet` and runs by delegatecall, so the funds stay here.
-///         One side of a swap is ETH or WETH. The other side is in this fund's mandate and on the global allowlist.
-///         ETH ↔ WETH is a direct wrap, with no router. Proceeds are measured on this contract.
-///         `nav()` is ETH plus WETH plus the quote spent on other allowlisted assets. It is not a market price.
-///         There is no price feed. Holdings outside ETH and WETH stay at the quote that was spent.
+///         Status moves Raising → RaisingClosed → Investing, or Raising → Failed after the deadline.
+///         There is no function that sends principal to the manager.
+///         A failed raise refunds the current holder their share of spendable ETH. Fees stay separate.
+///         After a successful close, a holder can exit for ETH, WETH, and mandate tokens, including dust on the last units.
+///         `nav()` quotes mandate assets from the allowlist feed and reverts when that price cannot be used.
+///         Cost basis is not NAV.
 contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
+    using SafeERC20 for IERC20;
+
     address public immutable swapFacet;
 
     modifier onlyNft() {
@@ -35,13 +37,14 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         address _weth,
         bytes32 _mandateHash,
         address[] memory assets,
-        address _swapFacet
+        address _swapFacet,
+        uint64 _raiseDeadline
     ) {
         if (_manager == address(0) || _allowlist == address(0) || _weth == address(0) || _swapFacet == address(0)) {
             revert ZeroAddress();
         }
         if (_swapFacet.code.length == 0) revert BadRouter();
-        if (_mandateHash == bytes32(0)) revert BadValue();
+        if (_mandateHash == bytes32(0) || _raiseDeadline <= block.timestamp) revert BadValue();
         if (assets.length > MAX_ASSETS) revert TooMany();
         if (!IFundAllowlist(_allowlist).assetAllowed(_weth)) revert NotAllowlisted();
 
@@ -57,6 +60,7 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         mandateHash = _mandateHash;
         universeHash = keccak256(abi.encode(assets));
         payoutWallet = _manager;
+        raiseDeadline = _raiseDeadline;
         status = Status.Raising;
 
         for (uint256 i; i < assets.length; ++i) {
@@ -96,10 +100,35 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
 
     function closeIfReady(uint256 minted) external onlyNft {
         if (status != Status.Raising) return;
+        if (block.timestamp > raiseDeadline) return;
         if (raised >= raiseCap || minted >= maxSupply) {
             status = Status.RaisingClosed;
             emit RaiseClosed(raised, minted);
         }
+    }
+
+    /// @notice Anyone may close a raise that missed its deadline and did not fill.
+    function failRaise() external {
+        if (status != Status.Raising) revert NotRaising();
+        if (block.timestamp <= raiseDeadline) revert TooEarly();
+        status = Status.Failed;
+        emit RaiseFailed(raised, nft == address(0) ? 0 : IFundUnit(nft).totalMinted());
+    }
+
+    /// @notice Pay the current holder their share of a failed raise. Called by the NFT after it burns.
+    ///         Unclaimed entry and protocol fees are not part of the payout.
+    function settleRefund(address to, uint256 n, uint256 supplyBefore) external nonReentrant onlyNft {
+        if (status != Status.Failed) revert NotFailed();
+        uint256 ethOut = _settle(to, n, supplyBefore);
+        emit Refunded(to, n, ethOut);
+    }
+
+    /// @notice Pay the current holder their share of vault inventory. Pause does not block this.
+    ///         The last outstanding units receive the rounding dust. A short token transfer reverts.
+    function settleExit(address to, uint256 n, uint256 supplyBefore) external nonReentrant onlyNft {
+        if (status != Status.RaisingClosed && status != Status.Investing) revert NotExitable();
+        uint256 ethOut = _settle(to, n, supplyBefore);
+        emit Exited(to, n, ethOut);
     }
 
     /// @notice RaisingClosed → Investing. The manager share must already be minted. Cannot reopen the raise.
@@ -181,14 +210,15 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         return trades[index];
     }
 
-    /// @notice ETH balance + WETH balance + quote spent on mandate assets. Not a market price.
+    /// @notice ETH + WETH at face value, plus mandate balances at the feed. Reverts on a bad price.
+    ///         This includes unclaimed fees, because that ETH is still in the contract. It is not cost basis.
     function nav() public view returns (uint256) {
-        return NAVReader.total(address(this).balance, IERC20(weth).balanceOf(address(this)), totalCostBasis);
+        return NAVReader.total(address(this).balance, IERC20(weth).balanceOf(address(this)), _mandateAssets, allowlist);
     }
 
     function navPerNft() public view returns (uint256) {
-        uint256 minted = nft == address(0) ? 0 : IFundUnit(nft).totalMinted();
-        return NAVReader.perNft(nav(), minted);
+        uint256 live = nft == address(0) ? 0 : IFundUnit(nft).outstanding();
+        return NAVReader.perNft(nav(), live);
     }
 
     /// @notice Custody, allowlist, skin, published source, and allowlist timelock. High-water mark is unset.
@@ -234,6 +264,48 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         (bool ok, bytes memory data) = factory.staticcall(abi.encodeWithSignature("feeRecipient()"));
         if (!ok || data.length < 32) return address(0);
         return abi.decode(data, (address));
+    }
+
+    function _settle(address to, uint256 n, uint256 supplyBefore) internal returns (uint256 ethOut) {
+        if (to == address(0) || n == 0 || supplyBefore == 0 || n > supplyBefore) revert BadAmount();
+        if (IFundUnit(nft).outstanding() + n != supplyBefore) revert BadAmount();
+        ethOut = _share(spendableEth(), n, supplyBefore);
+        _payEth(to, ethOut);
+        _payToken(weth, to, n, supplyBefore);
+        uint256 assets = _mandateAssets.length;
+        for (uint256 i; i < assets; ++i) {
+            _payToken(_mandateAssets[i], to, n, supplyBefore);
+        }
+        if (principal > ethOut) principal -= ethOut;
+        else principal = 0;
+    }
+
+    function _share(uint256 pool, uint256 n, uint256 supplyBefore) internal pure returns (uint256) {
+        if (pool == 0) return 0;
+        if (n == supplyBefore) return pool;
+        return (pool * n) / supplyBefore;
+    }
+
+    function _payEth(address to, uint256 amount) internal {
+        if (amount == 0) return;
+        if (address(this).balance < amount + claimableFees()) revert FeesShort();
+        _send(to, amount);
+    }
+
+    function _payToken(address token, address to, uint256 n, uint256 supplyBefore) internal {
+        uint256 bal = IERC20(token).balanceOf(address(this));
+        if (bal == 0) return;
+        uint256 out = _share(bal, n, supplyBefore);
+        if (out == 0) return;
+        uint256 holderBefore = IERC20(token).balanceOf(to);
+        IERC20(token).safeTransfer(to, out);
+        if (IERC20(token).balanceOf(address(this)) != bal - out) revert TransferFailed();
+        if (IERC20(token).balanceOf(to) - holderBefore != out) revert TransferFailed();
+        uint256 basis = costBasis[token];
+        if (basis == 0) return;
+        uint256 removed = out == bal ? basis : (basis * out) / bal;
+        costBasis[token] = basis - removed;
+        totalCostBasis -= removed;
     }
 
     function _send(address to, uint256 amount) internal {

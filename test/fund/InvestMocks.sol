@@ -5,6 +5,31 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 
+/// @dev `priceX18` is ETH wei per 1e18 raw token units. Unpinned reads use the current timestamp.
+contract MockFeed {
+    uint256 public priceX18 = 1e18;
+    uint64 public updatedAt;
+    bool public pin;
+
+    constructor() {
+        updatedAt = uint64(block.timestamp);
+    }
+
+    function setPrice(uint256 next) external {
+        priceX18 = next;
+        if (!pin) updatedAt = uint64(block.timestamp);
+    }
+
+    function pinAt(uint64 stamp) external {
+        pin = true;
+        updatedAt = stamp;
+    }
+
+    function latestPrice(address) external view returns (uint256, uint64) {
+        return (priceX18, pin ? updatedAt : uint64(block.timestamp));
+    }
+}
+
 contract MockWETH is ERC20 {
     constructor() ERC20("Wrapped Ether", "WETH") {}
 

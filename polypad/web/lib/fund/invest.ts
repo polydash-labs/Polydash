@@ -47,6 +47,8 @@ export type FundInvestView = {
   allowlist: `0x${string}`;
   nav: bigint;
   navPerNft: bigint;
+  /** False when the vault read reverted. A zero figure is not a price in that case. */
+  navKnown: boolean;
   spendableEth: bigint;
   claimableFees: bigint;
   swapsPaused: boolean;

@@ -24,7 +24,8 @@ abstract contract FundVaultStore {
     enum Status {
         Raising,
         RaisingClosed,
-        Investing
+        Investing,
+        Failed
     }
 
     struct TradeRecord {
@@ -64,6 +65,7 @@ abstract contract FundVaultStore {
     uint256 public executorCount;
     uint64 public investBlock;
     uint64 public investTimestamp;
+    uint64 public raiseDeadline;
 
     mapping(address => uint256) public costBasis;
     mapping(address => bool) public inMandate;
@@ -74,6 +76,9 @@ abstract contract FundVaultStore {
     event Bound(address indexed nft);
     event Deposited(uint256 gross, uint256 principalAdded, uint256 entryFee, uint256 protocolFee);
     event RaiseClosed(uint256 raised, uint256 minted);
+    event RaiseFailed(uint256 raised, uint256 minted);
+    event Refunded(address indexed holder, uint256 count, uint256 ethOut);
+    event Exited(address indexed holder, uint256 count, uint256 ethOut);
     event EntryFeeWithdrawn(address indexed to, uint256 amount);
     event ProtocolFeeWithdrawn(address indexed to, uint256 amount);
     event PayoutWalletSet(address indexed wallet);
@@ -89,6 +94,10 @@ abstract contract FundVaultStore {
     error NotRaising();
     error NotClosed();
     error NotInvesting();
+    error NotFailed();
+    error NotExitable();
+    error RaiseEnded();
+    error TooEarly();
     error AlreadyBound();
     error BadValue();
     error NothingToWithdraw();

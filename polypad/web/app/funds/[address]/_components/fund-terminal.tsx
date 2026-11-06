@@ -46,11 +46,13 @@ export function FundTerminal({
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
           <p className="text-[12px] text-white/45">NAV per NFT</p>
-          <p className="mt-1 font-mono text-[22px] text-white">{totalMinted === 0n ? '—' : `${formatFundEth(perNft)} ETH`}</p>
+          <p className="mt-1 font-mono text-[22px] text-white">
+            {invest && !invest.navKnown ? 'Unavailable' : totalMinted === 0n ? '—' : `${formatFundEth(perNft)} ETH`}
+          </p>
           <p className="mt-2 text-[12px] leading-relaxed text-white/50">
             {invest
-              ? 'ETH in the vault, plus WETH, plus the ETH spent on other holdings. Not a market price.'
-              : 'Vault ETH divided by NFTs minted. Not a market price.'}
+              ? 'ETH and WETH at face value, plus other holdings at the feed. A missing or unusable feed leaves this blank. Cost basis is not this figure.'
+              : 'Vault ETH divided by NFTs minted. Phase 1 does not price other assets.'}
           </p>
           <NavTape points={points} />
           {status === 'investing' && invest && invest.trades.length > 0 && (
@@ -85,18 +87,18 @@ export function FundTerminal({
         <h3 className="text-[13px] font-semibold">Holdings</h3>
         <ul className="mt-3 divide-y divide-white/5">
           {holdings.map((row) => {
-            const weight = row.kind === 'asset' ? ratioPercent(row.cost, nav) : ratioPercent(row.balance, nav);
+            const weight = row.kind === 'asset' || !invest?.navKnown ? null : ratioPercent(row.balance, nav);
             return (
               <li key={`${row.kind}-${row.asset}`} className="flex items-center justify-between gap-3 py-2 text-[13px]">
                 <div>
                   <p className="text-white">{row.symbol}</p>
                   <p className="text-[11px] text-white/40">
-                    {row.kind === 'asset' ? `At cost ${formatFundEth(row.cost)} ETH` : row.kind === 'eth' && invest && invest.claimableFees > 0n ? `Includes ${formatFundEth(invest.claimableFees)} ETH of unclaimed fees` : 'Quote balance'}
+                    {row.kind === 'asset' ? `Cost basis ${formatFundEth(row.cost)} ETH. Not a NAV weight.` : row.kind === 'eth' && invest && invest.claimableFees > 0n ? `Includes ${formatFundEth(invest.claimableFees)} ETH of unclaimed fees` : 'Quote balance'}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-mono text-white/80">{formatToken(row.balance, row.decimals)}</p>
-                  <p className="text-[11px] text-white/35">{nav === 0n ? '—' : `${weight.toFixed(weight >= 10 ? 1 : 2)}% of NAV`}</p>
+                  <p className="text-[11px] text-white/35">{weight === null || nav === 0n ? '—' : `${weight.toFixed(weight >= 10 ? 1 : 2)}% of NAV`}</p>
                 </div>
               </li>
             );

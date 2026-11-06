@@ -11,7 +11,7 @@ import {FundNFTInvest} from "../../src/fund/phase2/FundNFTInvest.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 import {FundVaultStore} from "../../src/fund/phase2/FundVaultStore.sol";
 import {MockERC20} from "../mocks/MockERC20.sol";
-import {RateRouter} from "../fund/InvestMocks.sol";
+import {MockFeed, RateRouter} from "../fund/InvestMocks.sol";
 
 /// @notice Fork coverage for the Phase 2 invest path. Nothing is broadcast.
 ///         The live Phase 1a factory is read and then checked again so this test cannot rewrite it.
@@ -53,9 +53,19 @@ contract FundInvestForkTest is Test {
 
         address[] memory routers = new address[](1);
         routers[0] = address(router);
-        address[] memory seeded = new address[](2);
-        seeded[0] = realWeth;
-        seeded[1] = address(alpha);
+        MockFeed feed = new MockFeed();
+        FundAllowlist.AssetInit[] memory seeded = new FundAllowlist.AssetInit[](2);
+        seeded[0] = FundAllowlist.AssetInit({
+            asset: realWeth, quote: true, feed: address(0), maxStale: 0, minPriceX18: 0, maxPriceX18: 0
+        });
+        seeded[1] = FundAllowlist.AssetInit({
+            asset: address(alpha),
+            quote: false,
+            feed: address(feed),
+            maxStale: 1 hours,
+            minPriceX18: 0.5 ether,
+            maxPriceX18: 1.5 ether
+        });
         FundAllowlist allowlist = new FundAllowlist(address(this), 1 days, routers, seeded);
         FundFactoryInvest factory =
             new FundFactoryInvest(FEE_RECIPIENT, address(allowlist), realWeth, address(new FundSwapFacet()));
@@ -76,6 +86,7 @@ contract FundInvestForkTest is Test {
                     raiseCap: 0.1 ether,
                     entryFeeBps: 0,
                     minSkinBps: 10_000,
+                    raiseDuration: 1 hours,
                     mandateHash: keccak256("fork-mandate"),
                     assets: universe
                 })

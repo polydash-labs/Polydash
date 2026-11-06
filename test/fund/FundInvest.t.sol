@@ -14,7 +14,7 @@ import {FundNFTInvest} from "../../src/fund/phase2/FundNFTInvest.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 import {FundVaultStore} from "../../src/fund/phase2/FundVaultStore.sol";
 import {MockERC20} from "../mocks/MockERC20.sol";
-import {FailRouter, MockWETH, RateRouter, ReenterRouter, ThiefRouter} from "./InvestMocks.sol";
+import {FailRouter, MockFeed, MockWETH, RateRouter, ReenterRouter, ThiefRouter} from "./InvestMocks.sol";
 
 contract InvestMinter is IERC721Receiver {
     function mint(FundNFTInvest nft, uint256 qty) external {
@@ -51,10 +51,11 @@ contract FundInvestTest is Test {
 
         address[] memory routers = new address[](1);
         routers[0] = address(router);
-        address[] memory assets = new address[](3);
-        assets[0] = address(weth);
-        assets[1] = address(alpha);
-        assets[2] = address(beta);
+        MockFeed feed = new MockFeed();
+        FundAllowlist.AssetInit[] memory assets = new FundAllowlist.AssetInit[](3);
+        assets[0] = _quote(address(weth));
+        assets[1] = _priced(address(alpha), feed);
+        assets[2] = _priced(address(beta), feed);
         allowlist = new FundAllowlist(address(this), 2 days, routers, assets);
         factory = new FundFactoryInvest(feeTo, address(allowlist), address(weth), address(new FundSwapFacet()));
 
@@ -80,6 +81,7 @@ contract FundInvestTest is Test {
         p.raiseCap = 2 ether;
         p.entryFeeBps = 0;
         p.minSkinBps = 10_000;
+        p.raiseDuration = 7 days;
         p.mandateHash = mandate;
         p.assets = _assets();
     }
@@ -593,6 +595,19 @@ contract FundInvestTest is Test {
         vm.expectRevert(FundNFTInvest.NotRaising.selector);
         vm.prank(alice);
         nft.mint{value: price}(1);
+    }
+
+    function _quote(address asset) internal pure returns (FundAllowlist.AssetInit memory item) {
+        item.asset = asset;
+        item.quote = true;
+    }
+
+    function _priced(address asset, MockFeed feed) internal pure returns (FundAllowlist.AssetInit memory item) {
+        item.asset = asset;
+        item.feed = address(feed);
+        item.maxStale = 1 hours;
+        item.minPriceX18 = 0.5 ether;
+        item.maxPriceX18 = 1.5 ether;
     }
 
     function _allowRouter(address next) internal {

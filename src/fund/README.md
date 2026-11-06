@@ -43,11 +43,13 @@ A carry NFT, token-bound accounts, a floor bid, a secondary market, redeeming un
 
 `FundFactoryInvest`, `FundVaultInvest`, `FundNFTInvest`, `FundSwapFacet`, `FundAllowlist`, and `NAVReader` are unaudited. The swap body is in `FundSwapFacet`. Each vault delegatecalls it, so the factory does not carry a copy of that code. A direct call to the facet reverts. An outside review is planned. Not financial advice. Do not broadcast them until that deploy is intentional. `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It does not call the live factory. There is no proxy and no upgrade of a Phase 1a vault. A Phase 1a fund stays raise-only.
 
-The raise and the mint match Phase 1a, including the manager skin gate. After the raise is `RaisingClosed`, the manager can call `enableInvesting`. Status becomes `Investing`. Minting stays closed. There is still no function that sends principal to a wallet.
+The raise and the mint match Phase 1a, including the manager skin gate, plus a raise deadline of 1 hour to 30 days. Filling the supply or the cap at or before the deadline sets `RaisingClosed`. After the deadline, anyone can call `failRaise` if it is still `Raising`. That sets `Failed`. Minting stops. The manager cannot open investing. The current holder of each NFT calls `refund` and receives a pro-rata share of spendable ETH. Unclaimed entry and protocol fees are not part of that payment and can still be pulled. A transferred NFT pays the current holder. The last outstanding units receive the rounding dust.
+
+After `RaisingClosed` or `Investing`, the current holder calls `exit` and receives a pro-rata share of spendable ETH, WETH, and mandate tokens. The last outstanding units receive the dust. Pause does not block `exit` or `refund`. A token transfer that delivers less than the vault sent reverts the whole call, so the NFT is not burned. There is still no function that sends principal to the manager.
 
 The mandate hash is stored at create. The asset list stored with it is the per-fund universe. It must already be on the global allowlist, and it cannot include WETH. WETH is the wrapped quote. ETH is the native quote. A swap is quote against one mandate asset, through an allowlisted router, or a direct ETH ↔ WETH wrap with no router. The vault measures its own balances. `minAmountOut` has to be greater than zero. The router address has code. Proceeds that do not arrive at the vault revert the transaction.
 
-`nav()` is the vault's ETH, plus its WETH, plus the quote spent to buy other holdings. `navPerNft()` divides that by the number of NFTs minted. Integer division leaves a remainder. It is not a market price. There is no external price feed. A sale moves NAV by the quote received minus the cost removed.
+`nav()` is the vault's ETH, plus its WETH at the same face value, plus each mandate asset at its allowlist feed. `navPerNft()` divides that by the outstanding NFTs. Integer division leaves a remainder. A missing feed, a feed that reverts, a stale timestamp, a zero price, or a price outside the configured bounds makes `nav()` revert. Cost basis is still stored for the blotter and is not this number. This repository does not record a production price feed for Robinhood Chain. The deploy script does not set one. A non-quote asset stays disabled until a reviewed feed is passed to `proposeAsset`.
 
 `Trade(asset, side, size, price, navAfter)` is the blotter event. The vault also keeps the latest 32 trades for readers that do not scan logs. `side` is 0 for a buy or a wrap, and 1 for a sell or an unwrap. `price` is quote wei per 1e18 raw token units.
 
@@ -55,7 +57,7 @@ The allowlist's constructor set is active immediately. Later additions and remov
 
 `protectionBits()` reports custody, the allowlist, skin once the manager share is minted, published source, and the allowlist timelock. The high-water mark bit is unset. The source bit means this code is in the repository. It is not a review.
 
-The deploy script's initial allowlist is WETH only. Routers and other assets are added afterwards with `propose`, then `execute` after the delay. `FUND_INVEST_WETH` is required and has no default. One reference for that address is `weth()` on `PolydashBuybackVault` `0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193`. The signer sets `FEE_RECIPIENT` or `FUND_INVEST_FEE_RECIPIENT`, and `PRIVATE_KEY` unless `DEPLOY_FUND_INVEST_PK` is set for a test. Leave `DEPLOY_FUND_INVEST_PK` unset for a broadcast. Do not commit a key.
+The deploy script's initial allowlist is WETH as the quote and nothing else. Routers are added with `propose`. Other assets are added with `proposeAsset` and a feed, then `execute` after the delay. `FUND_INVEST_WETH` is required and has no default. One reference for that address is `weth()` on `PolydashBuybackVault` `0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193`. The signer sets `FEE_RECIPIENT` or `FUND_INVEST_FEE_RECIPIENT`, and `PRIVATE_KEY` unless `DEPLOY_FUND_INVEST_PK` is set for a test. Leave `DEPLOY_FUND_INVEST_PK` unset for a broadcast. Do not commit a key. Do not put a guessed feed address in the script.
 
 ```bash
 export ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com
@@ -67,7 +69,7 @@ export PRIVATE_KEY=0xYOUR_DEPLOYER_PRIVATE_KEY_HERE
 forge script script/DeployFundFactoryInvest.s.sol --rpc-url robinhood --broadcast
 ```
 
-That command is for the later deploy. It was not run for this change. After a deploy, record the allowlist and factory addresses, verify them, and set `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` for the site. Until that variable is a real address, the fund pages keep reading the Phase 1a factory only.
+That command is not a broadcast from this change. The site fund routes stay off unless the server variable `FUND_ROUTES_ENABLED` is exactly `enabled`. Do not set that for a public resync. `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stays unset. The header and footer do not link to `/funds`.
 
 ## Tests
 
