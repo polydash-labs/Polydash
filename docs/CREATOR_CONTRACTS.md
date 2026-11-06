@@ -15,8 +15,8 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | [`src/treasury`](../src/treasury) | `TreasuryRulesFactory`, `TreasuryRules` | Per-token treasury with on-chain rules and a timelock for operator-run tasks | 30 |
 | [`src/floorvault`](../src/floorvault) | `PolypadTokenFloorFactory`, `PolypadTokenFloorCollection` | Fixed-price NFT collections whose mint share funds an ETH + launch-token vault redeemable pro rata by burning | 115 |
 | [`src/buyback`](../src/buyback) | `PolydashBuybackVault`, `PolydashRewardsPool` | Capped on-chain POLYDASH buys from the fee share: 62.5% burned, 37.5% streamed to stakers | 70 |
-| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT` | Phase 1a fund raise: fixed ETH mint price, ERC-721 units, vault holds the ETH. Factory is deployed; vaults and NFTs are created per fund | 16 |
-| [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 10 |
+| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT`, plus Phase 2 `FundAllowlist`, `FundFactoryInvest`, `FundVaultInvest`, `FundSwapFacet`, `FundNFTInvest`, `NAVReader` | Phase 1a raise is deployed. Phase 2 adds allowlisted swaps and NAV after the raise closes. Phase 2 is not deployed | 35 |
+| [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 11 |
 
 ## Deployed addresses (Robinhood Chain, chain ID 4663)
 
@@ -48,7 +48,7 @@ Routing fees to a project treasury is handled by the Polypad site and has no ded
 
 ## Source provenance
 
-The deployed `.sol` files in these modules, including `src/fund`, are the source verified on Sourcify. They are not reformatted (`forge fmt` ignores `src/`) and their NatSpec headers are left as they were at deployment, including the "DRAFT - not reviewed, not deployed" titles, because any change would alter the metadata hash. `FundFactory` is a Sourcify exact match. Blockscout's API verification for that address was blocked by Cloudflare. Compiling inside this repository yields the same runtime code; only the trailing CBOR metadata hash differs, because Foundry records this repository's auto-detected remappings in the metadata. Use the standard-JSON input on Sourcify to reproduce an exact match.
+The deployed `.sol` files in these modules, including `src/fund/FundFactory.sol`, `src/fund/FundVault.sol`, and `src/fund/FundNFT.sol`, are the source verified on Sourcify. `src/fund/phase2` is later source and is not part of that deployment. They are not reformatted (`forge fmt` ignores `src/`) and their NatSpec headers are left as they were at deployment, including the "DRAFT - not reviewed, not deployed" titles, because any change would alter the metadata hash. `FundFactory` is a Sourcify exact match. Blockscout's API verification for that address was blocked by Cloudflare. Compiling inside this repository yields the same runtime code; only the trailing CBOR metadata hash differs, because Foundry records this repository's auto-detected remappings in the metadata. Use the standard-JSON input on Sourcify to reproduce an exact match.
 
 ## Build and test
 

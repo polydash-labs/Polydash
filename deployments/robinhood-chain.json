@@ -293,7 +293,7 @@
       "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
       "verification": "exact match",
       "source": "src/fund/",
-      "notes": "Phase 1a raise/mint only; unaudited. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Blockscout API verification was blocked by Cloudflare; Sourcify is the verification of record.",
+      "notes": "Phase 1a raise/mint only; unaudited. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Blockscout API verification was blocked by Cloudflare; Sourcify is the verification of record. Phase 2 contracts in src/fund/phase2 are not deployed and have no address here.",
       "documentedIn": ["README.md", "docs/DEPLOYMENTS.md", "docs/CREATOR_CONTRACTS.md", "src/fund/README.md"]
     }
   ],

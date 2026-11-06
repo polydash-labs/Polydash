@@ -129,6 +129,8 @@ test('status follows the vault and the manager gate', () => {
   assert.equal(fundStatus(0, true), 'open');
   assert.equal(fundStatus(1, true), 'closed');
   assert.equal(fundStatus(1, false), 'closed');
+  assert.equal(fundStatus(2, true), 'investing');
+  assert.equal(fundStatus(2, false), 'investing');
 });
 
 test('list filters and sorts do not change the source order in place', () => {

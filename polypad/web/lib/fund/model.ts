@@ -12,15 +12,16 @@ export const MAX_NAME_BYTES = 64;
 export const MAX_SYMBOL_BYTES = 16;
 export const MAX_URI_BYTES = 512;
 
-export type FundStatus = 'waiting' | 'open' | 'closed';
+export type FundStatus = 'waiting' | 'open' | 'closed' | 'investing';
 
 export const FUND_STATUS_LABEL: Record<FundStatus, string> = {
   waiting: 'Waiting on manager',
   open: 'Open for minting',
   closed: 'Closed',
+  investing: 'Investing',
 };
 
-export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'mine';
+export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'investing' | 'mine';
 export type FundSort = 'newest' | 'raised';
 
 export type FundDraft = {
@@ -88,6 +89,7 @@ export function utf8Size(value: string): number {
 }
 
 export function fundStatus(vaultStatus: number, publicOpen: boolean): FundStatus {
+  if (vaultStatus === 2) return 'investing';
   if (vaultStatus !== 0) return 'closed';
   if (!publicOpen) return 'waiting';
   return 'open';
@@ -252,6 +254,12 @@ export function fundTxError(message: string): string {
   if (m.includes('skinrequired')) return 'The manager has to mint their share before anyone else can.';
   if (m.includes('soldout')) return 'Not enough NFTs are left at that quantity.';
   if (m.includes('notraising')) return 'This raise is closed.';
+  if (m.includes('notallowlisted') || m.includes('notinmandate')) return 'That asset or router is not on the allowlist.';
+  if (m.includes('slippage')) return 'The vault would receive less than the minimum you set.';
+  if (m.includes('notinvesting')) return 'Investing is not open on this fund.';
+  if (m.includes('notauthorized')) return 'Only the manager or an authorized wallet can do that.';
+  if (m.includes('notclosed')) return 'The raise is still open.';
+  if (m.includes('paused')) return 'Swaps are paused.';
   if (m.includes('badvalue')) return 'The ETH amount does not match the mint price.';
   if (m.includes('badquantity')) return 'Enter at least 1 NFT.';
   if (m.includes('invalidparams')) return 'Those settings are outside the allowed limits.';
@@ -267,6 +275,7 @@ export type FundListItem = {
   manager: string;
   status: FundStatus;
   raised: bigint;
+  generation?: number;
 };
 
 export function filterFunds<T extends FundListItem>(
@@ -280,6 +289,7 @@ export function filterFunds<T extends FundListItem>(
     if (filter === 'open' && item.status !== 'open') return false;
     if (filter === 'waiting' && item.status !== 'waiting') return false;
     if (filter === 'closed' && item.status !== 'closed') return false;
+    if (filter === 'investing' && item.status !== 'investing') return false;
     if (filter === 'mine') {
       if (!account) return false;
       if (item.manager.toLowerCase() !== account.toLowerCase()) return false;
@@ -299,7 +309,11 @@ export function sortFunds<T extends FundListItem>(items: T[], sort: FundSort): T
     copy.sort((a, b) => (a.raised === b.raised ? b.index - a.index : a.raised > b.raised ? -1 : 1));
     return copy;
   }
-  copy.sort((a, b) => b.index - a.index);
+  copy.sort((a, b) => {
+    const generation = (b.generation ?? 1) - (a.generation ?? 1);
+    if (generation !== 0) return generation;
+    return b.index - a.index;
+  });
   return copy;
 }
 

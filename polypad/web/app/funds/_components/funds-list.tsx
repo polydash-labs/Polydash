@@ -25,6 +25,7 @@ const FILTERS: { key: FundFilter; label: string }[] = [
   { key: 'open', label: 'Open' },
   { key: 'waiting', label: 'Waiting on manager' },
   { key: 'closed', label: 'Closed' },
+  { key: 'investing', label: 'Investing' },
   { key: 'mine', label: 'My funds' },
 ];
 
@@ -177,7 +178,9 @@ function StatusPill({ status }: { status: FundSummary['status'] }) {
     ? 'bg-polydash-green/15 text-polydash-green'
     : status === 'waiting'
       ? 'bg-yellow-400/10 text-yellow-200'
-      : 'bg-white/10 text-white/60';
+      : status === 'investing'
+        ? 'bg-sky-400/10 text-sky-100'
+        : 'bg-white/10 text-white/60';
   return (
     <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide', tone)}>
       {FUND_STATUS_LABEL[status]}

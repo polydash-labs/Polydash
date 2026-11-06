@@ -14,3 +14,16 @@ export function getFundFactoryAddress(): `0x${string}` {
   if (!raw || raw === ZERO) return FUND_FACTORY_ADDRESS;
   return raw as `0x${string}`;
 }
+
+/**
+ * Phase 2 factory. Not deployed. An empty value, the zero address, or the
+ * Phase 1 factory address keeps the fund pages on the raise factory only.
+ */
+export function getFundInvestFactoryAddress(): `0x${string}` | null {
+  const raw = process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS?.trim();
+  if (!raw || raw.toLowerCase() === ZERO) return null;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(raw)) return null;
+  if (raw.toLowerCase() === FUND_FACTORY_ADDRESS.toLowerCase()) return null;
+  if (raw.toLowerCase() === getFundFactoryAddress().toLowerCase()) return null;
+  return raw as `0x${string}`;
+}
