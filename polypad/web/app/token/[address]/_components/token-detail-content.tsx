@@ -13,6 +13,8 @@ import { getExplorerAddressUrl, getExplorerTxUrl } from '@/lib/contracts/address
 import { MarketCapChart, GraduatedChartPanel, dexScreenerUrl } from './bonding-curve-chart';
 import { TradePanel } from './trade-panel';
 import { cn } from '@/lib/utils';
+import { partitionLaunchLinks } from '@/lib/agent-mark';
+import { AgentLaunchedBadge } from '@/components/agent-launched-badge';
 
 const card = 'rounded-2xl border border-white/10 bg-white/[0.03]';
 
@@ -51,6 +53,7 @@ export function TokenDetailContent({ address }: { address: string }) {
   const isPre = token.phase === PHASE.Pending || token.phase === PHASE.Processing;
   const phaseLabel = graduated ? 'Graduated' : token.phase === PHASE.Pending ? 'Commitments open' : token.phase === PHASE.Processing ? 'Processing' : 'Bonding curve';
   const pct = Math.min(100, Math.max(0, token.curveProgress ?? 0));
+  const links = partitionLaunchLinks(token.socialLinks);
 
   return (
     <div className="mx-auto max-w-container space-y-4 px-4 py-5 sm:space-y-5 sm:px-8 sm:py-8">
@@ -75,6 +78,7 @@ export function TokenDetailContent({ address }: { address: string }) {
                 {!graduated && <span className={cn('h-1.5 w-1.5 rounded-full', isPre ? 'bg-yellow-300' : 'bg-polydash-green animate-pulse')} />}
                 {phaseLabel}
               </span>
+              {links.agentLaunched && <AgentLaunchedBadge />}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-white/45">
               <button onClick={handleCopy} className="inline-flex items-center gap-1 font-mono transition-colors hover:text-white">
@@ -89,8 +93,13 @@ export function TokenDetailContent({ address }: { address: string }) {
                   DexScreener <ArrowUpRight className="h-3 w-3" />
                 </a>
               )}
-              {token.socialLinks?.map?.((link: string, i: number) => (
-                <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 transition-colors hover:text-white">
+              {links.buildUrl && (
+                <a href={links.buildUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 transition-colors hover:text-white">
+                  Build <ArrowUpRight className="h-3 w-3" />
+                </a>
+              )}
+              {links.links.map((link) => (
+                <a key={link} href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 transition-colors hover:text-white">
                   {hostOf(link)} <ArrowUpRight className="h-3 w-3" />
                 </a>
               ))}

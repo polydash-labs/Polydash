@@ -98,6 +98,22 @@ jobs:
       - name: Test
         run: pytest -q
 
+  web:
+    name: Polypad web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test
+        working-directory: polypad/web
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn install --immutable
+          yarn test
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest

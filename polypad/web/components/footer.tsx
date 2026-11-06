@@ -30,6 +30,7 @@ export function Footer() {
                 <li><a href="https://dasheco.xyz/" target="_blank" rel="noopener noreferrer" className="text-sm text-black/50 transition-colors hover:text-black">Polydash ecosystem</a></li>
                 <li><Link href="/portfolio" className="text-sm text-black/50 transition-colors hover:text-black">Portfolio</Link></li>
                 <li><Link href="/about" className="text-sm text-black/50 transition-colors hover:text-black">About</Link></li>
+                <li><Link href="/docs" className="text-sm text-black/50 transition-colors hover:text-black">Docs</Link></li>
               </ul>
             </div>
           </div>

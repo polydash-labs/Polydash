@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/polydash-labs/Polydash/actions/workflows/ci.yml"><img src="https://github.com/polydash-labs/Polydash/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://heyresearch.xyz"><img src="https://heyresearch.xyz/api/badge/polydashdev-polydash" alt="HEY Research"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT"></a>
   <img src="https://img.shields.io/badge/Solidity-0.8.24%20%2F%200.8.26-363636.svg" alt="Solidity">
   <a href="https://getfoundry.sh"><img src="https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg" alt="Foundry"></a>
@@ -17,6 +18,7 @@
 
 <p align="center">
   <a href="https://polypad.family">Polypad</a> ·
+  <a href="docs/README.md">Docs</a> ·
   <a href="https://dasheco.xyz">Website</a> ·
   <a href="https://x.com/Polydash_">X @Polydash_</a> ·
   <a href="https://t.me/polydashofficial">Telegram</a> ·
@@ -94,6 +96,8 @@ Staking v1 behaviour, roles, and fees are written up in [docs/ARCHITECTURE.md](d
 | Buybacks | Capped POLYDASH buys from a fee share: 62.5% burned, 37.5% to stakers. | [`src/buyback/`](src/buyback) |
 | Poly Agent | Read-only staking monitor: pool sizes, reward rates, inflows and outflows. | [`agents/poly-agent/`](agents/poly-agent) |
 | PolyCTO | Read-only multi-role agent for a launch: community, marketing drafts, token stats, and a heuristic source scan. The scan is not a review. | [`agents/polycto/`](agents/polycto) |
+| Agent launch API | Validates `createLaunch` parameters, simulates the call with `eth_call`, and returns an unsigned transaction. Non-custodial. | [`polypad/web/app/api/agents/v1`](polypad/web/app/api/agents/v1) · [`docs/AGENTS_API.md`](docs/AGENTS_API.md) |
+| Polypad MCP | Tools an external agent can call to validate or prepare a launch. | [`agents/polypad-mcp`](agents/polypad-mcp) |
 
 Reward rates reported by Poly Agent are token-denominated snapshots. They are not a promised return.
 
@@ -110,8 +114,9 @@ Deployed `.sol` sources under `src/` and `polypad/contracts/src/` match the veri
 ├── polypad/              # Launchpad sources, ABIs, deployments, web app
 ├── agents/poly-agent/    # Poly Agent
 ├── agents/polycto/       # PolyCTO
+├── agents/polypad-mcp/   # MCP tools for the agent launch API
 ├── deployments/          # Robinhood Chain address manifest
-├── docs/                 # Architecture, creator contracts, launch notes
+├── docs/                 # Public docs index, launch flow, agent API, risk
 ├── assets/               # Logo and banner
 ├── lib/                  # openzeppelin-contracts v5.0.2, forge-std, v4-core (submodules)
 └── .github/              # CI, Dependabot, issue and PR templates
@@ -181,6 +186,8 @@ forge test
 
 The web app: `cd polypad/web && cp .env.example .env.local && yarn install && yarn dev`.
 
+Web unit tests, from `polypad/web`: `corepack enable && corepack prepare yarn@4.9.2 --activate && yarn install --immutable && yarn test`.
+
 ### Deploy
 
 `script/Deploy.s.sol` deploys a staking factory. Copy [`.env.example`](.env.example) to `.env`, fill it in locally, and prefer a hardware wallet or encrypted keystore (`--account`) over a raw key.
@@ -229,7 +236,7 @@ V2 pools are deployed with `new` from the verified pool source. Two example pool
 
 ## Security
 
-- The contracts are unaudited. An outside review is planned.
+- The contracts are unaudited. An outside review is planned. Security-scanned with Bevor. Not a formal audit. Scans are not audits. Not financial advice.
 - Source is public here and on Sourcify where the table says so.
 - CI runs Foundry tests and an advisory Slither job. Slither findings are not a review, and a green run does not remove risk.
 - Staking has a small self-hosted bug bounty. Scope, amounts, and rules are in [SECURITY.md](SECURITY.md).
@@ -242,7 +249,7 @@ Areas an outside review of staking would focus on are listed in [docs/AUDIT_SCOP
 
 Shipped in this repository: the Polypad launchpad on Robinhood Chain, staking pools, creator contracts, the floor vault, POLYDASH buybacks, Poly Agent, and PolyCTO.
 
-Next: AI infrastructure for launches. [docs/AGENTS_LAUNCH.md](docs/AGENTS_LAUNCH.md) describes how an operator can submit `createLaunch` from the operator's own wallet. Polypad does not take custody of keys. Poly Agent and PolyCTO do not sign transactions.
+Agent launch rails are in the repository. [docs/AGENTS_API.md](docs/AGENTS_API.md) is the HTTP API that validates parameters, simulates `createLaunch` with `eth_call`, and returns an unsigned transaction. [agents/polypad-mcp](agents/polypad-mcp) exposes those steps as MCP tools. [docs/AGENTS_LAUNCH.md](docs/AGENTS_LAUNCH.md) is the same factory call built in the operator's own wallet. Polypad does not take custody of keys. Poly Agent and PolyCTO do not sign transactions. The public docs index is [docs/README.md](docs/README.md), and the website serves it at `/docs`.
 
 ## Brand
 

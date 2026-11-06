@@ -20,6 +20,8 @@ pytest
 python3 script/scan_secrets.py
 ```
 
+Polypad web tests, from `polypad/web`: `corepack enable && corepack prepare yarn@4.9.2 --activate && yarn test` after `yarn install --immutable`.
+
 `FOUNDRY_PROFILE=ci` is what GitHub Actions uses for Foundry. Fork tests need `FORK_RPC` and are optional locally.
 
 ## Pull requests

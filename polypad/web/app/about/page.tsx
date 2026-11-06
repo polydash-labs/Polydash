@@ -115,6 +115,14 @@ export default function AboutPage() {
           </section>
 
           <section>
+            <h2 className="text-[15px] font-semibold mb-3">Documentation</h2>
+            <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
+              The launch flow, commitment window, graduation hook, Holder Protections, build-activity links, and the
+              agent launch API are written up in the <Link href="/docs" className="text-polydash-green hover:underline">Docs</Link>.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-[15px] font-semibold mb-3">Risks</h2>
             <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
               Tokens launched on Polypad are created by their users, not by Polypad. The contracts are unaudited. An
@@ -128,6 +136,9 @@ export default function AboutPage() {
             </Button>
             <Button asChild variant="outline">
               <Link href="/">Explore tokens</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/docs">Docs</Link>
             </Button>
           </section>
         </div>

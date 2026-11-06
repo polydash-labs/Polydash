@@ -3,12 +3,17 @@
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](https://semver.org/).
 
 ## [Unreleased]
+
+## [1.2.0] - 2026-11-06
 ### Security
 - Polypad logo upload (`polypad/web/app/api/upload/logo`) no longer returns an unbounded S3 PUT URL. It returns a presigned POST with a 1 byte–5 MB `content-length-range`, an exact image `Content-Type` (png, jpeg, webp, gif), a server-chosen key under `token-logos/<uuid>.<ext>`, and a 5-minute expiry. The route rate-limits by IP in memory (10 requests / 10 minutes per process; a shared store is required across instances). The web app has no session or wallet-auth helper, so the route requires `Origin` or `Referer` to match the app host.
 - Documented a v1 staking-pool issue: `_sendPrincipal` pushes the unstake fee to `feeRecipient`, so a stake token that reverts on that transfer (blocklist or a refusing recipient) reverts `withdraw`, `exit`, and `emergencyWithdraw` until the factory owner rotates the recipient. V1 is legacy, with a single third-party pool. Deployed Solidity is unchanged. V2 uses a pull for platform fees and is not affected. Reported by r00k, Hey Research Lab. Demonstration: `test/PolydashStakingPoolFeeRecipient.t.sol`.
 ### Fixed
 - `test_fork_rewards_pool_path` credits its staker on the fork instead of transferring POLYDASH from a live wallet whose balance can be zero. The fork CI job skips when the Robinhood Chain RPC is unreachable, and a reachable RPC with a failing test fails the check.
 ### Added
+- Polypad agent launch HTTP API under `polypad/web/app/api/agents/v1`. `POST /validate` checks `createLaunch` parameters. `POST /simulate` runs `eth_call` and returns an unsigned transaction. The caller signs and broadcasts it. The route rejects private-key fields, rate-limits by IP (20 requests / 10 minutes per process), and records an Agent-launched mark in `socialLinks` (`https://polypad.family/docs#agent-launched`). The deployed factory bytecode is unchanged. The site shows an Agent-launched badge from that mark, and `/create?agent=1` writes the same mark. A GitHub `repository` field is labelled Build on the token page.
+- MCP server `agents/polypad-mcp` (`polypad_validate_launch`, `polypad_prepare_launch`) with tool schemas in `schemas/tools.json`. It calls the HTTP API and does not sign.
+- Public docs index in `docs/README.md` (launch flow, commitment window, graduation and the V4 hook, Holder Protections, build activity, agent API, risk) and a Polypad `/docs` page linked from the header, footer, and About page.
 - `deployments/robinhood-chain.json` and `docs/DEPLOYMENTS.md`: one address list for Robinhood Chain, taken from addresses already recorded in the repo. Notes the current and earlier Polypad sets, including both commit vaults.
 - `docs/README.md` index of the docs.
 - Agent CI: Ruff and pytest for Poly Agent and PolyCTO, plus offline tests for routing, scam scoring, and reward-rate math.

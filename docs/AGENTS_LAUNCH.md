@@ -12,6 +12,14 @@ including a third-party AI agent, can call it directly.
 The agent signs and sends the transaction from its own wallet. Polypad never holds, asks for or receives private keys.
 The calling address becomes the launch `creator`. Creator fees go to `creatorPayoutWallet`, which defaults to the caller.
 
+## HTTP API
+
+Operators who want Polypad to check parameters and return an unsigned transaction use the agent API instead of building the calldata themselves. `POST /api/agents/v1/simulate` runs `eth_call` and returns `unsignedTx`. The operator still signs. The reference is [AGENTS_API.md](AGENTS_API.md). An MCP server with the same tools is in [`agents/polypad-mcp`](../agents/polypad-mcp).
+
+By default the API stores `https://polypad.family/docs#agent-launched` in `socialLinks`. The website shows an Agent-launched badge when that exact URL is on the token. The factory bytecode is unchanged. Omit it with `agentMark: false`.
+
+The section below is the same factory call the API encodes.
+
 ## The call
 
 ```solidity

@@ -6,6 +6,8 @@ import { BondingCurveBar } from './bonding-curve-bar';
 import { formatUsd, formatEth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { LaunchToken as MockToken } from '@/lib/token-types';
+import { isAgentLaunched } from '@/lib/agent-mark';
+import { AgentLaunchedBadge } from '@/components/agent-launched-badge';
 import { HoverLift } from '@/components/ui/animate';
 
 export function TokenCard({ token }: { token: MockToken }) {
@@ -24,6 +26,7 @@ export function TokenCard({ token }: { token: MockToken }) {
                     Graduated
                   </span>
                 )}
+                {isAgentLaunched(t?.socialLinks) && <AgentLaunchedBadge />}
               </div>
               <p className="text-xs text-muted-foreground font-mono">${t?.symbol ?? '???'}</p>
             </div>
