@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
 import type { PublicClient } from 'viem';
 import { FundFactoryABI, FundNFTABI, FundVaultABI } from '@/lib/contracts/fund-abi';
-import { getFundFactoryAddress } from '@/lib/fund/address';
+import { getFundFactoryAddress, getFundInvestFactoryAddress } from '@/lib/fund/address';
 import { fundStatus, type FundStatus } from '@/lib/fund/model';
+import { readInvest } from '@/lib/fund/read-invest';
+import type { FundInvestView } from '@/lib/fund/invest';
 import { robinhoodChain } from '@/lib/chain';
 
 const NFT_FIELDS = [
@@ -36,6 +38,13 @@ export type FundSummary = {
   vaultStatus: number;
   status: FundStatus;
   balance: bigint;
+  generation: 1 | 2;
+};
+
+export type FundDetail = FundSummary & {
+  navPerNft: bigint;
+  vaultEth: bigint;
+  invest: FundInvestView | null;
 };
 
 type CallResult = { status: string; result?: unknown };
@@ -49,6 +58,7 @@ async function readFund(
   address: `0x${string}`,
   index: number,
   account?: `0x${string}`,
+  generation: 1 | 2 = 1,
 ): Promise<FundSummary | null> {
   const nftRes = await client.multicall({
     contracts: NFT_FIELDS.map((functionName) => ({ address, abi: FundNFTABI, functionName })),
@@ -99,11 +109,11 @@ async function readFund(
     vaultStatus,
     status: fundStatus(vaultStatus, publicOpen),
     balance,
+    generation,
   };
 }
 
-async function listFunds(client: PublicClient): Promise<FundSummary[]> {
-  const factory = getFundFactoryAddress();
+async function listFunds(client: PublicClient, factory: `0x${string}`, generation: 1 | 2): Promise<FundSummary[]> {
   const length = await client.readContract({
     address: factory,
     abi: FundFactoryABI,
@@ -126,7 +136,7 @@ async function listFunds(client: PublicClient): Promise<FundSummary[]> {
       found.push({ address: row.result, index });
     }
   });
-  const funds = await Promise.all(found.map((item) => readFund(client, item.address, item.index)));
+  const funds = await Promise.all(found.map((item) => readFund(client, item.address, item.index, undefined, generation)));
   return funds.filter((fund): fund is FundSummary => fund !== null);
 }
 
@@ -134,13 +144,17 @@ async function listFunds(client: PublicClient): Promise<FundSummary[]> {
 export function useFunds() {
   const client = usePublicClient({ chainId: robinhoodChain.id });
   const factory = getFundFactoryAddress();
+  const investFactory = getFundInvestFactoryAddress();
   return useQuery({
-    queryKey: ['funds', factory],
+    queryKey: ['funds', factory, investFactory ?? ''],
     enabled: !!client && !!factory,
     refetchInterval: 20_000,
     queryFn: async () => {
       if (!client) return [];
-      return listFunds(client);
+      const primary = await listFunds(client, factory, 1);
+      if (!investFactory) return primary;
+      const extra = await listFunds(client, investFactory, 2);
+      return [...primary, ...extra];
     },
   });
 }
@@ -148,21 +162,47 @@ export function useFunds() {
 export function useFund(address: string, account?: `0x${string}`) {
   const client = usePublicClient({ chainId: robinhoodChain.id });
   const factory = getFundFactoryAddress();
+  const investFactory = getFundInvestFactoryAddress();
   const valid = /^0x[0-9a-fA-F]{40}$/.test(address);
   return useQuery({
-    queryKey: ['fund', factory, address.toLowerCase(), account ?? ''],
+    queryKey: ['fund', factory, investFactory ?? '', address.toLowerCase(), account ?? ''],
     enabled: !!client && valid,
     refetchInterval: 15_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<FundDetail | null> => {
       if (!client) return null;
-      const listed = await client.readContract({
+      const fundAddress = address as `0x${string}`;
+      let generation: 1 | 2 = 1;
+      let listed = await client.readContract({
         address: factory,
         abi: FundFactoryABI,
         functionName: 'isFund',
-        args: [address as `0x${string}`],
+        args: [fundAddress],
       });
+      if (!listed && investFactory) {
+        listed = await client.readContract({
+          address: investFactory,
+          abi: FundFactoryABI,
+          functionName: 'isFund',
+          args: [fundAddress],
+        });
+        generation = 2;
+      }
       if (!listed) return null;
-      return readFund(client, address as `0x${string}`, 0, account);
+      const summary = await readFund(client, fundAddress, 0, account, generation);
+      if (!summary) return null;
+      const vaultEth = await client.getBalance({ address: summary.vault }).catch(() => 0n);
+      let navPerNft = 0n;
+      try {
+        navPerNft = await client.readContract({
+          address: fundAddress,
+          abi: FundNFTABI,
+          functionName: 'navPerNft',
+        });
+      } catch {
+        navPerNft = 0n;
+      }
+      const invest = await readInvest(client, summary.vault, vaultEth, account).catch(() => null);
+      return { ...summary, navPerNft: invest?.navPerNft ?? navPerNft, vaultEth, invest };
     },
   });
 }

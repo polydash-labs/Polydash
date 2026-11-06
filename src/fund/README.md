@@ -4,6 +4,8 @@ These contracts are unaudited. An outside review is planned. Not financial advic
 
 Phase 1a is the raise. A manager creates a fund the way a creator creates an NFT collection, as an alternative to launching a token. Buyers mint ERC-721 units at a fixed ETH price. Each NFT is one equal unit. A wallet's share of what has been minted is `balanceOf(wallet) / totalMinted`.
 
+Phase 2 investing is a separate set of contracts in [`phase2`](phase2). It is not deployed. The live `FundFactory` does not create those vaults. See [Phase 2](#phase-2-not-deployed).
+
 `FundFactory` deploys one `FundVault` and one `FundNFT` per fund with `new`. That is the same style as the staking, vesting, bond, and NFT staking factories. There is no proxy and no upgrade path.
 
 ## What a manager sets
@@ -33,13 +35,45 @@ Minting stops when the vault is `RaisingClosed`. That happens when gross raised 
 
 Direct ETH transfers to the vault revert. ETH forced into the vault stays there, increases `navPerNft`, and cannot be pulled by the fee functions.
 
-## Not in this phase
+## Not in Phase 1a
 
-Allowlist swaps, stock tokens, a carry NFT, token-bound accounts, a floor bid, a secondary market, redeeming units, metadata that changes after mint, and an agent executor. Those are not implemented here.
+A carry NFT, token-bound accounts, a floor bid, a secondary market, redeeming units, metadata that changes after mint, and an agent executor. Those are not implemented. Allowlisted swaps are Phase 2, in separate files, and they are not on the deployed factory.
+
+## Phase 2 (not deployed)
+
+`FundFactoryInvest`, `FundVaultInvest`, `FundNFTInvest`, `FundSwapFacet`, `FundAllowlist`, and `NAVReader` are unaudited. The swap body is in `FundSwapFacet`. Each vault delegatecalls it, so the factory does not carry a copy of that code. A direct call to the facet reverts. An outside review is planned. Not financial advice. Do not broadcast them until that deploy is intentional. `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It does not call the live factory. There is no proxy and no upgrade of a Phase 1a vault. A Phase 1a fund stays raise-only.
+
+The raise and the mint match Phase 1a, including the manager skin gate. After the raise is `RaisingClosed`, the manager can call `enableInvesting`. Status becomes `Investing`. Minting stays closed. There is still no function that sends principal to a wallet.
+
+The mandate hash is stored at create. The asset list stored with it is the per-fund universe. It must already be on the global allowlist, and it cannot include WETH. WETH is the wrapped quote. ETH is the native quote. A swap is quote against one mandate asset, through an allowlisted router, or a direct ETH ↔ WETH wrap with no router. The vault measures its own balances. `minAmountOut` has to be greater than zero. The router address has code. Proceeds that do not arrive at the vault revert the transaction.
+
+`nav()` is the vault's ETH, plus its WETH, plus the quote spent to buy other holdings. `navPerNft()` divides that by the number of NFTs minted. Integer division leaves a remainder. It is not a market price. There is no external price feed. A sale moves NAV by the quote received minus the cost removed.
+
+`Trade(asset, side, size, price, navAfter)` is the blotter event. The vault also keeps the latest 32 trades for readers that do not scan logs. `side` is 0 for a buy or a wrap, and 1 for a sell or an unwrap. `price` is quote wei per 1e18 raw token units.
+
+The allowlist's constructor set is active immediately. Later additions and removals wait `delay` (at least one day, default two days in the deploy script, and the delay can only be lengthened). Pause is immediate and blocks swaps. It does not move balances. The manager can pause that vault's swaps immediately. The manager can name up to eight executors. An executor can swap. An executor cannot open investing, change the payout wallet, or pull fees.
+
+`protectionBits()` reports custody, the allowlist, skin once the manager share is minted, published source, and the allowlist timelock. The high-water mark bit is unset. The source bit means this code is in the repository. It is not a review.
+
+The deploy script's initial allowlist is WETH only. Routers and other assets are added afterwards with `propose`, then `execute` after the delay. `FUND_INVEST_WETH` is required and has no default. One reference for that address is `weth()` on `PolydashBuybackVault` `0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193`. The signer sets `FEE_RECIPIENT` or `FUND_INVEST_FEE_RECIPIENT`, and `PRIVATE_KEY` unless `DEPLOY_FUND_INVEST_PK` is set for a test. Leave `DEPLOY_FUND_INVEST_PK` unset for a broadcast. Do not commit a key.
+
+```bash
+export ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com
+export CONFIRM_FUND_PHASE2_DEPLOY=yes
+export FUND_INVEST_WETH=0xWETH_ON_ROBINHOOD_CHAIN
+export FEE_RECIPIENT=0x9a21c75aC263cC43125E70200636f6397f8776d0
+export PRIVATE_KEY=0xYOUR_DEPLOYER_PRIVATE_KEY_HERE
+
+forge script script/DeployFundFactoryInvest.s.sol --rpc-url robinhood --broadcast
+```
+
+That command is for the later deploy. It was not run for this change. After a deploy, record the allowlist and factory addresses, verify them, and set `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` for the site. Until that variable is a real address, the fund pages keep reading the Phase 1a factory only.
 
 ## Tests
 
-`test/fund/Fund.t.sol` and `test/fund/DeployFundFactory.t.sol`.
+`test/fund/Fund.t.sol` and `test/fund/DeployFundFactory.t.sol` cover Phase 1a.
+
+`test/fund/FundInvest.t.sol` and `test/fund/DeployFundFactoryInvest.t.sol` cover the invest path, the allowlist, NAV, the raise-to-invest transition, and the skin gate. `test/fork/FundInvestFork.t.sol` runs the same path on a local fork and checks that the live factory's code is unchanged. It returns immediately when `FORK_RPC` is unset.
 
 ## Deployment (Robinhood Chain, chain ID 4663)
 

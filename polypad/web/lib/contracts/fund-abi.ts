@@ -88,6 +88,7 @@ export const FundNFTABI = [
   { type: 'function', name: 'publicOpen', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bool' }] },
   { type: 'function', name: 'entryFeeBps', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
   { type: 'function', name: 'skinRequired', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'navPerNft', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
   { type: 'function', name: 'minSkinBps', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
   {
     type: 'function',
@@ -114,4 +115,140 @@ export const FundVaultABI = [
   { type: 'function', name: 'raiseCap', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
   { type: 'function', name: 'raised', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
   { type: 'function', name: 'status', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint8' }] },
+] as const;
+
+const tradeRecord = [
+  { name: 'asset', type: 'address' },
+  { name: 'side', type: 'uint8' },
+  { name: 'timestamp', type: 'uint64' },
+  { name: 'size', type: 'uint256' },
+  { name: 'price', type: 'uint256' },
+  { name: 'navAfter', type: 'uint256' },
+] as const;
+
+export const FundVaultInvestABI = [
+  ...FundVaultABI,
+  { type: 'function', name: 'mandateHash', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bytes32' }] },
+  { type: 'function', name: 'universeHash', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bytes32' }] },
+  { type: 'function', name: 'weth', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
+  { type: 'function', name: 'allowlist', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
+  { type: 'function', name: 'nav', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'navPerNft', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'spendableEth', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'claimableFees', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'swapsPaused', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bool' }] },
+  { type: 'function', name: 'investBlock', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint64' }] },
+  { type: 'function', name: 'mandateAssetCount', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  {
+    type: 'function',
+    name: 'mandateAssets',
+    stateMutability: 'view',
+    inputs: [{ name: 'index', type: 'uint256' }],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  { type: 'function', name: 'tradeCount', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  {
+    type: 'function',
+    name: 'blotter',
+    stateMutability: 'view',
+    inputs: [{ name: 'offset', type: 'uint256' }],
+    outputs: [{ name: '', type: 'tuple', components: tradeRecord }],
+  },
+  {
+    type: 'function',
+    name: 'protectionBits',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      { name: 'bits', type: 'uint8' },
+      { name: 'met', type: 'uint8' },
+      { name: 'total', type: 'uint8' },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'costBasis',
+    stateMutability: 'view',
+    inputs: [{ name: 'asset', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'isExecutor',
+    stateMutability: 'view',
+    inputs: [{ name: 'who', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'swap',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'router', type: 'address' },
+      { name: 'assetIn', type: 'address' },
+      { name: 'assetOut', type: 'address' },
+      { name: 'amountIn', type: 'uint256' },
+      { name: 'minAmountOut', type: 'uint256' },
+      { name: 'data', type: 'bytes' },
+    ],
+    outputs: [],
+  },
+  { type: 'function', name: 'enableInvesting', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  {
+    type: 'function',
+    name: 'setSwapsPaused',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'next', type: 'bool' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'setExecutor',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'who', type: 'address' },
+      { name: 'allowed', type: 'bool' },
+    ],
+    outputs: [],
+  },
+  { type: 'error', name: 'NotAllowlisted', inputs: [] },
+  { type: 'error', name: 'NotInMandate', inputs: [] },
+  { type: 'error', name: 'NotInvesting', inputs: [] },
+  { type: 'error', name: 'NotAuthorized', inputs: [] },
+  { type: 'error', name: 'NotClosed', inputs: [] },
+  { type: 'error', name: 'Paused', inputs: [] },
+  { type: 'error', name: 'Slippage', inputs: [] },
+  { type: 'error', name: 'SkinRequired', inputs: [] },
+] as const;
+
+export const FundAllowlistABI = [
+  { type: 'function', name: 'paused', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bool' }] },
+  { type: 'function', name: 'delay', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'routerCount', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  {
+    type: 'function',
+    name: 'routers',
+    stateMutability: 'view',
+    inputs: [{ name: 'index', type: 'uint256' }],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    type: 'function',
+    name: 'routerAllowed',
+    stateMutability: 'view',
+    inputs: [{ name: 'router', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+] as const;
+
+export const FundErc20ABI = [
+  { type: 'function', name: 'symbol', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'string' }] },
+  { type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint8' }] },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
 ] as const;

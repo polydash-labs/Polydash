@@ -26,6 +26,8 @@ import { useFund } from '@/lib/fund/use-funds';
 import { shortenAddress } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { FundNotice } from '../../_components/fund-notice';
+import { FundTerminal } from './fund-terminal';
+import { ManagerDesk } from './manager-desk';
 
 export function FundDetail({ address, focusMint }: { address: string; focusMint?: boolean }) {
   const { address: account, isConnected, chainId } = useAccount();
@@ -131,7 +133,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
               <span className="font-mono text-[13px] text-white/45">{fund.symbol}</span>
               <span className={cn(
                 'rounded-full px-2.5 py-0.5 text-[11px] font-medium',
-                fund.status === 'open' ? 'bg-polydash-green/15 text-polydash-green' : fund.status === 'waiting' ? 'bg-yellow-400/10 text-yellow-200' : 'bg-white/10 text-white/60',
+                fund.status === 'open' ? 'bg-polydash-green/15 text-polydash-green' : fund.status === 'waiting' ? 'bg-yellow-400/10 text-yellow-200' : fund.status === 'investing' ? 'bg-sky-400/10 text-sky-100' : 'bg-white/10 text-white/60',
               )}>
                 {FUND_STATUS_LABEL[fund.status]}
               </span>
@@ -147,7 +149,9 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
       </div>
 
       <p className="max-w-2xl text-[13px] leading-relaxed text-white/60">
-        Each NFT is one equal unit of this raise. It is the ownership claim on the ETH held in the vault. This page covers the raise and the mint.
+        Each NFT is one equal unit. {fund.invest
+          ? 'Swaps stay in the vault and use the allowlist. The NAV figure is not a market price.'
+          : 'It is the ownership claim on the ETH held in the vault. This page covers the raise and the mint.'}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -224,6 +228,16 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
         )}
       </section>
 
+      <FundTerminal
+        status={fund.status}
+        navPerNft={fund.navPerNft}
+        totalMinted={fund.totalMinted}
+        vaultEth={fund.vaultEth}
+        publicOpen={fund.publicOpen}
+        invest={fund.invest}
+      />
+      <ManagerDesk vault={fund.vault} status={fund.status} isManager={isManager} invest={fund.invest} />
+
       <div className="space-y-1 text-[12px] text-white/50">
         <p>
           Fund NFT{' '}
@@ -234,7 +248,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
           <a className="font-mono text-polydash-green" href={getExplorerAddressUrl(fund.vault)} target="_blank" rel="noopener noreferrer">{fund.vault}</a>
         </p>
       </div>
-      <FundNotice />
+      <FundNotice mode={fund.invest ? 'invest' : 'raise'} />
     </div>
   );
 }
