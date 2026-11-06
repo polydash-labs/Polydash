@@ -150,7 +150,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
 
       <p className="max-w-2xl text-[13px] leading-relaxed text-white/60">
         Each NFT is one equal unit. {fund.invest
-          ? 'Swaps stay in the vault and use the allowlist. The NAV figure is not a market price.'
+          ? 'Swaps stay in the vault and use the allowlist. NAV uses the feed and is blank when that feed cannot be used.'
           : 'It is the ownership claim on the ETH held in the vault. This page covers the raise and the mint.'}
       </p>
 
@@ -202,6 +202,10 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
                 <p>Protocol fee (0.2%): {formatFundEth(quote.protocolFee)} ETH.</p>
                 {fund.entryFeeBps > 0 && <p>Entry fee ({bpsLabel(fund.entryFeeBps)}): {formatFundEth(quote.entryFee)} ETH.</p>}
                 <p>Stays in the vault: {formatFundEth(quote.staysInVault)} ETH.</p>
+                <p>
+                  A failed raise, where that path exists, can return {formatFundEth(quote.failedRaiseRefund)} ETH of this payment.
+                  The protocol fee and the entry fee are not returned. This is not a refund of the full mint price.
+                </p>
               </div>
             )}
             {!isConnected ? (

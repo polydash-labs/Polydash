@@ -329,7 +329,7 @@ export function CreateFundWizard() {
                 You mint {preview.skinRequired.toString()} of {preview.maxSupply.toString()} NFTs yourself before anyone else can. That is {bpsLabel(Number(preview.skinBps))} of the supply, at the same price.
               </p>
               <p className="mt-2">
-                You pay {formatFundEth(preview.managerEth)} ETH. The 0.2% protocol fee on that payment is {formatFundEth(preview.protocolFeeOnManagerMint)} ETH.
+                You pay {formatFundEth(preview.managerEth)} ETH. The 0.2% protocol fee on that payment is {formatFundEth(preview.protocolFeeOnManagerMint)} ETH. That fee is not returned.
                 {preview.entryFeeOnManagerMint > 0n ? ` Your entry fee on it is ${formatFundEth(preview.entryFeeOnManagerMint)} ETH.` : ' You are not taking an entry fee.'}
                 {' '}The rest stays in the vault. You do not have to keep the NFTs afterward. Minting them is what opens the raise.
               </p>
@@ -373,7 +373,7 @@ export function CreateFundWizard() {
               <img src={result.params.imageUri} alt="" className="h-12 w-12 rounded-full object-cover" />
             )}
             <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-[12px] leading-relaxed text-yellow-200">
-              You sign one transaction to create the fund. It does not send you the raise. Minting your share is a second transaction. This factory does not swap the ETH. These contracts are unaudited. Not financial advice.
+              You sign one transaction to create the fund. It does not send you the raise. Minting your share is a second transaction. This factory does not swap the ETH. The protocol fee and any entry fee are withheld from the amount that stays in the vault. They are not part of a refund. These contracts are unaudited. Not financial advice.
             </div>
           </>
         )}

@@ -9,8 +9,8 @@ import {FundVaultStore} from "./FundVaultStore.sol";
 
 /// @title FundNFTInvest (not reviewed, not deployed)
 /// @notice ERC-721 units for one Phase 2 fund. Mint rules match Phase 1a: fixed ETH price, manager skin first.
-///         `navPerNft` reads the vault, which counts ETH, WETH, and the quote spent on other holdings.
-///         It is not a market price. Phase 1a `FundNFT` is a different contract and is not modified.
+///         `navPerNft` reads the vault. That figure is a feed quote and reverts when the feed cannot be used.
+///         Phase 1a `FundNFT` is a different contract and is not modified.
 contract FundNFTInvest is ERC721, ReentrancyGuard {
     using Strings for uint256;
 
@@ -46,6 +46,7 @@ contract FundNFTInvest is ERC721, ReentrancyGuard {
     string private _base;
 
     uint256 public totalMinted;
+    uint256 public totalBurned;
     uint256 public managerMinted;
     bool public publicOpen;
 
@@ -54,6 +55,8 @@ contract FundNFTInvest is ERC721, ReentrancyGuard {
     event BaseURIUpdated(string baseURI);
 
     error NotRaising();
+    error RaiseEnded();
+    error NotHolder();
     error SkinRequired();
     error BadQuantity();
     error BadValue();
@@ -80,6 +83,7 @@ contract FundNFTInvest is ERC721, ReentrancyGuard {
     ///         Until the manager has minted `skinRequired` units, only the manager can call this.
     function mint(uint256 qty) external payable nonReentrant {
         if (qty == 0) revert BadQuantity();
+        if (block.timestamp > vault.raiseDeadline()) revert RaiseEnded();
         if (vault.status() != FundVaultStore.Status.Raising) revert NotRaising();
         if (!publicOpen && msg.sender != manager) revert SkinRequired();
         if (totalMinted + qty > maxSupply) revert SoldOut();
@@ -117,7 +121,30 @@ contract FundNFTInvest is ERC721, ReentrancyGuard {
     }
 
     function totalSupply() external view returns (uint256) {
-        return totalMinted;
+        return totalMinted - totalBurned;
+    }
+
+    function outstanding() public view returns (uint256) {
+        return totalMinted - totalBurned;
+    }
+
+    /// @notice Burn units of a failed raise. The current owner is paid their share of spendable ETH.
+    ///         Entry and protocol fees are not included. A transferred unit pays the current holder.
+    function refund(uint256[] calldata ids) external nonReentrant {
+        if (vault.status() != FundVaultStore.Status.Failed) revert NotRaising();
+        (uint256 n, uint256 supplyBefore) = _take(ids);
+        vault.settleRefund(msg.sender, n, supplyBefore);
+    }
+
+    /// @notice Burn units after a successful close and take a pro-rata share of vault inventory.
+    ///         The last outstanding units receive rounding dust. A short token transfer reverts the burn.
+    function exit(uint256[] calldata ids) external nonReentrant {
+        FundVaultStore.Status state = vault.status();
+        if (state != FundVaultStore.Status.RaisingClosed && state != FundVaultStore.Status.Investing) {
+            revert NotRaising();
+        }
+        (uint256 n, uint256 supplyBefore) = _take(ids);
+        vault.settleExit(msg.sender, n, supplyBefore);
     }
 
     function remainingSupply() external view returns (uint256) {
@@ -125,13 +152,29 @@ contract FundNFTInvest is ERC721, ReentrancyGuard {
     }
 
     function ownershipBps(address account) public view returns (uint256) {
-        if (totalMinted == 0) return 0;
-        return (balanceOf(account) * BPS) / totalMinted;
+        uint256 live = outstanding();
+        if (live == 0) return 0;
+        return (balanceOf(account) * BPS) / live;
     }
 
-    /// @notice Vault NAV divided by NFTs minted. Zero before the first mint. Not a market price.
+    /// @notice Vault market NAV divided by outstanding NFTs. Reverts when a required feed cannot be used.
     function navPerNft() public view returns (uint256) {
         return vault.navPerNft();
+    }
+
+    function _take(uint256[] calldata ids) internal returns (uint256 n, uint256 supplyBefore) {
+        n = ids.length;
+        if (n == 0 || n > 100) revert BadQuantity();
+        supplyBefore = outstanding();
+        if (n > supplyBefore) revert BadQuantity();
+        for (uint256 i; i < n; ++i) {
+            if (ownerOf(ids[i]) != msg.sender) revert NotHolder();
+            for (uint256 j; j < i; ++j) {
+                if (ids[j] == ids[i]) revert BadQuantity();
+            }
+            _burn(ids[i]);
+        }
+        totalBurned += n;
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {

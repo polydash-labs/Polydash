@@ -5,6 +5,97 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 
+/// @dev `priceX18` is ETH wei per 1e18 raw token units. Unpinned reads use the current timestamp.
+contract MockFeed {
+    uint256 public priceX18 = 1e18;
+    uint64 public updatedAt;
+    bool public pin;
+
+    constructor() {
+        updatedAt = uint64(block.timestamp);
+    }
+
+    function setPrice(uint256 next) external {
+        priceX18 = next;
+        if (!pin) updatedAt = uint64(block.timestamp);
+    }
+
+    function pinAt(uint64 stamp) external {
+        pin = true;
+        updatedAt = stamp;
+    }
+
+    function latestPrice(address) external view returns (uint256, uint64) {
+        return (priceX18, pin ? updatedAt : uint64(block.timestamp));
+    }
+}
+
+/// @dev Transfers succeed until `lock` is called. Used to show a later exit can still pay ETH.
+contract GateToken is ERC20 {
+    bool public locked;
+
+    constructor() ERC20("Gate", "GATE") {
+        _mint(msg.sender, 1e24);
+    }
+
+    function lock() external {
+        locked = true;
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (locked && from != address(0)) revert("locked");
+        super._update(from, to, value);
+    }
+}
+
+/// @dev Takes `feeBps` from each holder-to-holder transfer. Mint and burn are not taxed.
+contract TaxToken is ERC20 {
+    uint256 public immutable feeBps;
+    address public constant SINK = address(0xFEE);
+
+    constructor(uint256 _feeBps) ERC20("Tax", "TAX") {
+        feeBps = _feeBps;
+        _mint(msg.sender, 1e24);
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (feeBps == 0 || from == address(0) || to == address(0) || value == 0) {
+            super._update(from, to, value);
+            return;
+        }
+        uint256 fee = (value * feeBps) / 10_000;
+        super._update(from, to, value - fee);
+        if (fee != 0) super._update(from, SINK, fee);
+    }
+}
+
+/// @dev Optional 1 wei shortfall on deposit or withdraw. Used to lock the 1:1 quote rule.
+contract SkewWETH is ERC20 {
+    bool public shortDeposit;
+    bool public shortWithdraw;
+
+    constructor() ERC20("Skew", "sWETH") {}
+
+    function setShort(bool depositShort, bool withdrawShort) external {
+        shortDeposit = depositShort;
+        shortWithdraw = withdrawShort;
+    }
+
+    function deposit() external payable {
+        uint256 minted = shortDeposit && msg.value > 1 ? msg.value - 1 : msg.value;
+        _mint(msg.sender, minted);
+    }
+
+    function withdraw(uint256 amount) external {
+        _burn(msg.sender, amount);
+        uint256 out = shortWithdraw && amount > 1 ? amount - 1 : amount;
+        (bool ok,) = msg.sender.call{value: out}("");
+        require(ok, "weth");
+    }
+
+    receive() external payable {}
+}
+
 contract MockWETH is ERC20 {
     constructor() ERC20("Wrapped Ether", "WETH") {}
 

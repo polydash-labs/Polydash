@@ -4,12 +4,14 @@ pragma solidity 0.8.24;
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IFundAllowlist} from "./Interfaces.sol";
 import {FundNFTInvest} from "./FundNFTInvest.sol";
+import {FundNFTDeployer, FundVaultDeployer} from "./FundSpawn.sol";
 import {FundVaultInvest} from "./FundVaultInvest.sol";
 
 /// @title FundFactoryInvest (not reviewed, not deployed)
 /// @notice Deploys one investing vault and one NFT per fund. This is not the live Phase 1a factory.
 ///         Phase 1a `FundFactory` at 0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878 is unchanged.
-///         There is no proxy. Deploy is a separate step and is not part of this source being live.
+///         There is no proxy. The vault and NFT are still created with `new`, from two deployer
+///         contracts, so this factory's runtime stays under the 24576-byte limit.
 ///         The owner can change the fee recipient. The owner cannot move ETH out of a vault.
 contract FundFactoryInvest is ReentrancyGuard {
     uint256 public constant BPS = 10_000;
@@ -20,6 +22,8 @@ contract FundFactoryInvest is ReentrancyGuard {
     uint256 public constant MIN_MINT_PRICE = 0.00001 ether;
     uint256 public constant MAX_MINT_PRICE = 100 ether;
     uint256 public constant MAX_ASSETS = 16;
+    uint256 public constant MIN_RAISE_DURATION = 1 hours;
+    uint256 public constant MAX_RAISE_DURATION = 30 days;
 
     struct Params {
         string name;
@@ -30,6 +34,7 @@ contract FundFactoryInvest is ReentrancyGuard {
         uint256 raiseCap;
         uint256 entryFeeBps;
         uint256 minSkinBps;
+        uint256 raiseDuration;
         bytes32 mandateHash;
         address[] assets;
     }
@@ -40,6 +45,8 @@ contract FundFactoryInvest is ReentrancyGuard {
     IFundAllowlist public immutable allowlist;
     address public immutable weth;
     address public immutable swapFacet;
+    FundVaultDeployer public immutable vaultDeployer;
+    FundNFTDeployer public immutable nftDeployer;
 
     address[] public allFunds;
     mapping(address => bool) public isFund;
@@ -75,8 +82,12 @@ contract FundFactoryInvest is ReentrancyGuard {
             revert InvalidParams();
         }
         if (_swapFacet.code.length == 0) revert InvalidParams();
-        if (!IFundAllowlist(_allowlist).assetAllowed(_weth)) revert InvalidParams();
+        if (!IFundAllowlist(_allowlist).assetAllowed(_weth) || IFundAllowlist(_allowlist).quoteAsset() != _weth) {
+            revert InvalidParams();
+        }
         owner = msg.sender;
+        vaultDeployer = new FundVaultDeployer();
+        nftDeployer = new FundNFTDeployer();
         feeRecipient = _feeRecipient;
         allowlist = IFundAllowlist(_allowlist);
         weth = _weth;
@@ -105,6 +116,7 @@ contract FundFactoryInvest is ReentrancyGuard {
         if (p.mintPrice < MIN_MINT_PRICE || p.mintPrice > MAX_MINT_PRICE) revert InvalidParams();
         if (p.raiseCap < p.mintPrice || p.entryFeeBps > MAX_ENTRY_FEE_BPS) revert InvalidParams();
         if (p.mandateHash == bytes32(0) || p.assets.length > MAX_ASSETS) revert InvalidParams();
+        if (p.raiseDuration < MIN_RAISE_DURATION || p.raiseDuration > MAX_RAISE_DURATION) revert InvalidParams();
 
         uint256 maxSupply = p.raiseCap / p.mintPrice;
         if (maxSupply == 0 || maxSupply > MAX_SUPPLY) revert InvalidParams();
@@ -115,7 +127,7 @@ contract FundFactoryInvest is ReentrancyGuard {
         if (skinRequired == 0 || skinRequired > maxSupply) revert InvalidParams();
         _checkAssets(p.assets);
 
-        FundVaultInvest vault = new FundVaultInvest(
+        FundVaultInvest vault = vaultDeployer.deploy(
             msg.sender,
             p.raiseCap,
             maxSupply,
@@ -125,9 +137,10 @@ contract FundFactoryInvest is ReentrancyGuard {
             weth,
             p.mandateHash,
             p.assets,
-            swapFacet
+            swapFacet,
+            uint64(block.timestamp + p.raiseDuration)
         );
-        FundNFTInvest nft = new FundNFTInvest(
+        FundNFTInvest nft = nftDeployer.deploy(
             FundNFTInvest.Init({
                 name: p.name,
                 symbol: p.symbol,
@@ -198,6 +211,8 @@ contract FundFactoryInvest is ReentrancyGuard {
             address asset = assets[i];
             if (asset == address(0) || asset == weth || asset == address(allowlist)) revert InvalidParams();
             if (!allowlist.assetAllowed(asset)) revert InvalidParams();
+            (address feed,,,) = allowlist.feedOf(asset);
+            if (feed == address(0)) revert InvalidParams();
             for (uint256 j; j < i; ++j) {
                 if (assets[j] == asset) revert InvalidParams();
             }

@@ -31,6 +31,7 @@ contract DeployFundFactoryInvestTest is Test {
         assertEq(allowlist.owner(), deployer);
         assertEq(allowlist.delay(), 2 days);
         assertTrue(allowlist.assetAllowed(weth));
+        assertEq(allowlist.quoteAsset(), weth);
         assertEq(allowlist.routerCount(), 0);
         assertEq(factory.allFundsLength(), 0);
     }

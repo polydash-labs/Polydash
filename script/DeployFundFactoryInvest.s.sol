@@ -17,8 +17,11 @@ import {FundSwapFacet} from "../src/fund/phase2/FundSwapFacet.sol";
 ///      PRIVATE_KEY, unless DEPLOY_FUND_INVEST_PK is set. Leave DEPLOY_FUND_INVEST_PK unset to broadcast.
 ///      The unit test sets DEPLOY_FUND_INVEST_PK so it does not share PRIVATE_KEY with other deploy tests.
 ///      Optional FUND_INVEST_DELAY seconds. Default is 2 days. Minimum is 1 day.
-///      The allowlist starts with WETH only. Routers and other assets are added later through `propose`
-///      and wait out the delay. Assets are the addresses the owner adds. There is no price feed.
+///      The allowlist starts with WETH as the quote and no other asset. This script does not set a
+///      Chainlink proxy, a sequencer feed, or a Uniswap router. Per-asset proxy, heartbeat, and
+///      denomination were not in the official table when this was written. That is not a finding
+///      that feeds do not exist. Do not invent them. Do not allowlist UniversalRouter from this script.
+///      A non-quote asset stays disabled until `proposeAsset` is given a reviewed feed and the delay elapses.
 ///      These contracts are unaudited. Not financial advice.
 ///      CONFIRM_FUND_PHASE2_DEPLOY=yes FUND_INVEST_WETH=0x... FEE_RECIPIENT=0x... PRIVATE_KEY=0x... \
 ///      forge script script/DeployFundFactoryInvest.s.sol --rpc-url robinhood --broadcast
@@ -39,8 +42,10 @@ contract DeployFundFactoryInvest is Script {
         uint256 timelock = vm.envOr("FUND_INVEST_DELAY", uint256(2 days));
 
         address[] memory routers = new address[](0);
-        address[] memory assets = new address[](1);
-        assets[0] = weth;
+        FundAllowlist.AssetInit[] memory assets = new FundAllowlist.AssetInit[](1);
+        assets[0] = FundAllowlist.AssetInit({
+            asset: weth, quote: true, feed: address(0), maxStale: 0, minPriceX18: 0, maxPriceX18: 0
+        });
 
         vm.startBroadcast(pk);
         facet = new FundSwapFacet();

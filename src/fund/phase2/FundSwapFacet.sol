@@ -55,6 +55,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         address asset = buying ? assetOut : assetIn;
         if (!inMandate[asset]) revert NotInMandate();
         if (!allowlist.assetAllowed(asset) || !allowlist.routerAllowed(router)) revert NotAllowlisted();
+        allowlist.checkPrice(asset);
         if (router == address(this) || router == nft || router == asset || router == weth || router.code.length == 0) {
             revert BadRouter();
         }
@@ -66,9 +67,9 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         uint256 before = _wethBalance();
         IWETH(weth).deposit{value: amountIn}();
         uint256 got = _wethBalance() - before;
-        if (got < minAmountOut) revert Slippage();
+        if (got != amountIn || got < minAmountOut) revert Slippage();
         if (address(this).balance < _claimableFees()) revert FeesShort();
-        _record(weth, SIDE_BUY, got, NAVReader.price(amountIn, got));
+        _record(weth, SIDE_BUY, got, NAVReader.executionPrice(amountIn, got));
     }
 
     function _unwrap(uint256 amountIn, uint256 minAmountOut) internal {
@@ -78,8 +79,8 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         IWETH(weth).withdraw(amountIn);
         inSwap = false;
         uint256 got = address(this).balance - ethBefore;
-        if (got < minAmountOut) revert Slippage();
-        _record(weth, SIDE_SELL, amountIn, NAVReader.price(got, amountIn));
+        if (got != amountIn || got < minAmountOut) revert Slippage();
+        _record(weth, SIDE_SELL, amountIn, NAVReader.executionPrice(got, amountIn));
     }
 
     function _swap(
@@ -120,7 +121,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
             if (got < minAmountOut) revert Slippage();
             costBasis[asset] += spent;
             totalCostBasis += spent;
-            _record(asset, SIDE_BUY, got, NAVReader.price(spent, got));
+            _record(asset, SIDE_BUY, got, NAVReader.executionPrice(spent, got));
         } else {
             if (assetAfter >= assetBefore) revert BadAmount();
             uint256 sold = assetBefore - assetAfter;
@@ -132,7 +133,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
             uint256 removed = sold == assetBefore ? basis : (basis * sold) / assetBefore;
             costBasis[asset] = basis - removed;
             totalCostBasis -= removed;
-            _record(asset, SIDE_SELL, sold, NAVReader.price(got, sold));
+            _record(asset, SIDE_SELL, sold, NAVReader.executionPrice(got, sold));
         }
     }
 
@@ -160,7 +161,9 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
     }
 
     function _navPerNft() internal view returns (uint256) {
-        uint256 minted = nft == address(0) ? 0 : IFundUnit(nft).totalMinted();
-        return NAVReader.perNft(NAVReader.total(address(this).balance, _wethBalance(), totalCostBasis), minted);
+        uint256 live = nft == address(0) ? 0 : IFundUnit(nft).outstanding();
+        return NAVReader.perNft(
+            NAVReader.total(address(this).balance, _wethBalance(), _mandateAssets, allowlist), live
+        );
     }
 }

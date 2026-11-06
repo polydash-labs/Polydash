@@ -154,7 +154,15 @@ export function quoteMint(mintPrice: bigint, qty: bigint, entryFeeBps: bigint) {
   const cost = mintPrice * qty;
   const protocolFee = feeOn(cost, PROTOCOL_FEE_BPS);
   const entryFee = feeOn(cost, entryFeeBps);
-  return { cost, protocolFee, entryFee, staysInVault: cost - protocolFee - entryFee };
+  const staysInVault = cost - protocolFee - entryFee;
+  return {
+    cost,
+    protocolFee,
+    entryFee,
+    staysInVault,
+    // A failed Phase 2 raise can return this amount. It is not the mint price. Fees are withheld.
+    failedRaiseRefund: staysInVault,
+  };
 }
 
 export function issueFor(issues: FundIssue[], field: FundField): string | undefined {
