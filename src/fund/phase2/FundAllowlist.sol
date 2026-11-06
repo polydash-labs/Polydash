@@ -10,12 +10,14 @@ import {IFundPriceFeed} from "./Interfaces.sol";
 ///         Pause takes effect immediately and blocks swaps. It does not move vault balances.
 ///         One asset is the quote (WETH) and has no feed. Every other asset needs a feed
 ///         before it can be enabled. This contract does not ship a feed address.
-///         There is no production price feed recorded for Robinhood Chain in this repository.
+///         No per-asset Chainlink proxy, heartbeat, or denomination is recorded here.
+///         That is not a finding that feeds do not exist. This allowlist does not set one.
 contract FundAllowlist {
     uint256 public constant MIN_DELAY = 1 days;
     uint256 public constant MAX_DELAY = 30 days;
     uint256 public constant MIN_STALE = 1 minutes;
-    uint256 public constant MAX_STALE = 1 days;
+    /// @notice Trading freshness ceiling. The Chainlink dataset heartbeat is 86400 seconds and is not this value.
+    uint256 public constant MAX_STALE = 1 hours;
     uint256 public constant MAX_LIST = 64;
 
     struct Feed {

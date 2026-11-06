@@ -22,13 +22,38 @@ Not ready to sign as a public fund, and not deployed.
 
 `script/DeployFundFactoryInvest.s.sol` still reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It was not broadcast. Compiled ABIs are in `polypad/abi/phase2/`. They match this source, not an on-chain deployment.
 
-Blocker: this repository has no production price-feed address for Robinhood Chain. The script does not invent one. Until a reviewed feed is supplied to `proposeAsset` and the timelock elapses, every asset except WETH stays disabled. ETH and WETH can be valued at face value. A mandate asset cannot.
+Feeds are published. They are not allowlisted and not deployed into a fund.
+
+The public dataset for Robinhood Chain mainnet lists primary Shared SVR proxies. A read on chain 4663 showed 9571 bytes of code, 8 decimals, a positive `latestRoundData` answer, and `answeredInRound == roundId`. The dataset heartbeat is 86400 seconds and the deviation threshold is 0.5. That heartbeat is the feed's advertised update interval. It is not a trading freshness bound. This allowlist rejects a staleness ceiling above 1 hour, so 86400 cannot be configured as `maxStale`.
+
+| Pair | Proxy | Label |
+| --- | --- | --- |
+| ETH/USD | `0x78F3556b67E17Df817D51Ef5a990cDaF09E8d3A9` | Shared SVR |
+| USDC/USD | `0x9e6f4605992a899eE2999999F3Ec80C41F452546` | Shared SVR |
+| USDT/USD | `0xbf3550B6fAe1671da7C238Af12e03Ac586BEf3B1` | Shared SVR |
+| WBTC/USD | `0x62107b0d3adA75fc1697fD342d99eed947a3aA5E` | Shared SVR |
+
+`ChainlinkNavFeed` divides asset/USD by ETH/USD and scales into raw token units. A decimal shift alone is not that conversion. Secondary proxies were not read. Shared SVR access and integration were not reviewed. No canonical ERC-20 address is tied to USDC, USDT, or WBTC here. WETH is not treated as 1:1 with the ETH/USD feed until that WETH contract is verified. Chainlink's published L2 sequencer list still omits Robinhood Chain, and the chain docs do not name an uptime proxy. The adapter reverts when a sequencer guard is required and no sequencer is set. No other network's uptime feed is copied. The deploy script does not set any of these proxies.
+
+Price-dependent production use stays blocked until source, access semantics, canonical assets, a reviewed freshness bound, the outage guard, and a bounded router simulation are validated.
+
+Uniswap's Robinhood Chain V3 deployment list names contracts whose code size was read at the RPC. They are not allowlisted and this source does not call them:
+
+| Contract | Address | Code size read |
+| --- | --- | --- |
+| SwapRouter02 | `0xcaf681a66d020601342297493863e78c959e5cb2` | 24497 bytes |
+| UniversalRouter | `0x8876789976decbfcbbbe364623c63652db8c0904` | 24546 bytes |
+| V3Factory | `0x1f7d7550b1b028f7571e69a784071f0205fd2efa` | 24535 bytes |
+
+QuoterV2 `0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7` is on that list and was not code-checked here. Source, ABI, WETH and token mappings, and liquid pools are not verified in this repository. UniversalRouter is not given a blanket allow. Ethereum example token addresses are not copied.
+
+Until `proposeAsset` receives a reviewed feed and the timelock elapses, every asset except WETH stays disabled. ETH and WETH can be valued at face value. A mandate asset cannot.
 
 Do not set `FUND_ROUTES_ENABLED`. Do not set `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS`. Header and footer do not link to `/funds`. Direct `/funds` routes render a not-live page.
 
 ## Abacus sync
 
-Do not enable public Funds. Leave `FUND_ROUTES_ENABLED` unset. Leave `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` unset. Do not broadcast `DeployFundFactoryInvest`. Phase 2 is not deployed. There is no production price feed in this repo, so non-quote assets stay disabled. Phase 1 factory `0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878` is unchanged.
+Do not enable public Funds. Leave `FUND_ROUTES_ENABLED` unset. Leave `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` unset. Do not broadcast `DeployFundFactoryInvest`. Do not allowlist SwapRouter02, UniversalRouter, or V3Factory from this note. Phase 2 is not deployed. Non-quote assets stay disabled until a reviewed feed is set. Phase 1 factory `0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878` is unchanged.
 
 ## Still later
 

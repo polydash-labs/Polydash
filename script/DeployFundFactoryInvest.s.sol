@@ -17,8 +17,10 @@ import {FundSwapFacet} from "../src/fund/phase2/FundSwapFacet.sol";
 ///      PRIVATE_KEY, unless DEPLOY_FUND_INVEST_PK is set. Leave DEPLOY_FUND_INVEST_PK unset to broadcast.
 ///      The unit test sets DEPLOY_FUND_INVEST_PK so it does not share PRIVATE_KEY with other deploy tests.
 ///      Optional FUND_INVEST_DELAY seconds. Default is 2 days. Minimum is 1 day.
-///      The allowlist starts with WETH as the quote and no other asset. There is no price feed in this
-///      script. This repository has no production feed address for Robinhood Chain. Do not invent one.
+///      The allowlist starts with WETH as the quote and no other asset. This script does not set a
+///      Chainlink proxy, a sequencer feed, or a Uniswap router. Per-asset proxy, heartbeat, and
+///      denomination were not in the official table when this was written. That is not a finding
+///      that feeds do not exist. Do not invent them. Do not allowlist UniversalRouter from this script.
 ///      A non-quote asset stays disabled until `proposeAsset` is given a reviewed feed and the delay elapses.
 ///      These contracts are unaudited. Not financial advice.
 ///      CONFIRM_FUND_PHASE2_DEPLOY=yes FUND_INVEST_WETH=0x... FEE_RECIPIENT=0x... PRIVATE_KEY=0x... \
