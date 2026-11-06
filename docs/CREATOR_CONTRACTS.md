@@ -15,7 +15,7 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | [`src/treasury`](../src/treasury) | `TreasuryRulesFactory`, `TreasuryRules` | Per-token treasury with on-chain rules and a timelock for operator-run tasks | 30 |
 | [`src/floorvault`](../src/floorvault) | `PolypadTokenFloorFactory`, `PolypadTokenFloorCollection` | Fixed-price NFT collections whose mint share funds an ETH + launch-token vault redeemable pro rata by burning | 115 |
 | [`src/buyback`](../src/buyback) | `PolydashBuybackVault`, `PolydashRewardsPool` | Capped on-chain POLYDASH buys from the fee share: 62.5% burned, 37.5% streamed to stakers | 70 |
-| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT` | Phase 1a fund raise: fixed ETH mint price, ERC-721 units, vault holds the ETH. Not deployed | 15 |
+| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT` | Phase 1a fund raise: fixed ETH mint price, ERC-721 units, vault holds the ETH. Factory broadcast script is ready; not deployed | 16 |
 | [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 10 |
 
 ## Deployed addresses (Robinhood Chain, chain ID 4663)
@@ -32,6 +32,8 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | `PolypadTokenFloorCollection` (implementation, created by the factory) | [`0xFa23E496f7244d1674fA8bE5C42556bd054140EA`](https://robinhoodchain.blockscout.com/address/0xFa23E496f7244d1674fA8bE5C42556bd054140EA) | [Sourcify match](https://repo.sourcify.dev/4663/0xFa23E496f7244d1674fA8bE5C42556bd054140EA) |
 | `PolydashRewardsPool` | [`0x608d106Bb58A804fcd45823e0C6087801dee2aCa`](https://robinhoodchain.blockscout.com/address/0x608d106Bb58A804fcd45823e0C6087801dee2aCa) | [Sourcify match](https://repo.sourcify.dev/4663/0x608d106Bb58A804fcd45823e0C6087801dee2aCa) |
 | `PolydashBuybackVault` | [`0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193`](https://robinhoodchain.blockscout.com/address/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193) | [Sourcify match](https://repo.sourcify.dev/4663/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193) |
+
+`FundFactory` has no row yet. [`script/DeployFundFactory.s.sol`](../script/DeployFundFactory.s.sol) is the broadcast, and [`src/fund/README.md`](../src/fund/README.md) has the forge commands. `createFund` deploys each vault and fund NFT. These contracts are unaudited. Not financial advice.
 
 Pools, vaults, bonds and collections are deployed by these factories from the verified source. Treasury vaults and token-backed collections are EIP-1167 minimal proxies (clones) of their implementations. "Match" means Sourcify matched the creation and runtime bytecode but not the metadata hash.
 

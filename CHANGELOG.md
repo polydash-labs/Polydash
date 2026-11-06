@@ -4,6 +4,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 
 ## [Unreleased]
 ### Added
+- `script/DeployFundFactory.s.sol` broadcasts `FundFactory` on Robinhood Chain (chain ID 4663) when the deployer sets `PRIVATE_KEY` and `FEE_RECIPIENT`. The script does not choose a fee recipient. The documented platform fee wallet, if that is the intended recipient, is `0x9a21c75aC263cC43125E70200636f6397f8776d0`. `createFund` deploys each `FundVault` and `FundNFT`. Commands and the manifest entry to fill in after broadcast are in `src/fund/README.md`. Not broadcast in this change. Not audited. Not financial advice.
 - Phase 1a tokenized funds in `src/fund`: `FundFactory`, `FundVault`, and `FundNFT`. A manager sets the name, symbol, image, base URI, fixed ETH mint price, raise cap, and an optional entry fee of 0% to 5%. Buyers mint ERC-721 units at that price while the raise is open. ETH is held by the vault. The manager must mint at least 5% of supply (or a higher configured share) before other wallets can mint. `maxSupply` is `raiseCap / mintPrice`, rounded down; the remainder cannot mint another unit. The raise closes at that supply. A 0.2% protocol fee matches the launchpad platform fee and can be pulled to the factory fee recipient. The manager can pull the entry fee. This phase does not withdraw principal and does not invest it. Not deployed. Not audited.
 
 ## [1.2.0] - 2026-11-06

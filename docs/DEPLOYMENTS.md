@@ -30,4 +30,8 @@ Sourcify status in the manifest is the status already stated in this repository,
 
 Staking factory v1 (`0x0aAEa47d2e7303EC5a809062eafa59e7F011D857`) is legacy and is not described as explorer-verified. See the v1 warning in the README.
 
-These contracts are unaudited. An outside review is planned.
+These contracts are unaudited. An outside review is planned. Not financial advice.
+
+## Tokenized funds
+
+`FundFactory` is not in the manifest. Phase 1a source is [`src/fund`](../src/fund). [`script/DeployFundFactory.s.sol`](../script/DeployFundFactory.s.sol) broadcasts that factory when `PRIVATE_KEY`, `FEE_RECIPIENT`, and `ROBINHOOD_RPC_URL` are set. `createFund` deploys each `FundVault` and `FundNFT`. Commands and the manifest object to add after a real broadcast are in [`src/fund/README.md`](../src/fund/README.md). The suggested fee recipient, if that is the wallet the deployer means, is the platform fee wallet `0x9a21c75aC263cC43125E70200636f6397f8776d0` already listed under `referenced`. The script still requires `FEE_RECIPIENT` in the environment. These contracts are unaudited. An outside review is planned. Not financial advice.
