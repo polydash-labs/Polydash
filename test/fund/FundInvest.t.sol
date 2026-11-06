@@ -14,7 +14,7 @@ import {FundNFTInvest} from "../../src/fund/phase2/FundNFTInvest.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 import {FundVaultStore} from "../../src/fund/phase2/FundVaultStore.sol";
 import {MockERC20} from "../mocks/MockERC20.sol";
-import {FailRouter, MockFeed, MockWETH, RateRouter, ReenterRouter, ThiefRouter} from "./InvestMocks.sol";
+import {FailRouter, MockFeed, MockWETH, RateRouter, ReenterRouter, SkewWETH, ThiefRouter} from "./InvestMocks.sol";
 
 contract InvestMinter is IERC721Receiver {
     function mint(FundNFTInvest nft, uint256 qty) external {
@@ -274,6 +274,40 @@ contract FundInvestTest is Test {
         vault.swap(address(0), address(weth), address(0), 0.5 ether, 0.5 ether, "");
         assertEq(weth.balanceOf(address(vault)), 0);
         assertEq(vault.nav(), navBefore);
+    }
+
+    function test_wrap_and_unwrap_reject_a_short_weth() public {
+        SkewWETH skew = new SkewWETH();
+        address[] memory routers = new address[](0);
+        FundAllowlist.AssetInit[] memory assets = new FundAllowlist.AssetInit[](1);
+        assets[0] = FundAllowlist.AssetInit(address(skew), true, address(0), 0, 0, 0);
+        FundAllowlist skewList = new FundAllowlist(address(this), 1 days, routers, assets);
+        FundFactoryInvest skewFactory =
+            new FundFactoryInvest(feeTo, address(skewList), address(skew), address(new FundSwapFacet()));
+        FundFactoryInvest.Params memory p = _params();
+        p.assets = new address[](0);
+        vm.prank(manager);
+        FundNFTInvest nft = FundNFTInvest(skewFactory.createFund(p));
+        _ready(nft);
+        FundVaultInvest vault = nft.vault();
+
+        skew.setShort(true, false);
+        uint256 ethBefore = address(vault).balance;
+        vm.prank(manager);
+        vm.expectRevert(FundVaultStore.Slippage.selector);
+        vault.swap(address(0), address(0), address(skew), 0.2 ether, 1, "");
+        assertEq(address(vault).balance, ethBefore);
+        assertEq(skew.balanceOf(address(vault)), 0);
+
+        skew.setShort(false, false);
+        vm.prank(manager);
+        vault.swap(address(0), address(0), address(skew), 0.2 ether, 0.2 ether, "");
+        assertEq(skew.balanceOf(address(vault)), 0.2 ether);
+        skew.setShort(false, true);
+        vm.prank(manager);
+        vm.expectRevert(FundVaultStore.Slippage.selector);
+        vault.swap(address(0), address(skew), address(0), 0.2 ether, 1, "");
+        assertEq(skew.balanceOf(address(vault)), 0.2 ether);
     }
 
     function test_weth_quote_buy_and_sell() public {

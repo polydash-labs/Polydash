@@ -10,7 +10,7 @@ import {FundNFTInvest} from "../../src/fund/phase2/FundNFTInvest.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 import {FundVaultStore} from "../../src/fund/phase2/FundVaultStore.sol";
 import {MockERC20} from "../mocks/MockERC20.sol";
-import {GateToken, MockFeed, MockWETH, RateRouter} from "./InvestMocks.sol";
+import {GateToken, MockFeed, MockWETH, RateRouter, TaxToken} from "./InvestMocks.sol";
 
 contract FundExitTest is Test {
     FundAllowlist allowlist;
@@ -219,6 +219,47 @@ contract FundExitTest is Test {
         gatedVault.claimOwed(address(gated));
         assertEq(gatedVault.tokenOwed(manager, address(gated)), 0.2 ether);
         assertEq(gated.balanceOf(address(gatedVault)), 0.2 ether);
+    }
+
+    function test_short_delivery_reverts_the_exit_and_a_full_sale_clears_it() public {
+        TaxToken tax = new TaxToken(1000);
+        uint256 id = allowlist.proposeAsset(address(tax), address(feed), 1 hours, 0.5 ether, 1.5 ether);
+        vm.warp(block.timestamp + 1 days);
+        allowlist.execute(id);
+        tax.transfer(address(router), 100 ether);
+
+        FundFactoryInvest.Params memory p = _params(1, 0);
+        p.assets[0] = address(tax);
+        p.raiseDuration = 2 hours;
+        vm.prank(manager);
+        FundNFTInvest nft = FundNFTInvest(factory.createFund(p));
+        vm.prank(manager);
+        nft.mint{value: 1 ether}(1);
+        FundVaultInvest vault = nft.vault();
+        vm.prank(manager);
+        vault.enableInvesting();
+        vm.prank(manager);
+        vault.swap(address(router), address(0), address(tax), 0.5 ether, 0.45 ether, "");
+        assertEq(tax.balanceOf(address(vault)), 0.45 ether);
+
+        uint256 ethBefore = manager.balance;
+        uint256 vaultEth = address(vault).balance;
+        vm.prank(manager);
+        vm.expectRevert(FundVaultStore.UnsupportedToken.selector);
+        nft.exit(_one(1));
+        assertEq(manager.balance, ethBefore);
+        assertEq(address(vault).balance, vaultEth);
+        assertEq(nft.ownerOf(1), manager);
+        assertEq(nft.outstanding(), 1);
+
+        uint256 held = tax.balanceOf(address(vault));
+        vm.prank(manager);
+        vault.swap(address(router), address(tax), address(0), held, 1, "");
+        assertEq(tax.balanceOf(address(vault)), 0);
+        vm.prank(manager);
+        nft.exit(_one(1));
+        assertEq(nft.outstanding(), 0);
+        assertGt(manager.balance, ethBefore);
     }
 
     function test_market_nav_fails_closed() public {

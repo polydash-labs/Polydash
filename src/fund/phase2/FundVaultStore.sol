@@ -107,6 +107,8 @@ abstract contract FundVaultStore {
     error BadValue();
     error NothingToWithdraw();
     error TransferFailed();
+    /// @notice A token moved, but the holder did not receive the full amount. Fee-on-transfer is not supported.
+    error UnsupportedToken();
     error ZeroAddress();
     error DirectTransfer();
     error SkinRequired();

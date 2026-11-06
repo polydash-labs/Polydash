@@ -30,6 +30,11 @@ contract FundInvestForkTest is Test {
     address constant WBTC_USD = 0x62107b0d3adA75fc1697fD342d99eed947a3aA5E;
     address constant BUYBACK = 0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193;
     address constant FEE_RECIPIENT = 0x9a21c75aC263cC43125E70200636f6397f8776d0;
+    /// @dev Robinhood's contract page lists this as WETH. Not a feed. Not an allowlisted router target.
+    address constant WETH = 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73;
+    address constant V2_ROUTER = 0x89e5DB8B5aA49aA85AC63f691524311AEB649eba;
+    /// @dev Listed by Uniswap. Code is read below and the contract is not called.
+    address constant QUOTER_V2 = 0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7;
 
     bool internal on;
 
@@ -150,6 +155,137 @@ contract FundInvestForkTest is Test {
         assertEq(SWAP_ROUTER02.code.length, 24_497);
         assertEq(UNIVERSAL_ROUTER.code.length, 24_546);
         assertEq(V3_FACTORY.code.length, 24_535);
+        assertEq(QUOTER_V2.code.length, 8273);
+        assertEq(_addr("WETH9()", SWAP_ROUTER02), WETH);
+        assertEq(_addr("WETH()", V2_ROUTER), WETH);
+    }
+
+    /// @notice Robinhood lists this WETH. deposit, withdraw, and transfer move 1:1. Nothing is broadcast.
+    function test_fork_weth_identity_and_one_for_one_flow() public {
+        if (!on) return;
+        if (block.chainid != 4663) return;
+        (bool ok, bytes memory data) = BUYBACK.staticcall(abi.encodeWithSignature("weth()"));
+        assertTrue(ok);
+        assertEq(abi.decode(data, (address)), WETH);
+        assertEq(_str("name()", WETH), "WETH");
+        assertEq(_str("symbol()", WETH), "WETH");
+        assertEq(_u8("decimals()", WETH), 18);
+        assertGt(WETH.code.length, 0);
+        address impl = address(
+            uint160(
+                uint256(
+                    vm.load(WETH, bytes32(uint256(0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc)))
+                )
+            )
+        );
+        assertEq(impl, 0xC6B81b429797E0f555440b70cD99e032D7AE947e);
+        assertGt(impl.code.length, 0);
+
+        uint256 supply = IERC20(WETH).totalSupply();
+        address holder = makeAddr("wethHolder");
+        assertEq(IERC20(WETH).balanceOf(holder), 0);
+        vm.deal(address(this), 1 ether);
+        IWETH(WETH).deposit{value: 0.01 ether}();
+        assertEq(IERC20(WETH).balanceOf(address(this)), 0.01 ether);
+        assertEq(IERC20(WETH).totalSupply(), supply + 0.01 ether);
+        assertTrue(IERC20(WETH).transfer(holder, 0.01 ether));
+        assertEq(IERC20(WETH).balanceOf(holder), 0.01 ether);
+        assertEq(IERC20(WETH).balanceOf(address(this)), 0);
+        uint256 ethBefore = holder.balance;
+        vm.prank(holder);
+        IWETH(WETH).withdraw(0.01 ether);
+        assertEq(holder.balance - ethBefore, 0.01 ether);
+        assertEq(IERC20(WETH).balanceOf(holder), 0);
+        assertEq(IERC20(WETH).totalSupply(), supply);
+    }
+
+    /// @notice A failed refund and a closed exit both read a zero WETH balance and still pay spendable ETH.
+    function test_fork_refund_and_exit_with_no_weth() public {
+        if (!on) return;
+        if (block.chainid != 4663) return;
+        address[] memory routers = new address[](0);
+        FundAllowlist.AssetInit[] memory seeded = new FundAllowlist.AssetInit[](1);
+        seeded[0] = FundAllowlist.AssetInit({
+            asset: WETH, quote: true, feed: address(0), maxStale: 0, minPriceX18: 0, maxPriceX18: 0
+        });
+        FundAllowlist allowlist = new FundAllowlist(address(this), 1 days, routers, seeded);
+        FundFactoryInvest factory =
+            new FundFactoryInvest(FEE_RECIPIENT, address(allowlist), WETH, address(new FundSwapFacet()));
+        address manager = makeAddr("wethManager");
+        vm.deal(manager, 10 ether);
+
+        FundNFTInvest missed = _bare(factory, manager, 2, 0.1 ether);
+        vm.prank(manager);
+        missed.mint{value: 0.1 ether}(1);
+        assertEq(IERC20(WETH).balanceOf(address(missed.vault())), 0);
+        vm.warp(missed.vault().raiseDeadline() + 1);
+        missed.vault().failRaise();
+        uint256 before = manager.balance;
+        vm.prank(manager);
+        missed.refund(_one(1));
+        assertEq(manager.balance - before, 0.0998 ether);
+        assertEq(IERC20(WETH).balanceOf(address(missed.vault())), 0);
+        assertEq(address(missed.vault()).balance, 0.0002 ether);
+
+        FundNFTInvest filled = _bare(factory, manager, 1, 0.1 ether);
+        vm.prank(manager);
+        filled.mint{value: 0.1 ether}(1);
+        FundVaultInvest vault = filled.vault();
+        assertEq(uint8(vault.status()), uint8(FundVaultStore.Status.RaisingClosed));
+        assertEq(IERC20(WETH).balanceOf(address(vault)), 0);
+        before = manager.balance;
+        vm.prank(manager);
+        filled.exit(_one(1));
+        assertEq(manager.balance - before, 0.0998 ether);
+        assertEq(IERC20(WETH).balanceOf(address(vault)), 0);
+        assertEq(filled.outstanding(), 0);
+    }
+
+    function _bare(FundFactoryInvest factory, address manager, uint256 supply, uint256 price)
+        internal
+        returns (FundNFTInvest nft)
+    {
+        vm.prank(manager);
+        nft = FundNFTInvest(
+            factory.createFund(
+                FundFactoryInvest.Params({
+                    name: "WETH Check",
+                    symbol: "WC",
+                    imageUri: "",
+                    baseURI: "",
+                    mintPrice: price,
+                    raiseCap: price * supply,
+                    entryFeeBps: 0,
+                    minSkinBps: 10_000,
+                    raiseDuration: 1 hours,
+                    mandateHash: keccak256("weth-check"),
+                    assets: new address[](0)
+                })
+            )
+        );
+    }
+
+    function _one(uint256 id) internal pure returns (uint256[] memory ids) {
+        ids = new uint256[](1);
+        ids[0] = id;
+    }
+
+    function _addr(string memory sig, address target) internal view returns (address) {
+        (bool ok, bytes memory data) = target.staticcall(abi.encodeWithSignature(sig));
+        assertTrue(ok);
+        return abi.decode(data, (address));
+    }
+
+    function _str(string memory sig, address target) internal view returns (string memory) {
+        (bool ok, bytes memory data) = target.staticcall(abi.encodeWithSignature(sig));
+        assertTrue(ok);
+        return abi.decode(data, (string));
+    }
+
+    function _u8(string memory sig, address target) internal view returns (uint8) {
+        (bool ok, bytes memory data) = target.staticcall(abi.encodeWithSignature(sig));
+        assertTrue(ok);
+        return abi.decode(data, (uint8));
     }
 
     /// @notice Read-only health of the four primary Shared SVR proxies. Does not allowlist them or compute a mandate NAV.
@@ -180,4 +316,9 @@ contract FundInvestForkTest is Test {
         assertGt(updatedAt, 0);
         assertEq(answeredInRound, roundId);
     }
+}
+
+interface IWETH {
+    function deposit() external payable;
+    function withdraw(uint256 amount) external;
 }

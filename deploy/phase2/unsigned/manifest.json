@@ -1,0 +1,112 @@
+{
+  "purpose": "Unsigned creation payloads for a hidden ETH/WETH-quote Phase 2 deployment. Not a broadcast. Not an investing product. No routers, feeds, or non-quote assets.",
+  "chainId": 4663,
+  "sourceCommit": null,
+  "compiler": {
+    "solc": "0.8.24",
+    "evmVersion": "paris",
+    "optimizer": true,
+    "optimizerRuns": 200,
+    "viaIR": true,
+    "bytecodeHash": "ipfs",
+    "foundry": "1.9.0"
+  },
+  "signer": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+  "nonceAssumption": {
+    "nextNonce": 24,
+    "order": [
+      "FundSwapFacet",
+      "FundAllowlist",
+      "FundFactoryInvest"
+    ],
+    "note": "Predicted addresses are valid only while this nonce is next and these three transactions are sent in order with nothing between them."
+  },
+  "balanceWeiAtEstimate": "2442407846310770",
+  "forkBaseFeeWei": 20030000,
+  "estimatedGasUsed": {
+    "FundSwapFacet": 1775814,
+    "FundAllowlist": 1448908,
+    "FundFactoryInvest": 6897647
+  },
+  "estimatedGasUsedTotal": 10122369,
+  "estimatedCostWeiAtBaseFee": "202751051070000",
+  "weth": {
+    "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    "role": "quote asset only"
+  },
+  "transactions": [
+    {
+      "order": 1,
+      "contract": "FundSwapFacet",
+      "nonce": 24,
+      "predictedAddress": "0x9F21F4555ADa5791a23060A2Ee46855109Cbd434",
+      "file": "FundSwapFacet.payload.hex",
+      "constructorArgs": "0x",
+      "payloadKeccak256": "0x353f6ec08b925845f331695e5bf0e370c573fc3741fe964cb2f555a798f3d362",
+      "payloadBytes": 7919,
+      "gasUsedOnFork": 1775814
+    },
+    {
+      "order": 2,
+      "contract": "FundAllowlist",
+      "nonce": 25,
+      "predictedAddress": "0x2A9173fcBF90b0915b8Ee0c94C8aB1eFEE8549B0",
+      "file": "FundAllowlist.payload.hex",
+      "constructor": {
+        "owner": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+        "delay": 172800,
+        "routers": [],
+        "assets": [
+          {
+            "asset": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+            "quote": true,
+            "feed": "0x0000000000000000000000000000000000000000",
+            "maxStale": 0,
+            "minPriceX18": 0,
+            "maxPriceX18": 0
+          }
+        ]
+      },
+      "constructorArgs": "0x0000000000000000000000009a21c75ac263cc43125e70200636f6397f8776d0000000000000000000000000000000000000000000000000000000000002a300000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000bd7d308f8e1639fab988df18a8011f41eacad7300000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "payloadKeccak256": "0x198b896376e6c9993d79ea90ea79cf7f95d1c668f4068a4e628936db51fe841f",
+      "payloadBytes": 8105,
+      "gasUsedOnFork": 1448908
+    },
+    {
+      "order": 3,
+      "contract": "FundFactoryInvest",
+      "nonce": 26,
+      "predictedAddress": "0x0849195DCBCD4a06265563dC3ebC4eb1a656aabe",
+      "file": "FundFactoryInvest.payload.hex",
+      "constructor": {
+        "feeRecipient": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+        "allowlist": "0x2A9173fcBF90b0915b8Ee0c94C8aB1eFEE8549B0",
+        "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+        "swapFacet": "0x9F21F4555ADa5791a23060A2Ee46855109Cbd434"
+      },
+      "constructorArgs": "0x0000000000000000000000009a21c75ac263cc43125e70200636f6397f8776d00000000000000000000000002a9173fcbf90b0915b8ee0c94c8ab1efee8549b00000000000000000000000000bd7d308f8e1639fab988df18a8011f41eacad730000000000000000000000009f21f4555ada5791a23060a2ee46855109cbd434",
+      "payloadKeccak256": "0x101eae68ef151322a1ee6ed458486beb3c6c43fa35b785e421f5fc1720536fa8",
+      "payloadBytes": 32192,
+      "gasUsedOnFork": 6897647,
+      "contractsCreatedByConstructor": {
+        "FundVaultDeployer": "0x7C87f91b84A457349537400153618DB1B0523AB2",
+        "FundNFTDeployer": "0x8F020f7Ae579e1b2aE503C6CB1544E6ca0F0ff4E"
+      }
+    }
+  ],
+  "abiKeccak256": {
+    "FundSwapFacet": "0xf629f679ed8eb49a1aab1c27fd738fd744b3eac410f06af6112e642cca43cfa7",
+    "FundAllowlist": "0xd06b9c666d066f591798a7dd930298f4abb1362c91fd74b2cb3928f066e48707",
+    "FundFactoryInvest": "0xa6f2d63da3d072ee0eb1293ce2da95a305b556c32f70b68bda41b26c95ddc01c",
+    "FundVaultInvest": "0x384479076573cc480b6637fe17d850b6ce73bbf938a486894eb10615d2b90225",
+    "FundNFTInvest": "0x6a14de5f5ddb33af4d26fa677d7dedae9ac857145a4d7ed4edac6770fd79fe74"
+  },
+  "disabled": [
+    "ChainlinkNavFeed is not in these transactions",
+    "no Shared SVR proxy is set",
+    "no Uniswap router is allowlisted",
+    "UniversalRouter is not allowed",
+    "FUND_ROUTES_ENABLED is not set to enabled",
+    "NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS is not set"
+  ]
+}

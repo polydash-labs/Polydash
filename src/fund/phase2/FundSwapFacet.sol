@@ -67,7 +67,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         uint256 before = _wethBalance();
         IWETH(weth).deposit{value: amountIn}();
         uint256 got = _wethBalance() - before;
-        if (got < minAmountOut) revert Slippage();
+        if (got != amountIn || got < minAmountOut) revert Slippage();
         if (address(this).balance < _claimableFees()) revert FeesShort();
         _record(weth, SIDE_BUY, got, NAVReader.executionPrice(amountIn, got));
     }
@@ -79,7 +79,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         IWETH(weth).withdraw(amountIn);
         inSwap = false;
         uint256 got = address(this).balance - ethBefore;
-        if (got < minAmountOut) revert Slippage();
+        if (got != amountIn || got < minAmountOut) revert Slippage();
         _record(weth, SIDE_SELL, amountIn, NAVReader.executionPrice(got, amountIn));
     }
 

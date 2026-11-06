@@ -48,6 +48,54 @@ contract GateToken is ERC20 {
     }
 }
 
+/// @dev Takes `feeBps` from each holder-to-holder transfer. Mint and burn are not taxed.
+contract TaxToken is ERC20 {
+    uint256 public immutable feeBps;
+    address public constant SINK = address(0xFEE);
+
+    constructor(uint256 _feeBps) ERC20("Tax", "TAX") {
+        feeBps = _feeBps;
+        _mint(msg.sender, 1e24);
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (feeBps == 0 || from == address(0) || to == address(0) || value == 0) {
+            super._update(from, to, value);
+            return;
+        }
+        uint256 fee = (value * feeBps) / 10_000;
+        super._update(from, to, value - fee);
+        if (fee != 0) super._update(from, SINK, fee);
+    }
+}
+
+/// @dev Optional 1 wei shortfall on deposit or withdraw. Used to lock the 1:1 quote rule.
+contract SkewWETH is ERC20 {
+    bool public shortDeposit;
+    bool public shortWithdraw;
+
+    constructor() ERC20("Skew", "sWETH") {}
+
+    function setShort(bool depositShort, bool withdrawShort) external {
+        shortDeposit = depositShort;
+        shortWithdraw = withdrawShort;
+    }
+
+    function deposit() external payable {
+        uint256 minted = shortDeposit && msg.value > 1 ? msg.value - 1 : msg.value;
+        _mint(msg.sender, minted);
+    }
+
+    function withdraw(uint256 amount) external {
+        _burn(msg.sender, amount);
+        uint256 out = shortWithdraw && amount > 1 ? amount - 1 : amount;
+        (bool ok,) = msg.sender.call{value: out}("");
+        require(ok, "weth");
+    }
+
+    receive() external payable {}
+}
+
 contract MockWETH is ERC20 {
     constructor() ERC20("Wrapped Ether", "WETH") {}
 

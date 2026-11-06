@@ -12,7 +12,7 @@ Phase 2 source from PR 23 is on `main` at `5757b07` and was not deployed. This c
 
 - `raiseDuration` of 1 hour to 30 days. Filling the cap or supply at or before the deadline sets `RaisingClosed`. After the deadline, `failRaise` sets `Failed` if the raise is still open.
 - `refund` on `Failed` pays the current NFT holder a pro-rata share of spendable ETH. It is not the mint price. The 0.2% protocol fee and any entry fee stay withheld. The last outstanding units receive rounding dust.
-- `exit` on `RaisingClosed` or `Investing` pays a pro-rata share of spendable ETH, WETH, and mandate tokens. Pause does not block it. Native ETH is sent even if a later token transfer reverts. That token share is reserved as `tokenOwed` and is not given to the next holder. `claimOwed` retries it. Fee-on-transfer tokens are not supported. A recipient that rejects ETH reverts that holder's exit.
+- `exit` on `RaisingClosed` or `Investing` pays a pro-rata share of spendable ETH, WETH, and mandate tokens. Pause does not block it. Native ETH is sent even if a later token transfer reverts and the tokens are still in the vault. That share is reserved as `tokenOwed` and is not given to the next holder. `claimOwed` retries it. If the token balance changes and the holder does not receive the full amount, the exit reverts. Fee-on-transfer tokens are not supported. A recipient that rejects ETH reverts that holder's exit. Wrap and unwrap revert unless the WETH amount equals the ETH amount.
 - `nav()` is ETH plus WETH at face value, plus mandate balances at the allowlist feed. A missing, reverting, stale, zero, or out-of-bounds price reverts. Cost basis is not that number.
 - Non-quote assets cannot be enabled without a feed that has code. The deploy script still starts with WETH only.
 
@@ -33,7 +33,7 @@ The public dataset for Robinhood Chain mainnet lists primary Shared SVR proxies.
 | USDT/USD | `0xbf3550B6fAe1671da7C238Af12e03Ac586BEf3B1` | Shared SVR |
 | WBTC/USD | `0x62107b0d3adA75fc1697fD342d99eed947a3aA5E` | Shared SVR |
 
-`ChainlinkNavFeed` divides asset/USD by ETH/USD and scales into raw token units. A decimal shift alone is not that conversion. Secondary proxies were not read. Shared SVR access and integration were not reviewed. No canonical ERC-20 address is tied to USDC, USDT, or WBTC here. WETH is not treated as 1:1 with the ETH/USD feed until that WETH contract is verified. Chainlink's published L2 sequencer list still omits Robinhood Chain, and the chain docs do not name an uptime proxy. The adapter reverts when a sequencer guard is required and no sequencer is set. No other network's uptime feed is copied. The deploy script does not set any of these proxies.
+`ChainlinkNavFeed` divides asset/USD by ETH/USD and scales into raw token units. A decimal shift alone is not that conversion. Secondary proxies were not read. Shared SVR access and integration were not reviewed. No canonical ERC-20 address is tied to USDC, USDT, or WBTC here. Robinhood's contract page lists WETH at `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73`. SwapRouter02 `WETH9()` and the recorded V2 router `WETH()` return that address. It is an ERC-1967 proxy. A fork exercise of `deposit`, `withdraw`, `transfer`, and a zero `balanceOf` is 1:1, which is what face-value NAV assumes. That is not a review of the proxy admin, and it does not connect WETH to the ETH/USD feed. Chainlink's published L2 sequencer list still omits Robinhood Chain, and the chain docs do not name an uptime proxy. The adapter reverts when a sequencer guard is required and no sequencer is set. No other network's uptime feed is copied. The deploy script does not set any of these proxies.
 
 Price-dependent production use stays blocked until source, access semantics, canonical assets, a reviewed freshness bound, the outage guard, and a bounded router simulation are validated.
 
@@ -45,7 +45,7 @@ Uniswap's Robinhood Chain V3 deployment list names contracts whose code size was
 | UniversalRouter | `0x8876789976decbfcbbbe364623c63652db8c0904` | 24546 bytes |
 | V3Factory | `0x1f7d7550b1b028f7571e69a784071f0205fd2efa` | 24535 bytes |
 
-QuoterV2 `0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7` is on that list and was not code-checked here. Source, ABI, WETH and token mappings, and liquid pools are not verified in this repository. UniversalRouter is not given a blanket allow. Ethereum example token addresses are not copied.
+QuoterV2 `0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7` has 8273 bytes of code and was not called. Its source, ABI, and pools are not verified here. SwapRouter02 `WETH9()` and Uniswap V2 router `0x89e5DB8B5aA49aA85AC63f691524311AEB649eba` `WETH()` both return the documented WETH. Those routers are not allowlisted and no swap was simulated through them. UniversalRouter is not given a blanket allow. Ethereum example token addresses are not copied.
 
 Until `proposeAsset` receives a reviewed feed and the timelock elapses, every asset except WETH stays disabled. ETH and WETH can be valued at face value. A mandate asset cannot.
 

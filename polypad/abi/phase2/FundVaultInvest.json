@@ -56,6 +56,11 @@
         "name": "_raiseDeadline",
         "type": "uint64",
         "internalType": "uint64"
+      },
+      {
+        "name": "_factory",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -1604,6 +1609,11 @@
   {
     "type": "error",
     "name": "TransferFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedToken",
     "inputs": []
   },
   {

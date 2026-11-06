@@ -321,11 +321,9 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         }
         uint256 vaultAfter = IERC20(token).balanceOf(address(this));
         if (vaultAfter != vaultBefore) {
-            // Tokens left the vault but the recipient did not receive `out` (for example a transfer tax).
-            // Do not reserve them, and do not undo the ETH already sent. Those tokens are unsupported.
-            uint256 gone = vaultBefore > vaultAfter ? vaultBefore - vaultAfter : 0;
-            if (gone > 0) _reduceBasis(token, gone, available);
-            return;
+            // Tokens left the vault without the holder receiving `out`. Revert so the burn and the
+            // ETH already staged in this call do not settle. A supported token has to deliver in full.
+            revert UnsupportedToken();
         }
         tokenOwed[to][token] += out;
         tokenReserved[token] += out;
