@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- Phase 1a tokenized funds in `src/fund`: `FundFactory`, `FundVault`, and `FundNFT`. A manager sets the name, symbol, image, base URI, fixed ETH mint price, raise cap, and an optional entry fee of 0% to 5%. Buyers mint ERC-721 units at that price while the raise is open. ETH is held by the vault. The manager must mint at least 5% of supply (or a higher configured share) before other wallets can mint. `maxSupply` is `raiseCap / mintPrice`, rounded down; the remainder cannot mint another unit. The raise closes at that supply. A 0.2% protocol fee matches the launchpad platform fee and can be pulled to the factory fee recipient. The manager can pull the entry fee. This phase does not withdraw principal and does not invest it. Not deployed. Not audited.
 
 ## [1.2.0] - 2026-11-06
 ### Security

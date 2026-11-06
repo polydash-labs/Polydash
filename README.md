@@ -62,6 +62,7 @@ flowchart TB
     Gate[Gated mints]
     Treas[Treasury rules]
     Floor[Floor vault]
+    Fund[Tokenized funds]
   end
 
   subgraph buybacks [POLYDASH buybacks]
@@ -93,6 +94,7 @@ Staking v1 behaviour, roles, and fees are written up in [docs/ARCHITECTURE.md](d
 | Gated mints | NFT collections with an optional token-holder phase. | [`src/gatedmint/`](src/gatedmint) |
 | Treasury rules | Per-token treasury. Operator tasks run only inside published rules and a timelock. | [`src/treasury/`](src/treasury) |
 | Floor vault | Fixed-price NFT collections whose mint share funds an ETH and launch-token vault. | [`src/floorvault/`](src/floorvault) |
+| Tokenized funds | Phase 1a raise: fixed-price ERC-721 units, ETH held in a vault, no principal withdraw. | [`src/fund/`](src/fund) |
 | Buybacks | Capped POLYDASH buys from a fee share: 62.5% burned, 37.5% to stakers. | [`src/buyback/`](src/buyback) |
 | Poly Agent | Read-only staking monitor: pool sizes, reward rates, inflows and outflows. | [`agents/poly-agent/`](agents/poly-agent) |
 | PolyCTO | Read-only multi-role agent for a launch: community, marketing drafts, token stats, and a heuristic source scan. The scan is not a review. | [`agents/polycto/`](agents/polycto) |
@@ -171,7 +173,7 @@ Compiler settings are per module in [`foundry.toml`](foundry.toml):
 
 | Modules | solc | EVM |
 | --- | --- | --- |
-| Staking v1, staking V2, NFT staking, vesting, bonds, gated mints, treasury | 0.8.24 (pragma) | `paris` |
+| Staking v1, staking V2, NFT staking, vesting, bonds, gated mints, treasury, tokenized funds | 0.8.24 (pragma) | `paris` |
 | Floor vault, buybacks, Polypad launchpad | 0.8.26 (pragma) | `cancun` |
 
 Optimizer 200 runs, `via_ir = true`. Floor vault and buybacks link Uniswap v4-core v4.0.0.
