@@ -10,7 +10,7 @@ import {FundNFTInvest} from "../../src/fund/phase2/FundNFTInvest.sol";
 import {FundVaultInvest} from "../../src/fund/phase2/FundVaultInvest.sol";
 import {FundVaultStore} from "../../src/fund/phase2/FundVaultStore.sol";
 import {MockERC20} from "../mocks/MockERC20.sol";
-import {MockFeed, MockWETH, RateRouter} from "./InvestMocks.sol";
+import {GateToken, MockFeed, MockWETH, RateRouter} from "./InvestMocks.sol";
 
 contract FundExitTest is Test {
     FundAllowlist allowlist;
@@ -112,6 +112,8 @@ contract FundExitTest is Test {
         uint256 before = alice.balance;
         vm.prank(alice);
         nft.refund(_one(1));
+        assertLt(principal, 1 ether);
+        assertEq(principal + fees, 1 ether);
         assertEq(alice.balance, before + principal);
         assertEq(nft.outstanding(), 0);
         assertEq(vault.spendableEth(), 0);
@@ -187,28 +189,36 @@ contract FundExitTest is Test {
         assertEq(nft.outstanding(), 1);
         assertGt(vault.spendableEth(), 0);
 
-        MockERC20 taxed = new MockERC20("Tax", "TAX", 1000);
-        uint256 id = allowlist.proposeAsset(address(taxed), address(feed), 1 hours, 0.5 ether, 1.5 ether);
+        GateToken gated = new GateToken();
+        uint256 id = allowlist.proposeAsset(address(gated), address(feed), 1 hours, 0.5 ether, 1.5 ether);
         vm.warp(block.timestamp + 1 days);
         allowlist.execute(id);
-        taxed.transfer(address(router), 100 ether);
+        gated.transfer(address(router), 100 ether);
         FundFactoryInvest.Params memory p = _params(1, 0);
-        p.assets[0] = address(taxed);
+        p.assets[0] = address(gated);
         p.raiseDuration = 2 hours;
         vm.prank(manager);
-        FundNFTInvest taxNft = FundNFTInvest(factory.createFund(p));
+        FundNFTInvest gatedNft = FundNFTInvest(factory.createFund(p));
         vm.prank(manager);
-        taxNft.mint{value: 1 ether}(1);
-        FundVaultInvest taxVault = taxNft.vault();
+        gatedNft.mint{value: 1 ether}(1);
+        FundVaultInvest gatedVault = gatedNft.vault();
         vm.prank(manager);
-        taxVault.enableInvesting();
+        gatedVault.enableInvesting();
         vm.prank(manager);
-        taxVault.swap(address(router), address(0), address(taxed), 0.2 ether, 0.1 ether, "");
+        gatedVault.swap(address(router), address(0), address(gated), 0.2 ether, 0.2 ether, "");
+        gated.lock();
+        uint256 ethBefore = manager.balance;
+        uint256 spendable = gatedVault.spendableEth();
+        vm.prank(manager);
+        gatedNft.exit(_one(1));
+        assertEq(manager.balance - ethBefore, spendable);
+        assertEq(gatedNft.outstanding(), 0);
+        assertEq(gatedVault.tokenOwed(manager, address(gated)), 0.2 ether);
         vm.prank(manager);
         vm.expectRevert(FundVaultStore.TransferFailed.selector);
-        taxNft.exit(_one(1));
-        assertEq(taxNft.ownerOf(1), manager);
-        assertEq(taxNft.outstanding(), 1);
+        gatedVault.claimOwed(address(gated));
+        assertEq(gatedVault.tokenOwed(manager, address(gated)), 0.2 ether);
+        assertEq(gated.balanceOf(address(gatedVault)), 0.2 ether);
     }
 
     function test_market_nav_fails_closed() public {

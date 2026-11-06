@@ -72,6 +72,9 @@ abstract contract FundVaultStore {
     mapping(address => bool) public isExecutor;
     mapping(uint256 => TradeRecord) public trades;
     address[] internal _mandateAssets;
+    /// @dev Tokens kept for a holder when a transfer did not complete. Later exits skip this amount.
+    mapping(address => mapping(address => uint256)) public tokenOwed;
+    mapping(address => uint256) public tokenReserved;
 
     event Bound(address indexed nft);
     event Deposited(uint256 gross, uint256 principalAdded, uint256 entryFee, uint256 protocolFee);
@@ -79,6 +82,8 @@ abstract contract FundVaultStore {
     event RaiseFailed(uint256 raised, uint256 minted);
     event Refunded(address indexed holder, uint256 count, uint256 ethOut);
     event Exited(address indexed holder, uint256 count, uint256 ethOut);
+    event TokenOwed(address indexed holder, address indexed asset, uint256 amount);
+    event TokenClaimed(address indexed holder, address indexed asset, uint256 amount);
     event EntryFeeWithdrawn(address indexed to, uint256 amount);
     event ProtocolFeeWithdrawn(address indexed to, uint256 amount);
     event PayoutWalletSet(address indexed wallet);

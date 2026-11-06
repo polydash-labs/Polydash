@@ -30,6 +30,24 @@ contract MockFeed {
     }
 }
 
+/// @dev Transfers succeed until `lock` is called. Used to show a later exit can still pay ETH.
+contract GateToken is ERC20 {
+    bool public locked;
+
+    constructor() ERC20("Gate", "GATE") {
+        _mint(msg.sender, 1e24);
+    }
+
+    function lock() external {
+        locked = true;
+    }
+
+    function _update(address from, address to, uint256 value) internal override {
+        if (locked && from != address(0)) revert("locked");
+        super._update(from, to, value);
+    }
+}
+
 contract MockWETH is ERC20 {
     constructor() ERC20("Wrapped Ether", "WETH") {}
 

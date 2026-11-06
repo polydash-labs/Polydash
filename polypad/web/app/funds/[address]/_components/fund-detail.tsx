@@ -202,6 +202,10 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
                 <p>Protocol fee (0.2%): {formatFundEth(quote.protocolFee)} ETH.</p>
                 {fund.entryFeeBps > 0 && <p>Entry fee ({bpsLabel(fund.entryFeeBps)}): {formatFundEth(quote.entryFee)} ETH.</p>}
                 <p>Stays in the vault: {formatFundEth(quote.staysInVault)} ETH.</p>
+                <p>
+                  A failed raise, where that path exists, can return {formatFundEth(quote.failedRaiseRefund)} ETH of this payment.
+                  The protocol fee and the entry fee are not returned. This is not a refund of the full mint price.
+                </p>
               </div>
             )}
             {!isConnected ? (

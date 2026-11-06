@@ -11,8 +11,8 @@ Phase 2 source from PR 23 is on `main` at `5757b07` and was not deployed. This c
 ## What this change adds
 
 - `raiseDuration` of 1 hour to 30 days. Filling the cap or supply at or before the deadline sets `RaisingClosed`. After the deadline, `failRaise` sets `Failed` if the raise is still open.
-- `refund` on `Failed` pays the current NFT holder a pro-rata share of spendable ETH. Entry and protocol fees stay out of that payment. The last outstanding units receive rounding dust.
-- `exit` on `RaisingClosed` or `Investing` pays a pro-rata share of spendable ETH, WETH, and mandate tokens. Pause does not block it. A token that delivers less than the vault sent reverts the call, and the NFT stays in place.
+- `refund` on `Failed` pays the current NFT holder a pro-rata share of spendable ETH. It is not the mint price. The 0.2% protocol fee and any entry fee stay withheld. The last outstanding units receive rounding dust.
+- `exit` on `RaisingClosed` or `Investing` pays a pro-rata share of spendable ETH, WETH, and mandate tokens. Pause does not block it. Native ETH is sent even if a later token transfer reverts. That token share is reserved as `tokenOwed` and is not given to the next holder. `claimOwed` retries it. Fee-on-transfer tokens are not supported. A recipient that rejects ETH reverts that holder's exit.
 - `nav()` is ETH plus WETH at face value, plus mandate balances at the allowlist feed. A missing, reverting, stale, zero, or out-of-bounds price reverts. Cost basis is not that number.
 - Non-quote assets cannot be enabled without a feed that has code. The deploy script still starts with WETH only.
 

@@ -121,6 +121,9 @@ test('mint quote floors the protocol fee and the entry fee separately', () => {
   assert.equal(quote.protocolFee, parseEther('0.00002'));
   assert.equal(quote.entryFee, parseEther('0.0005'));
   assert.equal(quote.staysInVault, quote.cost - quote.protocolFee - quote.entryFee);
+  assert.equal(quote.failedRaiseRefund, quote.staysInVault);
+  assert.ok(quote.failedRaiseRefund < quote.cost);
+  assert.equal(quote.failedRaiseRefund + quote.protocolFee + quote.entryFee, quote.cost);
   assert.equal(feeOn(1n, 20n), 0n);
 });
 

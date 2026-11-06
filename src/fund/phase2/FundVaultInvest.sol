@@ -2,7 +2,6 @@
 pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IFundAllowlist, IFundUnit} from "./Interfaces.sol";
 import {NAVReader} from "./NAVReader.sol";
@@ -18,8 +17,6 @@ import {FundVaultStore} from "./FundVaultStore.sol";
 ///         `nav()` quotes mandate assets from the allowlist feed and reverts when that price cannot be used.
 ///         Cost basis is not NAV.
 contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
-    using SafeERC20 for IERC20;
-
     address public immutable swapFacet;
 
     modifier onlyNft() {
@@ -270,6 +267,7 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         if (to == address(0) || n == 0 || supplyBefore == 0 || n > supplyBefore) revert BadAmount();
         if (IFundUnit(nft).outstanding() + n != supplyBefore) revert BadAmount();
         ethOut = _share(spendableEth(), n, supplyBefore);
+        // Native ETH is paid first. A later token transfer that reverts is caught and does not undo this payment.
         _payEth(to, ethOut);
         _payToken(weth, to, n, supplyBefore);
         uint256 assets = _mandateAssets.length;
@@ -292,18 +290,68 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         _send(to, amount);
     }
 
+    /// @notice Pull tokens that an exit reserved because the transfer did not complete.
+    ///         A failed pull leaves the reservation in place. It does not move ETH.
+    function claimOwed(address asset) external nonReentrant {
+        uint256 amount = tokenOwed[msg.sender][asset];
+        if (amount == 0) revert NothingToWithdraw();
+        tokenOwed[msg.sender][asset] = 0;
+        tokenReserved[asset] -= amount;
+        if (!_deliver(asset, msg.sender, amount)) {
+            tokenOwed[msg.sender][asset] = amount;
+            tokenReserved[asset] += amount;
+            revert TransferFailed();
+        }
+        emit TokenClaimed(msg.sender, asset, amount);
+    }
+
     function _payToken(address token, address to, uint256 n, uint256 supplyBefore) internal {
+        uint256 reserved = tokenReserved[token];
         uint256 bal = IERC20(token).balanceOf(address(this));
-        if (bal == 0) return;
-        uint256 out = _share(bal, n, supplyBefore);
+        uint256 available = bal > reserved ? bal - reserved : 0;
+        if (available == 0) return;
+        uint256 out = _share(available, n, supplyBefore);
         if (out == 0) return;
+        uint256 vaultBefore = IERC20(token).balanceOf(address(this));
+        if (_deliver(token, to, out)) {
+            _reduceBasis(token, out, available);
+            return;
+        }
+        uint256 vaultAfter = IERC20(token).balanceOf(address(this));
+        if (vaultAfter != vaultBefore) {
+            // Tokens left the vault but the recipient did not receive `out` (for example a transfer tax).
+            // Do not reserve them, and do not undo the ETH already sent. Those tokens are unsupported.
+            uint256 gone = vaultBefore > vaultAfter ? vaultBefore - vaultAfter : 0;
+            if (gone > 0) _reduceBasis(token, gone, available);
+            return;
+        }
+        tokenOwed[to][token] += out;
+        tokenReserved[token] += out;
+        emit TokenOwed(to, token, out);
+    }
+
+    /// @dev True only when the vault lost `amount` and the recipient gained `amount`.
+    ///      A revert, a false return, or a short delivery is a failure. Fee-on-transfer is not supported.
+    function _deliver(address token, address to, uint256 amount) internal returns (bool) {
+        uint256 vaultBefore = IERC20(token).balanceOf(address(this));
         uint256 holderBefore = IERC20(token).balanceOf(to);
-        IERC20(token).safeTransfer(to, out);
-        if (IERC20(token).balanceOf(address(this)) != bal - out) revert TransferFailed();
-        if (IERC20(token).balanceOf(to) - holderBefore != out) revert TransferFailed();
+        if (vaultBefore < amount) return false;
+        try IERC20(token).transfer(to, amount) returns (bool ok) {
+            if (!ok) return false;
+        } catch {
+            return false;
+        }
+        uint256 vaultAfter = IERC20(token).balanceOf(address(this));
+        uint256 holderAfter = IERC20(token).balanceOf(to);
+        if (holderAfter < holderBefore) return false;
+        return vaultAfter == vaultBefore - amount && holderAfter - holderBefore == amount;
+    }
+
+    function _reduceBasis(address token, uint256 out, uint256 available) internal {
         uint256 basis = costBasis[token];
         if (basis == 0) return;
-        uint256 removed = out == bal ? basis : (basis * out) / bal;
+        uint256 removed = out == available ? basis : (basis * out) / available;
+        if (removed > basis) removed = basis;
         costBasis[token] = basis - removed;
         totalCostBasis -= removed;
     }
