@@ -4,12 +4,14 @@ pragma solidity 0.8.24;
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IFundAllowlist} from "./Interfaces.sol";
 import {FundNFTInvest} from "./FundNFTInvest.sol";
+import {FundNFTDeployer, FundVaultDeployer} from "./FundSpawn.sol";
 import {FundVaultInvest} from "./FundVaultInvest.sol";
 
 /// @title FundFactoryInvest (not reviewed, not deployed)
 /// @notice Deploys one investing vault and one NFT per fund. This is not the live Phase 1a factory.
 ///         Phase 1a `FundFactory` at 0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878 is unchanged.
-///         There is no proxy. Deploy is a separate step and is not part of this source being live.
+///         There is no proxy. The vault and NFT are still created with `new`, from two deployer
+///         contracts, so this factory's runtime stays under the 24576-byte limit.
 ///         The owner can change the fee recipient. The owner cannot move ETH out of a vault.
 contract FundFactoryInvest is ReentrancyGuard {
     uint256 public constant BPS = 10_000;
@@ -43,6 +45,8 @@ contract FundFactoryInvest is ReentrancyGuard {
     IFundAllowlist public immutable allowlist;
     address public immutable weth;
     address public immutable swapFacet;
+    FundVaultDeployer public immutable vaultDeployer;
+    FundNFTDeployer public immutable nftDeployer;
 
     address[] public allFunds;
     mapping(address => bool) public isFund;
@@ -82,6 +86,8 @@ contract FundFactoryInvest is ReentrancyGuard {
             revert InvalidParams();
         }
         owner = msg.sender;
+        vaultDeployer = new FundVaultDeployer();
+        nftDeployer = new FundNFTDeployer();
         feeRecipient = _feeRecipient;
         allowlist = IFundAllowlist(_allowlist);
         weth = _weth;
@@ -121,7 +127,7 @@ contract FundFactoryInvest is ReentrancyGuard {
         if (skinRequired == 0 || skinRequired > maxSupply) revert InvalidParams();
         _checkAssets(p.assets);
 
-        FundVaultInvest vault = new FundVaultInvest(
+        FundVaultInvest vault = vaultDeployer.deploy(
             msg.sender,
             p.raiseCap,
             maxSupply,
@@ -134,7 +140,7 @@ contract FundFactoryInvest is ReentrancyGuard {
             swapFacet,
             uint64(block.timestamp + p.raiseDuration)
         );
-        FundNFTInvest nft = new FundNFTInvest(
+        FundNFTInvest nft = nftDeployer.deploy(
             FundNFTInvest.Init({
                 name: p.name,
                 symbol: p.symbol,

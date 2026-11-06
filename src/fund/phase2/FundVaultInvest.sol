@@ -35,18 +35,20 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         bytes32 _mandateHash,
         address[] memory assets,
         address _swapFacet,
-        uint64 _raiseDeadline
+        uint64 _raiseDeadline,
+        address _factory
     ) {
-        if (_manager == address(0) || _allowlist == address(0) || _weth == address(0) || _swapFacet == address(0)) {
-            revert ZeroAddress();
-        }
+        if (
+            _manager == address(0) || _allowlist == address(0) || _weth == address(0) || _swapFacet == address(0)
+                || _factory == address(0)
+        ) revert ZeroAddress();
         if (_swapFacet.code.length == 0) revert BadRouter();
         if (_mandateHash == bytes32(0) || _raiseDeadline <= block.timestamp) revert BadValue();
         if (assets.length > MAX_ASSETS) revert TooMany();
         if (!IFundAllowlist(_allowlist).assetAllowed(_weth)) revert NotAllowlisted();
 
         swapFacet = _swapFacet;
-        factory = msg.sender;
+        factory = _factory;
         manager = _manager;
         raiseCap = _raiseCap;
         maxSupply = _maxSupply;
