@@ -284,6 +284,17 @@
       "verification": "match",
       "source": "src/buyback/PolydashRewardsPool.sol",
       "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/buyback/README.md"]
+    },
+    {
+      "name": "FundFactory",
+      "group": "fund",
+      "role": "factory",
+      "address": "0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
+      "verification": "exact match",
+      "source": "src/fund/",
+      "notes": "Phase 1a raise/mint only; unaudited. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Blockscout API verification was blocked by Cloudflare; Sourcify is the verification of record.",
+      "documentedIn": ["README.md", "docs/DEPLOYMENTS.md", "docs/CREATOR_CONTRACTS.md", "src/fund/README.md"]
     }
   ],
   "referenced": [
@@ -302,8 +313,8 @@
     {
       "name": "Platform fee wallet",
       "address": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
-      "notes": "Wallet recorded as a constructor argument of the launch factories in polypad/README.md. Not a product contract.",
-      "documentedIn": ["polypad/README.md", "src/buyback/README.md"]
+      "notes": "Wallet recorded as a constructor argument of the launch factories in polypad/README.md. Also the owner and feeRecipient of FundFactory. Not a product contract.",
+      "documentedIn": ["polypad/README.md", "src/buyback/README.md", "src/fund/README.md"]
     },
     {
       "name": "POLYDASH/WETH pool hook",

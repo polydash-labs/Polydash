@@ -1,6 +1,6 @@
 # Tokenized funds (Phase 1a)
 
-These contracts are unaudited. An outside review is planned. They are not deployed.
+These contracts are unaudited. An outside review is planned. Not financial advice. `FundFactory` is deployed on Robinhood Chain. Details are in [Deployment](#deployment-robinhood-chain-chain-id-4663). Sourcify exact match is a bytecode check. It is not a review.
 
 Phase 1a is the raise. A manager creates a fund the way a creator creates an NFT collection, as an alternative to launching a token. Buyers mint ERC-721 units at a fixed ETH price. Each NFT is one equal unit. A wallet's share of what has been minted is `balanceOf(wallet) / totalMinted`.
 
@@ -39,4 +39,38 @@ Allowlist swaps, stock tokens, a carry NFT, token-bound accounts, a floor bid, a
 
 ## Tests
 
-`test/fund/Fund.t.sol`.
+`test/fund/Fund.t.sol` and `test/fund/DeployFundFactory.t.sol`.
+
+## Deployment (Robinhood Chain, chain ID 4663)
+
+These contracts are unaudited. An outside review is planned. Not financial advice. Sourcify exact match is a bytecode check. It is not a review.
+
+| Contract | Address | Verification |
+| --- | --- | --- |
+| `FundFactory` | [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) |
+
+Deploy transaction: [`0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3`](https://robinhoodchain.blockscout.com/tx/0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3) (block 107836877). `owner` and `feeRecipient` are `0x9a21c75aC263cC43125E70200636f6397f8776d0`. Phase 1a is the raise and the mint. `createFund` deploys one `FundVault` and one `FundNFT` per fund. Blockscout's API verification was blocked by Cloudflare. Sourcify is the verification of record, the same pattern as the other factories.
+
+The NatSpec titles in `src/fund` still say "DRAFT - not reviewed, not deployed". They are left unchanged so the source stays the verified exact match.
+
+`script/DeployFundFactory.s.sol` is the script that broadcast this factory. It reads `PRIVATE_KEY` and `FEE_RECIPIENT`. Both were required. The script has no default recipient. Leave `DEPLOY_FUND_FACTORY_PK` unset. If that variable is set, the script uses it instead of `PRIVATE_KEY`. The unit test is the only caller that sets it, so the test does not share `PRIVATE_KEY` with the staking deploy test in one Foundry process. Copy [`.env.example`](../../.env.example) to `.env` on the machine that signs. Do not commit `.env`, a key, or a keystore. Running the command again deploys a second factory.
+
+Compiler settings come from [`foundry.toml`](../../foundry.toml): solc 0.8.24, optimizer 200 runs, via-IR, `bytecode_hash = "ipfs"`, and EVM `paris` for `src/fund/**`.
+
+```bash
+export ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com
+export FEE_RECIPIENT=0x9a21c75aC263cC43125E70200636f6397f8776d0
+export PRIVATE_KEY=0xYOUR_DEPLOYER_PRIVATE_KEY_HERE
+
+forge script script/DeployFundFactory.s.sol --rpc-url robinhood --broadcast
+```
+
+`ROBINHOOD_RPC_URL` can be the public RPC or an Alchemy URL for chain ID 4663. `--rpc-url robinhood` reads that variable. The script logs the factory address, `owner`, and `feeRecipient`.
+
+Sourcify, already recorded for the address above:
+
+```bash
+forge verify-contract 0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878 src/fund/FundFactory.sol:FundFactory --chain 4663 --verifier sourcify
+```
+
+Sourcify compares the on-chain creation code, which includes the fee-recipient constructor argument. If a new submission needs that argument called out, add `--guess-constructor-args`, or pass `--creation-transaction-hash 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3`.

@@ -198,6 +198,8 @@ Web unit tests, from `polypad/web`: `corepack enable && corepack prepare yarn@4.
 forge script script/Deploy.s.sol --rpc-url robinhood --broadcast
 ```
 
+`script/DeployFundFactory.s.sol` deployed `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT` on the machine that signs. `createFund` deploys each `FundVault` and `FundNFT`. The live factory is [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878). Commands and Sourcify status are in [`src/fund/README.md`](src/fund/README.md). These contracts are unaudited. Not financial advice.
+
 The Polypad launchpad deploy script in `polypad/contracts/script/Deploy.s.sol` refuses chain ID 4663 unless `MAINNET` and `I_HAVE_WRITTEN_APPROVAL_AND_AUDIT` are both set. That guard is a script check. It is not a statement that a review has been completed. The live addresses below were already deployed; their sources are in this repository where noted.
 
 ## Deployed contracts
@@ -233,8 +235,11 @@ Explorer links use [robinhoodchain.blockscout.com](https://robinhoodchain.blocks
 | PolypadTokenFloorCollection implementation | [`0xFa23E496f7244d1674fA8bE5C42556bd054140EA`](https://robinhoodchain.blockscout.com/address/0xFa23E496f7244d1674fA8bE5C42556bd054140EA) | [Sourcify match](https://repo.sourcify.dev/4663/0xFa23E496f7244d1674fA8bE5C42556bd054140EA) |
 | PolydashBuybackVault | [`0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193`](https://robinhoodchain.blockscout.com/address/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193) | [Sourcify match](https://repo.sourcify.dev/4663/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193) · [`src/buyback/`](src/buyback) |
 | PolydashRewardsPool | [`0x608d106Bb58A804fcd45823e0C6087801dee2aCa`](https://robinhoodchain.blockscout.com/address/0x608d106Bb58A804fcd45823e0C6087801dee2aCa) | [Sourcify match](https://repo.sourcify.dev/4663/0x608d106Bb58A804fcd45823e0C6087801dee2aCa) · [`src/buyback/`](src/buyback) |
+| FundFactory | [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) · [`src/fund/`](src/fund) |
 
 V2 pools are deployed with `new` from the verified pool source. Two example pools are in [`src/v2/README.md`](src/v2/README.md): [`0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518`](https://robinhoodchain.blockscout.com/address/0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518) and [`0x0F50043E172B8652bb786C4F14f30c415E5760AB`](https://robinhoodchain.blockscout.com/address/0x0F50043E172B8652bb786C4F14f30c415E5760AB). They are not the full set.
+
+`FundVault` and `FundNFT` are created per fund by `createFund` on `FundFactory`. Phase 1a is a raise that mints ERC-721 units. It is unaudited. Not financial advice.
 
 ## Security
 
