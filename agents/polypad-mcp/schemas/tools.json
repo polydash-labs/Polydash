@@ -1,0 +1,71 @@
+{
+  "agentMark": "https://polypad.family/docs#agent-launched",
+  "limits": {
+    "maxCreatorFeeBps": 500,
+    "maxSocialLinks": 10,
+    "maxNameBytes": 64,
+    "maxSymbolBytes": 32,
+    "maxDescriptionChars": 2000,
+    "maxImageChars": 512,
+    "maxLinkChars": 256,
+    "maxLaunchDelaySeconds": 2592000,
+    "minTotalSupplyWei": "1000000000000000000000000",
+    "maxTotalSupplyWei": "1000000000000000000000000000000",
+    "minVirtualEthWei": "10000000000000000",
+    "maxVirtualEthWei": "1000000000000000000000",
+    "rateLimit": 20,
+    "rateWindowSeconds": 600
+  },
+  "tools": [
+    {
+      "name": "polypad_validate_launch",
+      "description": "Check createLaunch parameters against the Polypad factory limits on Robinhood Chain. Does not sign, broadcast, or ask for a private key. The HTTP API is authoritative.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "imageUri": { "type": "string" },
+          "description": { "type": "string" },
+          "socialLinks": { "type": "array", "items": { "type": "string" }, "maxItems": 10 },
+          "repository": { "type": "string", "description": "https://github.com/owner/repo" },
+          "creatorFeeBps": { "type": "integer", "minimum": 0, "maximum": 500 },
+          "creatorPayoutWallet": { "type": "string" },
+          "devBuyEth": { "type": "string", "description": "Wei, base-10 integer string. 0 means no dev buy." },
+          "totalSupply": { "type": "string", "description": "Wei. 0 selects the factory default." },
+          "virtualEthReserve": { "type": "string", "description": "Wei. 0 selects the factory default." },
+          "launchDelay": { "type": "string", "description": "Seconds. 0 opens trading immediately. Max 2592000." },
+          "agentMark": { "type": "boolean", "description": "Store the Agent-launched mark. Defaults to true." },
+          "from": { "type": "string", "description": "Optional signer address. Not a private key." }
+        },
+        "required": ["name", "symbol", "creatorFeeBps"]
+      }
+    },
+    {
+      "name": "polypad_prepare_launch",
+      "description": "Validate parameters, ask the Polypad HTTP API to eth_call createLaunch, and return the unsigned transaction. The caller signs and broadcasts it. Polypad does not accept private keys.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string", "description": "Address that will sign. Not a private key." },
+          "name": { "type": "string" },
+          "symbol": { "type": "string" },
+          "imageUri": { "type": "string" },
+          "description": { "type": "string" },
+          "socialLinks": { "type": "array", "items": { "type": "string" }, "maxItems": 10 },
+          "repository": { "type": "string" },
+          "creatorFeeBps": { "type": "integer", "minimum": 0, "maximum": 500 },
+          "creatorPayoutWallet": { "type": "string" },
+          "devBuyEth": { "type": "string" },
+          "totalSupply": { "type": "string" },
+          "virtualEthReserve": { "type": "string" },
+          "launchDelay": { "type": "string" },
+          "agentMark": { "type": "boolean" }
+        },
+        "required": ["from", "name", "symbol", "creatorFeeBps"]
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-pythonpath = ["agents/polycto", "agents/poly-agent"]
+pythonpath = ["agents/polycto", "agents/poly-agent", "agents/polypad-mcp"]
 testpaths = ["agents/tests"]
 
 [tool.ruff]
