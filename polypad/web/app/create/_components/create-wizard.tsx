@@ -16,6 +16,7 @@ import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { applyAgentMark } from '@/lib/agent-mark';
 
 interface FormData {
   name: string;
@@ -43,7 +44,7 @@ const STEPS = [
   { label: 'Review' },
 ];
 
-export function CreateWizard() {
+export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean }) {
   const { isConnected, chainId } = useAccount();
   const router = useRouter();
   const { writeContractAsync } = useWriteContract();
@@ -127,7 +128,13 @@ export function CreateWizard() {
       if (chainId !== robinhoodChain.id) {
         await switchChainAsync({ chainId: robinhoodChain.id });
       }
-      const socialLinks = [form.website, form.twitter, form.telegram].map((s) => s.trim()).filter(Boolean);
+      const baseLinks = [form.website, form.twitter, form.telegram].map((s) => s.trim()).filter(Boolean);
+      const marked = applyAgentMark(baseLinks, agentLaunch);
+      if (marked.error) {
+        toast.error(marked.error, { id: tid });
+        return;
+      }
+      const socialLinks = marked.links;
       const hash = await writeContractAsync({
         address: factory,
         abi: PolydashFactoryABI,
@@ -200,6 +207,11 @@ export function CreateWizard() {
         {step === 0 && (
           <div className="space-y-4">
             <h2 className="font-semibold text-[15px]">Token information</h2>
+            {agentLaunch && (
+              <p className="text-[12px] text-white/60">
+                Opened with <span className="font-mono">?agent=1</span>. The launch stores the agent mark in its links, and the token page shows an Agent-launched badge. You still sign the transaction in your wallet.
+              </p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Token Name *</label>
