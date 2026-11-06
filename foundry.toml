@@ -27,6 +27,7 @@ compilation_restrictions = [
     {paths = "src/bond/**", evm_version = "paris"},
     {paths = "src/gatedmint/**", evm_version = "paris"},
     {paths = "src/treasury/**", evm_version = "paris"},
+    {paths = "src/fund/**", evm_version = "paris"},
     {paths = "src/floorvault/**", min_evm_version = "cancun"},
     {paths = "src/buyback/**", min_evm_version = "cancun"},
     {paths = "lib/v4-core/**", min_evm_version = "cancun"},

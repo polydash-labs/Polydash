@@ -1,8 +1,8 @@
 # Polypad creator contracts
 
-Contracts that Polypad token creators use after launch: NFT staking, creator vesting, creator bonds, token-gated NFT mints, treasury rules and token-backed NFT collections, plus the POLYDASH buyback vault and rewards pool. They live alongside the staking contracts in this repository and share its toolchain (via-IR, optimizer 200 runs, OpenZeppelin v5.0.2). The first five modules use solc 0.8.24 and EVM `paris`; `src/floorvault` and `src/buyback` use solc 0.8.26 and EVM `cancun` because they integrate with Uniswap V4 (v4-core v4.0.0). `foundry.toml` pins the EVM version per module with `compilation_restrictions`.
+Contracts that Polypad token creators use after launch: NFT staking, creator vesting, creator bonds, token-gated NFT mints, treasury rules and token-backed NFT collections, plus the POLYDASH buyback vault and rewards pool. Phase 1a tokenized funds (`src/fund`) sit with them: a raise that mints ERC-721 units into a vault. They live alongside the staking contracts in this repository and share its toolchain (via-IR, optimizer 200 runs, OpenZeppelin v5.0.2). The first five modules and `src/fund` use solc 0.8.24 and EVM `paris`; `src/floorvault` and `src/buyback` use solc 0.8.26 and EVM `cancun` because they integrate with Uniswap V4 (v4-core v4.0.0). `foundry.toml` pins the EVM version per module with `compilation_restrictions`.
 
-> **Not audited.** These contracts were deployed before an external audit; an outside review is planned. Automated scans are not audits. See [SECURITY.md](../SECURITY.md).
+> **Not audited.** The deployed contracts below were deployed before an external audit; an outside review is planned. `src/fund` is not deployed. Automated scans are not audits. See [SECURITY.md](../SECURITY.md).
 
 ## Modules
 
@@ -15,6 +15,7 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | [`src/treasury`](../src/treasury) | `TreasuryRulesFactory`, `TreasuryRules` | Per-token treasury with on-chain rules and a timelock for operator-run tasks | 30 |
 | [`src/floorvault`](../src/floorvault) | `PolypadTokenFloorFactory`, `PolypadTokenFloorCollection` | Fixed-price NFT collections whose mint share funds an ETH + launch-token vault redeemable pro rata by burning | 115 |
 | [`src/buyback`](../src/buyback) | `PolydashBuybackVault`, `PolydashRewardsPool` | Capped on-chain POLYDASH buys from the fee share: 62.5% burned, 37.5% streamed to stakers | 70 |
+| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT` | Phase 1a fund raise: fixed ETH mint price, ERC-721 units, vault holds the ETH. Not deployed | 15 |
 | [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 10 |
 
 ## Deployed addresses (Robinhood Chain, chain ID 4663)
@@ -38,7 +39,7 @@ Routing fees to a project treasury is handled by the Polypad site and has no ded
 
 ## Architecture
 
-- **Factory per module.** Each module exposes a factory that deploys per-instance contracts and indexes them for front ends (`isPool`, `isVault`, `vaultsByToken`, ...). Treasury instances are EIP-1167 clones of one implementation; the other modules deploy full contracts with `new`.
+- **Factory per module.** Each module exposes a factory that deploys per-instance contracts and indexes them for front ends (`isPool`, `isVault`, `vaultsByToken`, ...). Treasury instances and token-backed collections are EIP-1167 clones of one implementation. Staking, vesting, bonds, NFT staking, and tokenized funds deploy full contracts with `new`.
 - **Polypad token check.** Vesting, bond, gated mint and treasury only accept tokens launched through the Polypad launch factories. They resolve a token to its launch with `launchOfToken` on the current factory (`0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2`) and the earlier factory (`0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2`), passed as constructor arguments. The shared interfaces are in `src/bond/IPolydashLaunchInfo.sol`.
 - **Staking integration.** Vesting and treasury integrate with the deployed `PolydashStakingFactoryV2` (`0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0`); unit tests run against the real V2 source in `src/v2/`.
 - **No upgradeability.** None of the modules use proxies for upgrades. Vesting vaults and bonds have no owner or admin.
@@ -46,14 +47,14 @@ Routing fees to a project treasury is handled by the Polypad site and has no ded
 
 ## Source provenance
 
-The `.sol` files in these modules are byte-identical to the source verified on Sourcify. They are not reformatted (`forge fmt` ignores `src/`) and their NatSpec headers are left as they were at deployment, including the earlier "DRAFT" titles, because any change would alter the metadata hash. Compiling inside this repository yields the same runtime code; only the trailing CBOR metadata hash differs, because Foundry records this repository's auto-detected remappings in the metadata. Use the standard-JSON input on Sourcify to reproduce an exact match.
+The deployed `.sol` files in these modules are byte-identical to the source verified on Sourcify. `src/fund` is new Phase 1a source and is not part of that set. They are not reformatted (`forge fmt` ignores `src/`) and their NatSpec headers are left as they were at deployment, including the earlier "DRAFT" titles, because any change would alter the metadata hash. Compiling inside this repository yields the same runtime code; only the trailing CBOR metadata hash differs, because Foundry records this repository's auto-detected remappings in the metadata. Use the standard-JSON input on Sourcify to reproduce an exact match.
 
 ## Build and test
 
 ```bash
 git submodule update --init --recursive
 forge build
-forge test --match-path "test/{nftstaking,vesting,bond,gatedmint,treasury,floorvault,buyback}/*"
+forge test --match-path "test/{nftstaking,vesting,bond,gatedmint,treasury,floorvault,buyback,fund}/*"
 
 # Fork tests (read-only against mainnet state, executed in a local fork)
 FORK_RPC=https://rpc.mainnet.chain.robinhood.com FOUNDRY_PROFILE=fork forge test --match-contract Fork
