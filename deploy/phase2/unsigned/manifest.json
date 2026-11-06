@@ -1,7 +1,7 @@
 {
   "purpose": "Unsigned creation payloads for a hidden ETH/WETH-quote Phase 2 deployment. Not a broadcast. Not an investing product. No routers, feeds, or non-quote assets.",
   "chainId": 4663,
-  "sourceCommit": null,
+  "sourceCommit": "43fcd403825ba67f84889565e642f407edc85f1b",
   "compiler": {
     "solc": "0.8.24",
     "evmVersion": "paris",
