@@ -21,6 +21,8 @@ export function Footer() {
               <ul className="space-y-3">
                 <li><Link href="/" className="text-sm text-black/50 transition-colors hover:text-black">Explore</Link></li>
                 <li><Link href="/create" className="text-sm text-black/50 transition-colors hover:text-black">Create a token</Link></li>
+                <li><Link href="/funds" className="text-sm text-black/50 transition-colors hover:text-black">Funds</Link></li>
+                <li><Link href="/funds/create" className="text-sm text-black/50 transition-colors hover:text-black">Create a fund</Link></li>
                 <li><Link href="/leaderboard" className="text-sm text-black/50 transition-colors hover:text-black">Leaderboard</Link></li>
               </ul>
             </div>

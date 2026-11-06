@@ -28,6 +28,16 @@ Network: **Robinhood Chain** (chain ID 4663) · RPC `https://rpc.mainnet.chain.r
 
 Each deployed address above was checked with `eth_getCode` on the Robinhood Chain RPC on 2026-10-28 and has contract code (Factory 13704 bytes, Launch 10649 bytes, Hook 10005 bytes, CommitVault 5357 bytes).
 
+### Tokenized funds (Phase 1a)
+
+Unaudited. An outside review is planned. Not financial advice. Phase 1a is the raise and the mint. `createFund` deploys one `FundVault` and one `FundNFT` per fund. Source is `src/fund/` in the repository root, compiled with solc 0.8.24, optimizer 200 runs, via-IR, and EVM `paris`. That is separate from the launchpad compiler settings above.
+
+| Contract | Address | Deploy tx | ABI | Source | Notes |
+| --- | --- | --- | --- | --- | --- |
+| **FundFactory** | [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) | [`0x3b02110b…`](https://robinhoodchain.blockscout.com/tx/0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3) | [`abi/FundFactory.json`](abi/FundFactory.json) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) | Constructor argument `0x9a21c75aC263cC43125E70200636f6397f8776d0` (owner and fee recipient). |
+| **FundNFT** | — | — | [`abi/FundNFT.json`](abi/FundNFT.json) | `src/fund/FundNFT.sol` | Deployed per fund. No single address. |
+| **FundVault** | — | — | [`abi/FundVault.json`](abi/FundVault.json) | `src/fund/FundVault.sol` | Deployed per fund. Holds mint ETH. |
+
 
 ### Legacy contracts
 
