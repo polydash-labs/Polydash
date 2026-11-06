@@ -14,6 +14,7 @@ const navItems = [
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/about', label: 'About' },
+  { href: '/docs', label: 'Docs' },
 ];
 
 export function Header() {
