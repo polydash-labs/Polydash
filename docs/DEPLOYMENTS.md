@@ -34,4 +34,8 @@ These contracts are unaudited. An outside review is planned. Not financial advic
 
 ## Tokenized funds
 
-`FundFactory` is not in the manifest, and this change leaves the file that way. Record the address after a local broadcast. Phase 1a source is [`src/fund`](../src/fund). [`script/DeployFundFactory.s.sol`](../script/DeployFundFactory.s.sol) broadcasts that factory when `PRIVATE_KEY`, `FEE_RECIPIENT`, and `ROBINHOOD_RPC_URL` are set on that machine. `createFund` deploys each `FundVault` and `FundNFT`. Commands and the manifest object are in [`src/fund/README.md`](../src/fund/README.md). The suggested fee recipient, if that is the wallet the deployer means, is the platform fee wallet `0x9a21c75aC263cC43125E70200636f6397f8776d0` already listed under `referenced`. The script still requires `FEE_RECIPIENT` in the environment. These contracts are unaudited. An outside review is planned. Not financial advice.
+| Contract | Address | Verification |
+| --- | --- | --- |
+| `FundFactory` | [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) |
+
+Phase 1a source is [`src/fund`](../src/fund). Deploy transaction [`0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3`](https://robinhoodchain.blockscout.com/tx/0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3). `owner` and `feeRecipient` are the platform fee wallet `0x9a21c75aC263cC43125E70200636f6397f8776d0`. `createFund` deploys each `FundVault` and `FundNFT`. Blockscout's API verification was blocked by Cloudflare. Sourcify is the verification of record. These contracts are unaudited. An outside review is planned. Not financial advice. Verification is not a review.
