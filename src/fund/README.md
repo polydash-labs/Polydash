@@ -49,7 +49,7 @@ Phase 1b broadcasts `FundFactory` only. `createFund` deploys one `FundVault` and
 
 `script/DeployFundFactory.s.sol` reads `PRIVATE_KEY` and `FEE_RECIPIENT`. Both are required for a broadcast. The script has no default recipient, so the deployer sets it on purpose. Leave `DEPLOY_FUND_FACTORY_PK` unset. If that variable is set, the script uses it instead of `PRIVATE_KEY`. The unit test is the only caller that sets it, so the test does not share `PRIVATE_KEY` with the staking deploy test in one Foundry process. If that recipient is the launchpad platform fee wallet already recorded in [`deployments/robinhood-chain.json`](../../deployments/robinhood-chain.json), set `FEE_RECIPIENT` to `0x9a21c75aC263cC43125E70200636f6397f8776d0`. Copy [`.env.example`](../../.env.example) to `.env` on the machine that signs. Do not commit `.env`, a key, or a keystore.
 
-The factory address is not in the manifest until that broadcast lands and the entry below is filled in.
+This change does not edit [`deployments/robinhood-chain.json`](../../deployments/robinhood-chain.json). Broadcast from a machine that has the key, then record the address with the entry below. A cloud agent must not be given `PRIVATE_KEY`.
 
 Compiler settings come from [`foundry.toml`](../../foundry.toml): solc 0.8.24, optimizer 200 runs, via-IR, `bytecode_hash = "ipfs"`, and EVM `paris` for `src/fund/**`. Run the commands from the repository root.
 
@@ -87,7 +87,7 @@ forge verify-contract <addr> src/fund/FundFactory.sol:FundFactory \
 
 ### Manifest entry after broadcast
 
-Add this object to `contracts` in [`deployments/robinhood-chain.json`](../../deployments/robinhood-chain.json) only after the factory is on chain. Replace the address, Sourcify URL, and verification status with the real result. Then add the same address to the tables in the root README, [`docs/DEPLOYMENTS.md`](../../docs/DEPLOYMENTS.md), [`docs/CREATOR_CONTRACTS.md`](../../docs/CREATOR_CONTRACTS.md), and this file.
+After a local broadcast and Sourcify check, add this object to `contracts` in [`deployments/robinhood-chain.json`](../../deployments/robinhood-chain.json). Replace the address, Sourcify URL, and verification status with the real result. Then add the same address to the tables in the root README, [`docs/DEPLOYMENTS.md`](../../docs/DEPLOYMENTS.md), [`docs/CREATOR_CONTRACTS.md`](../../docs/CREATOR_CONTRACTS.md), and this file.
 
 ```json
 {

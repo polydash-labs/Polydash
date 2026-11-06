@@ -198,7 +198,7 @@ Web unit tests, from `polypad/web`: `corepack enable && corepack prepare yarn@4.
 forge script script/Deploy.s.sol --rpc-url robinhood --broadcast
 ```
 
-`script/DeployFundFactory.s.sol` deploys `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT`. `createFund` deploys each `FundVault` and `FundNFT`. The factory is not on Robinhood Chain until someone broadcasts that script. Commands, the fee wallet to set, and Sourcify verification are in [`src/fund/README.md`](src/fund/README.md). These contracts are unaudited. Not financial advice.
+`script/DeployFundFactory.s.sol` deploys `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT` on the machine that signs. `createFund` deploys each `FundVault` and `FundNFT`. [`deployments/robinhood-chain.json`](deployments/robinhood-chain.json) has no factory address until that local broadcast. Commands, the fee wallet to set, and Sourcify verification are in [`src/fund/README.md`](src/fund/README.md). These contracts are unaudited. Not financial advice.
 
 The Polypad launchpad deploy script in `polypad/contracts/script/Deploy.s.sol` refuses chain ID 4663 unless `MAINNET` and `I_HAVE_WRITTEN_APPROVAL_AND_AUDIT` are both set. That guard is a script check. It is not a statement that a review has been completed. The live addresses below were already deployed; their sources are in this repository where noted.
 
