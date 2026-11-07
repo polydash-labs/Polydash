@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseEther } from 'viem';
-import { getFundInvestFactoryAddress } from './address';
+import { PHASE2_V1_FACTORY, getFundInvestFactoryAddress } from './address';
 import {
   PROTECTION_BITS,
   ZERO_ADDRESS,
@@ -24,6 +24,10 @@ test('invest factory stays unset until an address is configured', () => {
   process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = '0x0000000000000000000000000000000000000000';
   assert.equal(getFundInvestFactoryAddress(), null);
   process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = '0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878';
+  assert.equal(getFundInvestFactoryAddress(), null);
+  process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = PHASE2_V1_FACTORY;
+  assert.equal(getFundInvestFactoryAddress(), null);
+  process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = '0x0849195dcbcd4a06265563dc3ebc4eb1a656aabe';
   assert.equal(getFundInvestFactoryAddress(), null);
   process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = 'not-an-address';
   assert.equal(getFundInvestFactoryAddress(), null);

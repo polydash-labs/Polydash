@@ -5,6 +5,7 @@ export function FundHidden() {
       <h1 className="mt-3 text-[28px] font-semibold tracking-tight">Funds are not available</h1>
       <p className="mt-4 text-[14px] leading-relaxed text-white/60">
         This route is off. There is no public create, mint, or manager action here.
+        The deployed Phase 2 v1 factory is not connected to this site.
         The contracts are unaudited. An outside review is planned. Not financial advice.
       </p>
     </section>

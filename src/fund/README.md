@@ -4,7 +4,7 @@ These contracts are unaudited. An outside review is planned. Not financial advic
 
 Phase 1a is the raise. A manager creates a fund the way a creator creates an NFT collection, as an alternative to launching a token. Buyers mint ERC-721 units at a fixed ETH price. Each NFT is one equal unit. A wallet's share of what has been minted is `balanceOf(wallet) / totalMinted`.
 
-Phase 2 investing is a separate set of contracts in [`phase2`](phase2). It is not deployed. The live `FundFactory` does not create those vaults. See [Phase 2](#phase-2-not-deployed).
+Phase 2 v1 was deployed and is not the factory this site should call. Phase 2 v2 is a separate factory in [`phase2v2`](phase2v2). It is not deployed. See [docs/FUND_PHASE2_V2.md](../../docs/FUND_PHASE2_V2.md). The live Phase 1 `FundFactory` does not create those vaults.
 
 `FundFactory` deploys one `FundVault` and one `FundNFT` per fund with `new`. That is the same style as the staking, vesting, bond, and NFT staking factories. There is no proxy and no upgrade path.
 

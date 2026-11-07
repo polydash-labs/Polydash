@@ -293,8 +293,35 @@
       "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
       "verification": "exact match",
       "source": "src/fund/",
-      "notes": "Phase 1a raise/mint only; unaudited. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Blockscout API verification was blocked by Cloudflare; Sourcify is the verification of record. Phase 2 contracts in src/fund/phase2 are not deployed and have no address here.",
+      "notes": "Phase 1a raise/mint only; unaudited. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Blockscout API verification was blocked by Cloudflare; Sourcify is the verification of record. Do not point the site at Phase 2 v1.",
       "documentedIn": ["README.md", "docs/DEPLOYMENTS.md", "docs/CREATOR_CONTRACTS.md", "src/fund/README.md"]
+    },
+    {
+      "name": "FundFactoryInvest",
+      "group": "fund",
+      "role": "factory",
+      "address": "0x0849195DCBCD4a06265563dC3ebC4eb1a656aabe",
+      "source": "src/fund/phase2/",
+      "notes": "Phase 2 v1. Deployed. Not used by the website. Do not set NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS to this address. Unaudited. Not financial advice.",
+      "documentedIn": ["docs/FUND_PHASE2_V2.md"]
+    },
+    {
+      "name": "FundAllowlist",
+      "group": "fund",
+      "role": "allowlist",
+      "address": "0x2A9173fcBF90b0915b8Ee0c94C8aB1eFEE8549B0",
+      "source": "src/fund/phase2/",
+      "notes": "Phase 2 v1 allowlist deployed with FundFactoryInvest. Not used by the website. Unaudited. Not financial advice.",
+      "documentedIn": ["docs/FUND_PHASE2_V2.md"]
+    },
+    {
+      "name": "FundSwapFacet",
+      "group": "fund",
+      "role": "facet",
+      "address": "0x9F21F4555ADa5791a23060A2Ee46855109Cbd434",
+      "source": "src/fund/phase2/",
+      "notes": "Phase 2 v1 swap facet deployed with FundFactoryInvest. Not used by the website. Unaudited. Not financial advice.",
+      "documentedIn": ["docs/FUND_PHASE2_V2.md"]
     }
   ],
   "referenced": [
