@@ -51,7 +51,7 @@ export function FundTerminal({
           </p>
           <p className="mt-2 text-[12px] leading-relaxed text-white/50">
             {invest
-              ? 'ETH and WETH at face value, plus other holdings at the feed. A missing or unusable feed leaves this blank. Cost basis is not this figure.'
+              ? 'ETH and WETH at face value. Cost basis of other holdings is a separate accounting figure, not a market price. An optional price hook stays off unless a contract sets it, and it is not this number.'
               : 'Vault ETH divided by NFTs minted. Phase 1 does not price other assets.'}
           </p>
           <NavTape points={points} />
