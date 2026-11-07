@@ -1,7 +1,8 @@
 {
-  "purpose": "Unsigned creation payloads for a hidden ETH/WETH-quote Phase 2 deployment. Not a broadcast. Not an investing product. No routers, feeds, or non-quote assets.",
+  "purpose": "Unsigned creation payloads compiled from main 91c3c9d for the signer's current nonce 34, 35, and 36. Not a broadcast. Not an investing product. Nonces 24-26 are a different build. A nonce 27 draft was not published because the nonce had already moved.",
   "chainId": 4663,
-  "sourceCommit": "43fcd403825ba67f84889565e642f407edc85f1b",
+  "sourceCommit": "91c3c9d52a510448a27d9c23cad69a62b1ee4441",
+  "sourceTree": "fb1a9a91c8212268db46897e62e2fa4e679c21af",
   "compiler": {
     "solc": "0.8.24",
     "evmVersion": "paris",
@@ -13,44 +14,40 @@
   },
   "signer": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
   "nonceAssumption": {
-    "nextNonce": 24,
+    "nextNonce": 34,
+    "latestNonce": 34,
+    "pendingNonce": 34,
+    "observedBy": "eth_getTransactionCount latest and pending on https://rpc.mainnet.chain.robinhood.com",
     "order": [
       "FundSwapFacet",
       "FundAllowlist",
       "FundFactoryInvest"
     ],
-    "note": "Predicted addresses are valid only while this nonce is next and these three transactions are sent in order with nothing between them."
+    "note": "Addresses are valid only while nonce 34 is still next and these three transactions are sent in order with nothing between them."
   },
-  "balanceWeiAtEstimate": "2442407846310770",
-  "forkBaseFeeWei": 20030000,
-  "estimatedGasUsed": {
-    "FundSwapFacet": 1775814,
-    "FundAllowlist": 1448908,
-    "FundFactoryInvest": 6897647
-  },
-  "estimatedGasUsedTotal": 10122369,
-  "estimatedCostWeiAtBaseFee": "202751051070000",
   "weth": {
     "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
-    "role": "quote asset only"
+    "role": "quote only"
   },
   "transactions": [
     {
       "order": 1,
       "contract": "FundSwapFacet",
-      "nonce": 24,
-      "predictedAddress": "0x9F21F4555ADa5791a23060A2Ee46855109Cbd434",
+      "nonce": 34,
+      "predictedAddress": "0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
       "file": "FundSwapFacet.payload.hex",
       "constructorArgs": "0x",
       "payloadKeccak256": "0x353f6ec08b925845f331695e5bf0e370c573fc3741fe964cb2f555a798f3d362",
       "payloadBytes": 7919,
-      "gasUsedOnFork": 1775814
+      "localSimulationGasUsed": 1775814,
+      "linkedRuntimeBytes": 7866,
+      "linkedRuntimeKeccak256": "0x135cceb00a9d8e029c5afd84109cc013ce89a176ab74aeb08e4b867e4af5fbca"
     },
     {
       "order": 2,
       "contract": "FundAllowlist",
-      "nonce": 25,
-      "predictedAddress": "0x2A9173fcBF90b0915b8Ee0c94C8aB1eFEE8549B0",
+      "nonce": 35,
+      "predictedAddress": "0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
       "file": "FundAllowlist.payload.hex",
       "constructor": {
         "owner": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
@@ -62,38 +59,55 @@
             "quote": true,
             "feed": "0x0000000000000000000000000000000000000000",
             "maxStale": 0,
-            "minPriceX18": 0,
-            "maxPriceX18": 0
+            "minPriceX18": "0",
+            "maxPriceX18": "0"
           }
         ]
       },
       "constructorArgs": "0x0000000000000000000000009a21c75ac263cc43125e70200636f6397f8776d0000000000000000000000000000000000000000000000000000000000002a300000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000bd7d308f8e1639fab988df18a8011f41eacad7300000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "payloadKeccak256": "0x198b896376e6c9993d79ea90ea79cf7f95d1c668f4068a4e628936db51fe841f",
       "payloadBytes": 8105,
-      "gasUsedOnFork": 1448908
+      "localSimulationGasUsed": 1448908,
+      "linkedRuntimeBytes": 5549,
+      "linkedRuntimeKeccak256": "0xf2cc309b758ce868ea3a82bcf472347385bdafa1aa32f82cad958103948ae211"
     },
     {
       "order": 3,
       "contract": "FundFactoryInvest",
-      "nonce": 26,
-      "predictedAddress": "0x0849195DCBCD4a06265563dC3ebC4eb1a656aabe",
+      "nonce": 36,
+      "predictedAddress": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
       "file": "FundFactoryInvest.payload.hex",
       "constructor": {
         "feeRecipient": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
-        "allowlist": "0x2A9173fcBF90b0915b8Ee0c94C8aB1eFEE8549B0",
+        "allowlist": "0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
         "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
-        "swapFacet": "0x9F21F4555ADa5791a23060A2Ee46855109Cbd434"
+        "swapFacet": "0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0"
       },
-      "constructorArgs": "0x0000000000000000000000009a21c75ac263cc43125e70200636f6397f8776d00000000000000000000000002a9173fcbf90b0915b8ee0c94c8ab1efee8549b00000000000000000000000000bd7d308f8e1639fab988df18a8011f41eacad730000000000000000000000009f21f4555ada5791a23060a2ee46855109cbd434",
-      "payloadKeccak256": "0x101eae68ef151322a1ee6ed458486beb3c6c43fa35b785e421f5fc1720536fa8",
+      "constructorArgs": "0x0000000000000000000000009a21c75ac263cc43125e70200636f6397f8776d0000000000000000000000000a5187f8e56dd0784624d833cee3bf6f2aa5e75810000000000000000000000000bd7d308f8e1639fab988df18a8011f41eacad73000000000000000000000000a2620b14d1a39d4afbeaa4b87a7e7871050b50a0",
+      "payloadKeccak256": "0xd32d2b2865c878dc29dc48a9bf65a6f02e75a93a87cdd2eece2f157d2bde4199",
       "payloadBytes": 32192,
-      "gasUsedOnFork": 6897647,
+      "localSimulationGasUsed": 6897647,
+      "linkedRuntimeBytes": 5323,
+      "linkedRuntimeKeccak256": "0xa67bf08d7f7bfa348c11f12830e6b4d3c4510f631418ad9fb134796163d3e112",
       "contractsCreatedByConstructor": {
-        "FundVaultDeployer": "0x7C87f91b84A457349537400153618DB1B0523AB2",
-        "FundNFTDeployer": "0x8F020f7Ae579e1b2aE503C6CB1544E6ca0F0ff4E"
+        "FundVaultDeployer": "0x564b124A51E5c314e535Ec762249639B56E373E1",
+        "FundNFTDeployer": "0x50Da1DDC033299938E31dA3284A44f41597765a0"
       }
     }
   ],
+  "localSimulation": {
+    "kind": "anvil sequential create from nonce 34. Not broadcast to Robinhood Chain.",
+    "quoteAsset": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    "routerCount": 0,
+    "delay": 172800,
+    "owner": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+    "feeRecipient": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+    "fundCount": 0,
+    "wethAllowed": true,
+    "minRaiseDuration": 3600,
+    "maxRaiseDuration": 2592000,
+    "maxStale": 3600
+  },
   "abiKeccak256": {
     "FundSwapFacet": "0xf629f679ed8eb49a1aab1c27fd738fd744b3eac410f06af6112e642cca43cfa7",
     "FundAllowlist": "0xd06b9c666d066f591798a7dd930298f4abb1362c91fd74b2cb3928f066e48707",
@@ -102,11 +116,10 @@
     "FundNFTInvest": "0x6a14de5f5ddb33af4d26fa677d7dedae9ac857145a4d7ed4edac6770fd79fe74"
   },
   "disabled": [
-    "ChainlinkNavFeed is not in these transactions",
+    "no router is allowlisted",
+    "ChainlinkNavFeed is not deployed by these transactions",
     "no Shared SVR proxy is set",
-    "no Uniswap router is allowlisted",
-    "UniversalRouter is not allowed",
-    "FUND_ROUTES_ENABLED is not set to enabled",
+    "FUND_ROUTES_ENABLED is not enabled",
     "NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS is not set"
   ]
 }
