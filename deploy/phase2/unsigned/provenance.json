@@ -1,0 +1,70 @@
+{
+  "landedDeploymentIsNotTheReviewedPackage": true,
+  "reviewedSourceCommit": "91c3c9d52a510448a27d9c23cad69a62b1ee4441",
+  "landedSourceCommit": "5757b07",
+  "landedSourceSubject": "Add Phase 2 fund investing without deploying it. (#23)",
+  "match": "Creation-input keccak of each landed transaction equals forge inspect bytecode from 5757b07 plus the constructor args below. A local replay also reproduced the on-chain runtime keccak, including immutable linking. Later commits, including 91c3c9d, do not.",
+  "sender": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+  "chainId": 4663,
+  "timestampsUtc": [
+    "2026-11-07T00:15:27Z",
+    "2026-11-07T00:15:29Z",
+    "2026-11-07T00:15:31Z"
+  ],
+  "transactions": [
+    {
+      "nonce": 24,
+      "hash": "0xd337038ff6515373c32e6f0697fd98dbc26fd765e88721cda0ee210f7cc4c88d",
+      "block": 107992926,
+      "address": "0x9F21F4555ADa5791a23060A2Ee46855109Cbd434",
+      "contract": "FundSwapFacet",
+      "inputKeccak256": "0x290ee8e999a5c9f9dc5fb77e99c41a06ee5d677492a3c8e8e86facc60dc4ab2d",
+      "runtimeBytes": 6633,
+      "runtimeKeccak256": "0x907ddd194a376c591e5e93bcbbb84e90ead3c25ecabd30866a55279e4ad627fa"
+    },
+    {
+      "nonce": 25,
+      "hash": "0xd3c5ea2c5458afd6934587b100270b5fbe87c45f03496b69e1ddacef4a0a808e",
+      "block": 107992946,
+      "address": "0x2A9173fcBF90b0915b8Ee0c94C8aB1eFEE8549B0",
+      "contract": "FundAllowlist",
+      "inputKeccak256": "0xc94c15fd64d8f722bc5d69a5808626c4b00719918e8995823d5c5104a80e3217",
+      "constructor": "constructor(address,uint256,address[],address[]) owner=signer delay=172800 routers=[] assets=[WETH]",
+      "runtimeBytes": 3161,
+      "runtimeKeccak256": "0xd52e59a4311b002b6f91d7ed9fe603e0ab8ceb60181c2f1c1838bb76ba60d474"
+    },
+    {
+      "nonce": 26,
+      "hash": "0xb6fa3d14e6d8d2432f5507ae918af6e25eeb49ed87e9f98101d8efe9083efa62",
+      "block": 107992964,
+      "address": "0x0849195DCBCD4a06265563dC3ebC4eb1a656aabe",
+      "contract": "FundFactoryInvest",
+      "inputKeccak256": "0xf67eb476a2cf7834e163d194076821490e10c14ab22cd05df7613833376b8eba",
+      "constructor": "feeRecipient=signer allowlist=nonce25 weth=0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73 swapFacet=nonce24",
+      "runtimeBytes": 23496,
+      "runtimeKeccak256": "0x17ed44a08bd05d8726943c56643935c02688b98050fac239c4a58aaccadb22f8"
+    }
+  ],
+  "observedState": {
+    "ownerAndFeeRecipient": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+    "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    "routerCount": 0,
+    "fundCount": 0,
+    "absentSelectors": [
+      "raiseDeadline",
+      "quoteAsset",
+      "MAX_STALE",
+      "MIN_STALE",
+      "MIN_RAISE_DURATION",
+      "MAX_RAISE_DURATION",
+      "vaultDeployer",
+      "nftDeployer"
+    ]
+  },
+  "routes": "Repository visibility is on only when FUND_ROUTES_ENABLED is exactly enabled. That value is not set. NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS is not set.",
+  "nonceMovedBeforePublish": {
+    "draftNonce": 27,
+    "currentLatestAndPending": 34,
+    "note": "The nonce 27 draft was simulated locally and was not committed. Latest and pending nonce were both 34 on the public Robinhood RPC before this package was written. Transactions for nonces 27 through 33 were not retrieved from this VM. They are not identified here."
+  }
+}
