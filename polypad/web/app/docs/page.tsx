@@ -134,7 +134,15 @@ export default function DocsPage() {
               <span className="font-mono text-white/80"> eth_call</span> against the factory and returns an unsigned
               transaction for the <span className="font-mono text-white/80">from</span> address you supply. You sign
               and broadcast it. The API rejects bodies that contain a private key or seed phrase, and it rate-limits
-              by IP (20 requests / 10 minutes per process).
+              by IP (20 requests / 10 minutes per process). A reverted simulation still returns the unsigned transaction with HTTP 422. An unreachable RPC returns it with HTTP 503. You sign and broadcast it either way.
+            </p>
+            <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
+              A live application export also describes browse, quote, and unsigned trade routes
+              (<span className="font-mono text-white/80">/tokens</span>, <span className="font-mono text-white/80">/quote</span>, <span className="font-mono text-white/80">/tx/*</span>, <span className="font-mono text-white/80">/spec</span>)
+              and key, metadata, and launch-build routes. This repository does not serve them. Those handlers import a database client, request sanitizers, a server launch snapshot, holder-protection reads, and treasury, slice, buyback, and floor task services that are not in the export or in this tree. In that exported trade builder, only the first transaction is simulated. Later steps are not. A 422 response can still include the unsigned transactions. The caller signs and broadcasts every one. The API does not accept a private key or a seed phrase.
+            </p>
+            <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
+              Oak is a separate install of addon package <span className="font-mono text-white/80">@oakagentkit/addon</span> 0.3.3. This repository has no Oak adapter, no Oak tool list, and no Oak execution path. Oak is not connected to Polypad. Oak-side tool listing and an end-to-end launch through Oak have not been tested.
             </p>
             <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
               Launches prepared with the mark store <span className="font-mono text-white/80">https://polypad.family/docs#agent-launched</span> in

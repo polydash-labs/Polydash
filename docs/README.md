@@ -37,7 +37,7 @@ A launch can store `https://github.com/owner/repo` in its social links. The toke
 
 `GET /api/agents/v1` describes the HTTP API. `POST /api/agents/v1/validate` checks parameters. `POST /api/agents/v1/simulate` runs `eth_call` and returns an unsigned `createLaunch` transaction. The caller signs it. The API does not accept private keys. Successful calls that keep the default mark store `https://polypad.family/docs#agent-launched` on the token, which the site shows as Agent-launched. The factory bytecode is unchanged.
 
-The MCP server in [`agents/polypad-mcp`](../agents/polypad-mcp) exposes `polypad_validate_launch` and `polypad_prepare_launch` for external agents. See [AGENTS_API.md](AGENTS_API.md). Calling the factory yourself is still described in [AGENTS_LAUNCH.md](AGENTS_LAUNCH.md).
+The MCP server in [`agents/polypad-mcp`](../agents/polypad-mcp) exposes `polypad_validate_launch` and `polypad_prepare_launch` for external agents. See [AGENTS_API.md](AGENTS_API.md). Calling the factory yourself is still described in [AGENTS_LAUNCH.md](AGENTS_LAUNCH.md). Browse, quote, and unsigned trade routes from a live application export are not in this repository. Oak addon 0.3.3 is a separate install and is not connected to Polypad.
 
 ## Risk
 

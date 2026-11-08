@@ -113,4 +113,46 @@ curl -s https://polypad.family/api/agents/v1/simulate \
 
 Sign `unsignedTx.data` to the factory from `from`. The operator is responsible for what the agent launches.
 
+## Routes in this repository
+
+`GET /api/agents/v1`, `POST /validate`, `POST /simulate`, and `GET /marks` are the handlers in this tree. `simulate` returns `unsignedTx` on success, on a revert (HTTP 422), and when the RPC is unreachable (HTTP 503). The caller signs and broadcasts. A body that contains a private key or seed field is rejected with HTTP 400 and the value is not copied into the response. Validate and simulate share an in-memory limit of 20 requests per 10 minutes per IP, per process.
+
+Shared terms constants from the live application are in `polypad/web/lib/agents-api/terms.ts`: terms version `2026-10-30`, chain id 4663, and build limits of 3 per wallet and 10 per API key per 24 hours. Nothing in this tree enforces those build limits, because the key and launch-build routes are not compiled here.
+
+The web `PolydashLaunchABI` fragment now includes the payout-wallet views, `initiatePayoutWalletChange`, `cancelPayoutWalletChange`, `executePayoutWalletChange`, `claimCreatorFees`, and the matching events and errors. Those entries were already in `polypad/abi/PolydashLaunch.json`. `claimCreatorFees` in the TypeScript fragment leaves the uint256 output unnamed, as in the live export. Encoding a call with no arguments is unchanged.
+
+## Live export routes that are not served here
+
+A live application export describes additional HTTP routes. They are not in this repository, and this tree does not advertise them from `GET /api/agents/v1`.
+
+| Method | Path | Why it is not compiled here |
+| --- | --- | --- |
+| `GET` | `/api/agents/v1/spec` | Imports trade helpers that need the launch snapshot service and the database client. |
+| `GET` | `/api/agents/v1/tokens` | Same. `getLaunchesSnapshot` is not in the export or this tree. |
+| `GET` | `/api/agents/v1/quote` | Same. Quote reads `quoteBuy` / `quoteSell` through that client. |
+| `POST` | `/api/agents/v1/tx/{action}` | Same. Actions are buy, sell, commit, uncommit, withdraw-commitment, claim-refund, and claim-fees. |
+| `GET` | `/api/agents/v1/token/{address}` | Also imports sanitizers, holder-protection reads, and `prisma.agentLaunch`. |
+| `POST` | `/api/agents/v1/keys` | Imports the database client and sanitizers. |
+| `POST` | `/api/agents/v1/metadata` | Imports API-key auth, which needs the database client. Bucket helpers in `lib/s3.ts` and `lib/aws-config.ts` do exist. |
+| `POST` | `/api/agents/v1/launch/build` | Imports the database client. `getFactoryAddress` does exist. |
+| `POST` | `/api/agents/v1/launch/register` | Imports the database client. |
+| `GET` | `/api/agents/v1/launch/{txHash}` | Imports the database client and `getFactoryAddresses`, which this tree does not export. `getFactoryAddress` is singular and reads one env address. |
+| `GET` | `/api/agents/v1/launched` | Reads `AgentLaunch` rows through the database client. |
+| `GET` | `/api/agents/v1/treasury-tasks` | Imports `lib/treasury-server` and `lib/treasury`. |
+| `GET` | `/api/agents/v1/floor-vault-tasks` | Imports `lib/floor-vault-server` and `lib/floorVault`. |
+| `GET` | `/api/agents/v1/buyback-tasks` | Imports `lib/buyback-server`. |
+| `GET` | `/api/agents/v1/slice-tasks` | Imports `lib/slice-server`. |
+
+The exported trade builder returns unsigned transactions. Only step 1 is simulated with `eth_call`. Later steps, such as sell after approve, are marked unsimulated. If step 1 reverts, the HTTP status is 422 and the unsigned transactions are still in the body. If the RPC cannot be reached, the status is 503 and no transaction list is returned for that failure. Buys and sells on a graduated token or outside the trading phase return 409. A sell whose `from` balance is below `amount` returns 409. Key material in the JSON is rejected with HTTP 400. Quote and tx routes share an in-memory limit of 60 requests per minute per IP. None of that behavior is executed by this repository.
+
+Equivalents that do exist here, and are not enough to stand in for the missing modules: `lib/chain.ts` (`robinhoodChain`), `lib/token-types.ts` (`LaunchToken`), `lib/contracts/addresses.ts` (`getFactoryAddress`), `lib/s3.ts`, `lib/aws-config.ts`, and the client hook `lib/hooks/use-launches.ts`. That hook reads launches in the browser. It is not `getLaunchLookup` / `getLaunchesSnapshot`, and it is not a server snapshot with the export's timeout and missing-token result. Holder Protections exist as Solidity and as `docs/HOLDER_PROTECTIONS.md`. There is no `getHolderProtections` TypeScript module.
+
+## Database
+
+The export's Prisma schema includes `AgentApiKey`, `AgentTermsAcceptance`, `AgentBuild`, and `AgentLaunch`, plus many unrelated application models. The export has no migrations directory. This web app has no Prisma project and no database client. This change does not add `schema.prisma`, does not add a migration, and does not connect to a database. `package.json` is unchanged except for the test script. Prisma and NextAuth versions in the export were not added to the dependency stack.
+
+## Oak
+
+Oak is installed separately. The install manifest pins `@oakagentkit/addon` 0.3.3. This repository does not include that manifest, an Oak adapter, Oak tool definitions, or wallet configuration. Oak is not connected to Polypad. Oak-side tool listing and end-to-end execution through Oak are untested. Do not treat the public HTTP routes above as an Oak integration.
+
 Security-scanned with Bevor. Not a formal audit. Scans are not audits. Not financial advice.

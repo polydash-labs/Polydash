@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts"
+    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/agents-api/readiness.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts"
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "16.4.1",
