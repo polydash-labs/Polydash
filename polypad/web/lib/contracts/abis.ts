@@ -91,6 +91,41 @@ export const PolydashLaunchABI = [
   { type: 'function', name: 'creatorFeesAccrued', inputs: [], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view' },
   { type: 'function', name: 'currentBuyFeeBps', inputs: [], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view' },
   { type: 'function', name: 'factory', inputs: [], outputs: [{ name: '', type: 'address' }], stateMutability: 'view' },
+  { type: 'function', name: 'pendingPayoutWallet', inputs: [], outputs: [{ name: '', type: 'address' }], stateMutability: 'view' },
+  { type: 'function', name: 'payoutWalletChangeAt', inputs: [], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view' },
+  { type: 'function', name: 'PAYOUT_WALLET_DELAY', inputs: [], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'view' },
+  { type: 'function', name: 'hook', inputs: [], outputs: [{ name: '', type: 'address' }], stateMutability: 'view' },
+  { type: 'function', name: 'poolId', inputs: [], outputs: [{ name: '', type: 'bytes32' }], stateMutability: 'view' },
+  { type: 'function', name: 'initiatePayoutWalletChange', inputs: [{ name: 'newWallet', type: 'address' }], outputs: [], stateMutability: 'nonpayable' },
+  { type: 'function', name: 'cancelPayoutWalletChange', inputs: [], outputs: [], stateMutability: 'nonpayable' },
+  { type: 'function', name: 'executePayoutWalletChange', inputs: [], outputs: [], stateMutability: 'nonpayable' },
+  { type: 'function', name: 'claimCreatorFees', inputs: [], outputs: [{ name: '', type: 'uint256' }], stateMutability: 'nonpayable' },
+  {
+    type: 'event', name: 'PayoutWalletChangeInitiated',
+    inputs: [
+      { name: 'oldWallet', type: 'address', indexed: true },
+      { name: 'newWallet', type: 'address', indexed: true },
+      { name: 'executeAt', type: 'uint256', indexed: false },
+    ],
+  },
+  {
+    type: 'event', name: 'PayoutWalletChangeCancelled',
+    inputs: [
+      { name: 'cancelledWallet', type: 'address', indexed: true },
+      { name: 'cancelledBy', type: 'address', indexed: true },
+    ],
+  },
+  {
+    type: 'event', name: 'PayoutWalletChanged',
+    inputs: [
+      { name: 'oldWallet', type: 'address', indexed: true },
+      { name: 'newWallet', type: 'address', indexed: true },
+    ],
+  },
+  { type: 'error', name: 'OnlyCreator', inputs: [] },
+  { type: 'error', name: 'TooEarly', inputs: [] },
+  { type: 'error', name: 'NoPendingChange', inputs: [] },
+  { type: 'error', name: 'NothingToClaim', inputs: [] },
   {
     type: 'function', name: 'quoteBuy',
     inputs: [{ name: 'ethIn', type: 'uint256' }],
