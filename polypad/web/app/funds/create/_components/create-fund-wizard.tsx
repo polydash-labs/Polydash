@@ -12,10 +12,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { FundFactoryABI, FundFactoryInvestABI } from '@/lib/contracts/fund-abi';
+import { FundFactoryInvestABI } from '@/lib/contracts/fund-abi';
 import { getExplorerAddressUrl, getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
-import { getFundFactoryAddress, getFundInvestFactoryAddress } from '@/lib/fund/address';
+import { getFundInvestFactoryAddress } from '@/lib/fund/address';
 import {
   DEFAULT_FUND_DRAFT,
   DEFAULT_RAISE_DURATION_DAYS,
@@ -33,29 +33,15 @@ import {
 import { cn } from '@/lib/utils';
 import { FundNotice } from '../../_components/fund-notice';
 
-const RAISE_STEPS = [
+const STEPS = [
   { label: 'Basics' },
   { label: 'Raise' },
+  { label: 'Rules' },
   { label: 'Fees' },
   { label: 'Review' },
 ];
 
-const INVEST_STEPS = [
-  { label: 'Basics' },
-  { label: 'Raise' },
-  { label: 'Mandate' },
-  { label: 'Fees' },
-  { label: 'Review' },
-];
-
-const RAISE_STEP_FIELDS: FundField[][] = [
-  ['name', 'symbol', 'imageUri'],
-  ['mintPriceEth', 'raiseCapEth'],
-  ['entryFeeBps', 'skinBps', 'baseUri'],
-  ['name', 'symbol', 'imageUri', 'baseUri', 'mintPriceEth', 'raiseCapEth', 'entryFeeBps', 'skinBps'],
-];
-
-const INVEST_STEP_FIELDS: FundField[][] = [
+const STEP_FIELDS: FundField[][] = [
   ['name', 'symbol', 'imageUri'],
   ['mintPriceEth', 'raiseCapEth'],
   ['mandateText', 'mandateUri', 'raiseDurationDays', 'assetsText', 'maxPositionBps', 'maxTradeBps', 'maxDeviationBps'],
@@ -81,20 +67,13 @@ export function CreateFundWizard() {
 
   const result = previewDraft(draft);
   const investFactory = getFundInvestFactoryAddress();
-  const steps = draft.fundKind === 'invest' ? INVEST_STEPS : RAISE_STEPS;
-  const stepFields = draft.fundKind === 'invest' ? INVEST_STEP_FIELDS : RAISE_STEP_FIELDS;
+  const steps = STEPS;
+  const stepFields = STEP_FIELDS;
   const stepIssues = result.issues.filter((issue) => stepFields[step]?.includes(issue.field));
   const preview = result.preview;
 
   const update = <K extends keyof FundDraft>(field: K, value: FundDraft[K]) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const setKind = (kind: FundDraft['fundKind']) => {
-    if (kind === 'invest' && !investFactory) return;
-    setDraft((prev) => ({ ...prev, fundKind: kind }));
-    setStep(0);
-    setReveal(false);
   };
 
   const goNext = () => {
@@ -164,57 +143,34 @@ export function CreateFundWizard() {
         await switchChainAsync({ chainId: robinhoodChain.id });
       }
       const params = checked.params;
-      const isInvest = draft.fundKind === 'invest';
-      if (isInvest && !investFactory) {
+      if (!investFactory) {
         toast.dismiss(tid);
         toast.error('The investing factory is not configured yet.');
         return;
       }
-      if (isInvest && (!params.mandateHash || !params.mandateUri || params.raiseDuration === undefined || !params.assets)) {
-        toast.dismiss(tid);
-        toast.error('Fill in the mandate first.');
-        return;
-      }
-      const hash = isInvest
-        ? await writeContractAsync({
-          address: investFactory as `0x${string}`,
-          abi: FundFactoryInvestABI,
-          functionName: 'createFund',
-          chainId: robinhoodChain.id,
-          args: [{
-            name: params.name,
-            symbol: params.symbol,
-            imageUri: params.imageUri,
-            baseURI: params.baseURI,
-            mintPrice: params.mintPrice,
-            raiseCap: params.raiseCap,
-            entryFeeBps: params.entryFeeBps,
-            minSkinBps: params.minSkinBps,
-            raiseDuration: params.raiseDuration as bigint,
-            mandateHash: params.mandateHash as `0x${string}`,
-            assets: params.assets as `0x${string}`[],
-            mandateUri: params.mandateUri as string,
-            maxPositionBps: params.maxPositionBps as bigint,
-            maxTradeBps: params.maxTradeBps as bigint,
-            maxDeviationBps: params.maxDeviationBps as bigint,
-          }],
-        })
-        : await writeContractAsync({
-          address: getFundFactoryAddress(),
-          abi: FundFactoryABI,
-          functionName: 'createFund',
-          chainId: robinhoodChain.id,
-          args: [{
-            name: params.name,
-            symbol: params.symbol,
-            imageUri: params.imageUri,
-            baseURI: params.baseURI,
-            mintPrice: params.mintPrice,
-            raiseCap: params.raiseCap,
-            entryFeeBps: params.entryFeeBps,
-            minSkinBps: params.minSkinBps,
-          }],
-        });
+      const hash = await writeContractAsync({
+        address: investFactory as `0x${string}`,
+        abi: FundFactoryInvestABI,
+        functionName: 'createFund',
+        chainId: robinhoodChain.id,
+        args: [{
+          name: params.name,
+          symbol: params.symbol,
+          imageUri: params.imageUri,
+          baseURI: params.baseURI,
+          mintPrice: params.mintPrice,
+          raiseCap: params.raiseCap,
+          entryFeeBps: params.entryFeeBps,
+          minSkinBps: params.minSkinBps,
+          raiseDuration: params.raiseDuration,
+          mandateHash: params.mandateHash,
+          assets: params.assets,
+          mandateUri: params.mandateUri,
+          maxPositionBps: params.maxPositionBps,
+          maxTradeBps: params.maxTradeBps,
+          maxDeviationBps: params.maxDeviationBps,
+        }],
+      });
       toast.loading('Creating the fund on Robinhood Chain…', { id: tid });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
@@ -222,7 +178,7 @@ export function CreateFundWizard() {
       let vault: string | undefined;
       for (const log of receipt.logs) {
         try {
-          const event = decodeEventLog({ abi: isInvest ? FundFactoryInvestABI : FundFactoryABI, data: log.data, topics: log.topics });
+          const event = decodeEventLog({ abi: FundFactoryInvestABI, data: log.data, topics: log.topics });
           if (event.eventName === 'FundCreated') {
             fund = event.args.fund;
             vault = event.args.vault;
@@ -283,9 +239,9 @@ export function CreateFundWizard() {
     );
   }
 
-  const feesStep = draft.fundKind === 'invest' ? 3 : 2;
-  const reviewStep = draft.fundKind === 'invest' ? 4 : 3;
-  const mandateHash = draft.fundKind === 'invest' && draft.mandateText.trim()
+  const feesStep = 3;
+  const reviewStep = 4;
+  const mandateHash = draft.mandateText.trim()
     ? mandateHashFor(draft.mandateText.trim())
     : null;
 
@@ -295,40 +251,11 @@ export function CreateFundWizard() {
         <Link href="/funds" className="text-[12px] text-white/50 hover:text-white">Funds</Link>
         <h1 className="text-[22px] font-semibold tracking-tight sm:text-[28px]">Create a fund</h1>
         <p className="text-[13px] leading-relaxed text-white/60">
-          {draft.fundKind === 'invest'
-            ? 'Five short steps: name your fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund\u2019s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.'
-            : 'Four short steps: name your fund, set the price and goal, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund\u2019s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.'}
+          Five short steps: name your fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund’s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.
         </p>
-        <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => setKind('raise')}
-            className={cn(
-              'rounded-lg border px-3 py-2 text-left text-[12px] leading-relaxed',
-              draft.fundKind === 'raise' ? 'border-primary/40 bg-primary/10 text-white' : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white',
-            )}
-          >
-            <span className="block font-medium">Raise only</span>
-            <span className="text-white/50">The vault holds the ETH. No swaps.</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setKind('invest')}
-            disabled={!investFactory}
-            className={cn(
-              'rounded-lg border px-3 py-2 text-left text-[12px] leading-relaxed',
-              draft.fundKind === 'invest' ? 'border-primary/40 bg-primary/10 text-white' : 'border-white/10 bg-white/[0.03] text-white/60 hover:text-white',
-              !investFactory && 'cursor-not-allowed opacity-50',
-            )}
-          >
-            <span className="block font-medium">Investing fund</span>
-            <span className="text-white/50">
-              {investFactory
-                ? 'The manager swaps inside a published mandate, under an allowlist.'
-                : 'Not live yet — the investing factory is not configured.'}
-            </span>
-          </button>
-        </div>
+        <p className="text-[12px] leading-relaxed text-white/50">
+          Type of fund: Invest fund. A manager buys tokens within the rules you set.
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
@@ -413,9 +340,9 @@ export function CreateFundWizard() {
           </>
         )}
 
-        {step === 2 && draft.fundKind === 'invest' && (
+        {step === 2 && (
           <>
-            <h2 className="text-[15px] font-semibold">Mandate</h2>
+            <h2 className="text-[15px] font-semibold">Rules</h2>
             <p className="text-[12px] leading-relaxed text-white/55">
               The mandate is the lock on what this fund may do. Investors read the text at the link below; the fingerprint of that text is stored on the vault and cannot be changed after creation.
             </p>
@@ -526,24 +453,24 @@ export function CreateFundWizard() {
           <>
             <h2 className="text-[15px] font-semibold">Review and create</h2>
             <dl className="space-y-1 text-sm">
-              <ReviewRow label="Type" value={draft.fundKind === 'invest' ? 'Investing fund' : 'Raise only'} />
+              <ReviewRow label="Type of fund" value="Invest fund" />
               <ReviewRow label="Name" value={result.params.name} />
               <ReviewRow label="Ticker" value={result.params.symbol} />
-              <ReviewRow label="Mint price" value={`${formatFundEth(result.params.mintPrice)} ETH`} />
+              <ReviewRow label="Price per share" value={`${formatFundEth(result.params.mintPrice)} ETH`} />
               <ReviewRow label="Raise goal" value={`${formatFundEth(result.params.raiseCap)} ETH`} />
-              <ReviewRow label="NFTs" value={result.params.maxSupply.toString()} />
+              <ReviewRow label="Shares" value={result.params.maxSupply.toString()} />
               <ReviewRow label="Leftover" value={result.params.dust === 0n ? 'None' : `${formatFundEth(result.params.dust)} ETH`} />
               <ReviewRow label="Entry fee" value={bpsLabel(Number(result.params.entryFeeBps))} />
-              <ReviewRow label="Your NFTs before others" value={`${result.params.skinRequired.toString()} · ${formatFundEth(result.params.managerEth)} ETH`} />
-              <ReviewRow label="Protocol fee on your mint" value={`${formatFundEth(result.params.protocolFeeOnManagerMint)} ETH`} />
+              <ReviewRow label="Your shares before others" value={`${result.params.skinRequired.toString()} · ${formatFundEth(result.params.managerEth)} ETH`} />
+              <ReviewRow label="Protocol fee on your shares (0.2%)" value={`${formatFundEth(result.params.protocolFeeOnManagerMint)} ETH`} />
               <ReviewRow label="Protocol fee if the raise fills" value={`${formatFundEth(result.params.protocolFeeOnFullRaise)} ETH`} />
-              {draft.fundKind === 'invest' && result.params.mandateHash && (
+              {result.params.mandateHash && (
                 <>
-                  <ReviewRow label="Mandate hash" value={`${result.params.mandateHash.slice(0, 10)}…${result.params.mandateHash.slice(-6)}`} />
-                  <ReviewRow label="Mandate link" value={result.params.mandateUri ?? ''} />
-                  <ReviewRow label="Raise length" value={`${Number((result.params.raiseDuration ?? 0n) / 86_400n)} days`} />
-                  <ReviewRow label="Extra assets" value={result.params.assets?.length ? `${result.params.assets.length} asset(s)` : 'WETH only'} />
-                  <ReviewRow label="Caps (position / trade / deviation)" value={`${bpsLabel(Number(result.params.maxPositionBps ?? 0n))} / ${bpsLabel(Number(result.params.maxTradeBps ?? 0n))} / ${bpsLabel(Number(result.params.maxDeviationBps ?? 0n))}`} />
+                  <ReviewRow label="Fingerprint of the fund's rules (mandate hash)" value={`${result.params.mandateHash.slice(0, 10)}…${result.params.mandateHash.slice(-6)}`} />
+                  <ReviewRow label="Where to read the rules (mandate link)" value={result.params.mandateUri} />
+                  <ReviewRow label="Raise open for" value={`${Number(result.params.raiseDuration / 86_400n)} days`} />
+                  <ReviewRow label="Tokens it may buy" value={result.params.assets.length ? `${result.params.assets.length} asset(s)` : 'WETH only'} />
+                  <ReviewRow label="Limits (one token / per trade / price gap)" value={`${bpsLabel(Number(result.params.maxPositionBps))} / ${bpsLabel(Number(result.params.maxTradeBps))} / ${bpsLabel(Number(result.params.maxDeviationBps))}`} />
                 </>
               )}
             </dl>
@@ -551,10 +478,7 @@ export function CreateFundWizard() {
               <img src={result.params.imageUri} alt="" className="h-12 w-12 rounded-full object-cover" />
             )}
             <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-[12px] leading-relaxed text-yellow-200">
-              You sign one transaction to create the fund. It does not send you the raise. Minting your share is a second transaction. {draft.fundKind === 'invest'
-                ? 'After the raise closes you can swap inside the mandate, under the allowlist and the caps above. The mandate and the caps cannot be changed after creation.'
-                : 'This factory does not swap the ETH.'}{' '}
-              The protocol fee and any entry fee are withheld from the amount that stays in the vault. They are not part of a refund. These contracts are unaudited. Not financial advice.
+              What happens next: you sign one transaction to create the fund. No ETH is sent. Buying your manager shares is a second step on the fund page. After the raise closes, the manager can trade only within the rules, the approved tokens and the limits above, which cannot be changed later. The 0.2% protocol fee and any entry fee are not part of a refund. Unaudited. Not financial advice.
             </div>
           </>
         )}
@@ -585,7 +509,7 @@ export function CreateFundWizard() {
           )}
         </div>
       </div>
-      <FundNotice mode={draft.fundKind === 'invest' ? 'invest' : 'raise'} />
+      <FundNotice mode="invest" />
     </div>
   );
 }

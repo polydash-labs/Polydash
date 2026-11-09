@@ -25,6 +25,7 @@ const FILTERS: { key: FundFilter; label: string; hint: string }[] = [
   { key: 'open', label: 'Open for investments', hint: 'Funds you can join now by buying shares with ETH.' },
   { key: 'waiting', label: 'Waiting for the manager to join', hint: 'The manager must buy their own shares first. Nobody else can join until they do.' },
   { key: 'investing', label: 'Investing your money', hint: 'The raise is over and the manager is buying tokens from the approved list.' },
+  { key: 'refund', label: 'Refund available — get your money back', hint: 'The raise missed its goal in time. Holders can return their shares and get their ETH back.' },
   { key: 'closed', label: 'Closed', hint: 'No longer taking new money. This includes funds with a refund available.' },
   { key: 'mine', label: 'My funds', hint: 'Funds where your connected wallet is the manager.' },
 ];

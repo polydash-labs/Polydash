@@ -1,4 +1,4 @@
-import { formatEther, keccak256, parseEther, toHex } from 'viem';
+import { keccak256, parseEther, toHex } from 'viem';
 
 /** Bounds copied from FundFactory. Integer math matches the contract. */
 export const BPS = 10_000n;
@@ -21,9 +21,10 @@ export const DEFAULT_MAX_POSITION_BPS = 7500;
 export const DEFAULT_MAX_TRADE_BPS = 7500;
 export const DEFAULT_MAX_DEVIATION_BPS = 5000;
 
-export type FundKind = 'raise' | 'invest';
-
 export type FundStatus = 'waiting' | 'open' | 'closed' | 'investing';
+
+/** Raw vault status from FundVaultStore: 0 Raising, 1 RaisingClosed, 2 Investing, 3 Failed. */
+export const VAULT_STATUS_FAILED = 3;
 
 export const FUND_STATUS_LABEL: Record<FundStatus, string> = {
   waiting: 'Waiting on manager',
@@ -32,7 +33,7 @@ export const FUND_STATUS_LABEL: Record<FundStatus, string> = {
   investing: 'Investing',
 };
 
-export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'investing' | 'mine';
+export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'investing' | 'refund' | 'mine';
 export type FundSort = 'newest' | 'raised';
 
 export type FundDraft = {
@@ -45,17 +46,15 @@ export type FundDraft = {
   entryFeeBps: number;
   /** 500 is the 5% default. The factory is sent 0 so it applies that default. */
   skinBps: number;
-  /** 'raise' targets the Phase 1 factory (raise only). 'invest' targets FundFactoryInvest. */
-  fundKind: FundKind;
-  /** Phase 2 only: the mandate text the manager publishes. The hash is keccak256 of this text. */
+  /** The mandate text the manager publishes. The hash is keccak256 of this text. */
   mandateText: string;
-  /** Phase 2 only: where the mandate text lives (ipfs:// or https://). Stored on the vault. */
+  /** Where the mandate text lives (ipfs:// or https://). Stored on the vault. */
   mandateUri: string;
-  /** Phase 2 only: raise length in whole days, 1–30. */
+  /** Raise length in whole days, 1–30. */
   raiseDurationDays: string;
-  /** Phase 2 only: one allowlisted asset address per line. Empty means WETH-only. */
+  /** One allowlisted asset address per line. Empty means WETH-only. */
   assetsText: string;
-  /** Phase 2 only: swap caps in BPS of NAV. 7500 / 7500 / 5000 are the contract defaults. */
+  /** Swap caps in BPS of NAV. 7500 / 7500 / 5000 are the contract defaults. */
   maxPositionBps: number;
   maxTradeBps: number;
   maxDeviationBps: number;
@@ -70,7 +69,6 @@ export const DEFAULT_FUND_DRAFT: FundDraft = {
   raiseCapEth: '1',
   entryFeeBps: 0,
   skinBps: 500,
-  fundKind: 'raise',
   mandateText: '',
   mandateUri: '',
   raiseDurationDays: String(DEFAULT_RAISE_DURATION_DAYS),
@@ -122,16 +120,15 @@ export type FundCreateParams = RaisePreview & {
   entryFeeBps: bigint;
   /** Value passed to createFund. 0 selects the factory's 5% default. */
   minSkinBps: bigint;
-  /** Phase 2 only. Present when the draft targets FundFactoryInvest. */
-  mandateHash?: `0x${string}`;
-  mandateUri?: string;
-  /** Phase 2 only: raise length in seconds. */
-  raiseDuration?: bigint;
-  /** Phase 2 only: the per-fund universe. Empty means WETH-only. */
-  assets?: `0x${string}`[];
-  maxPositionBps?: bigint;
-  maxTradeBps?: bigint;
-  maxDeviationBps?: bigint;
+  mandateHash: `0x${string}`;
+  mandateUri: string;
+  /** Raise length in seconds. */
+  raiseDuration: bigint;
+  /** The per-fund universe. Empty means WETH-only. */
+  assets: `0x${string}`[];
+  maxPositionBps: bigint;
+  maxTradeBps: bigint;
+  maxDeviationBps: bigint;
 };
 
 /** Parse the wizard's asset list: one address per line, unique, at most 16. */
@@ -173,12 +170,18 @@ export function bpsLabel(bps: number): string {
 }
 
 export function formatFundEth(wei: bigint): string {
-  if (wei === 0n) return '0';
-  const raw = formatEther(wei);
-  const [whole, frac = ''] = raw.split('.');
-  const trimmed = frac.replace(/0+$/, '');
-  const shown = trimmed.length > 8 ? `${trimmed.slice(0, 8)}…` : trimmed;
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return formatTokenAmount(wei, 18);
+}
+
+/** Format a token amount in its own smallest units (e.g. 6 decimals for USDC). */
+export function formatTokenAmount(amount: bigint, decimals: number): string {
+  if (amount === 0n) return '0';
+  const dec = Number.isInteger(decimals) && decimals >= 0 && decimals <= 36 ? decimals : 18;
+  const scale = 10n ** BigInt(dec);
+  const whole = amount / scale;
+  const frac = (amount % scale).toString().padStart(dec, '0').replace(/0+$/, '');
+  const shown = frac.length > 8 ? `${frac.slice(0, 8)}…` : frac;
+  const grouped = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return shown ? `${grouped}.${shown}` : grouped;
 }
 
@@ -275,7 +278,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
   const skinOk = draft.skinBps === 0 || (Number.isInteger(draft.skinBps) && draft.skinBps >= Number(DEFAULT_MIN_SKIN_BPS) && draft.skinBps <= Number(BPS));
   if (!skinOk) issues.push({ field: 'skinBps', message: 'Manager share must be from 5% to 100%.' });
 
-  // Phase 2 only. A raise-only draft skips the mandate entirely.
+  // The mandate is always required: every fund created here is an invest fund.
   let invest: {
     mandateHash: `0x${string}`;
     mandateUri: string;
@@ -285,7 +288,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
     maxTradeBps: bigint;
     maxDeviationBps: bigint;
   } | null = null;
-  if (draft.fundKind === 'invest') {
+  {
     const mandateText = draft.mandateText.trim();
     if (!mandateText) issues.push({ field: 'mandateText', message: 'Write the mandate: what this fund may buy, and the limits.' });
     else if (mandateText.length > MAX_MANDATE_TEXT_CHARS) {
@@ -355,7 +358,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
     };
   }
 
-  if (issues.length || !preview) return { issues, preview, params: null };
+  if (issues.length || !preview || !invest) return { issues, preview, params: null };
   const minSkinBps = minSkinBpsForDraft(draft.skinBps);
   return {
     issues,
@@ -368,7 +371,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
       baseURI,
       entryFeeBps: BigInt(draft.entryFeeBps),
       minSkinBps,
-      ...(invest ? { ...invest } : {}),
+      ...invest,
     },
   };
 }
@@ -407,6 +410,8 @@ export type FundListItem = {
   symbol: string;
   manager: string;
   status: FundStatus;
+  /** Raw vault status (FundVaultStore): 3 means the raise failed and a refund is available. */
+  vaultStatus: number;
   raised: bigint;
   generation?: number;
 };
@@ -423,6 +428,7 @@ export function filterFunds<T extends FundListItem>(
     if (filter === 'waiting' && item.status !== 'waiting') return false;
     if (filter === 'closed' && item.status !== 'closed') return false;
     if (filter === 'investing' && item.status !== 'investing') return false;
+    if (filter === 'refund' && item.vaultStatus !== VAULT_STATUS_FAILED) return false;
     if (filter === 'mine') {
       if (!account) return false;
       if (item.manager.toLowerCase() !== account.toLowerCase()) return false;

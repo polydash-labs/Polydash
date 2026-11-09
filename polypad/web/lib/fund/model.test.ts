@@ -11,6 +11,7 @@ import {
   feeOn,
   filterFunds,
   formatFundEth,
+  formatTokenAmount,
   fundStatus,
   fundTxError,
   mandateHashFor,
@@ -76,7 +77,7 @@ test('manager share rounds up, with a floor of one NFT', () => {
 });
 
 test('default draft is 100 NFTs, 5 for the manager, and sends the factory default', () => {
-  const result = previewDraft({ ...DEFAULT_FUND_DRAFT, name: 'Example Fund', symbol: 'EX' });
+  const result = previewDraft({ ...DEFAULT_FUND_DRAFT, name: 'Example Fund', symbol: 'EX', mandateText: 'Hold WETH.', mandateUri: 'ipfs://QmMandate' });
   assert.equal(result.issues.length, 0);
   assert.ok(result.params);
   assert.equal(result.params?.maxSupply, 100n);
@@ -91,13 +92,13 @@ test('default draft is 100 NFTs, 5 for the manager, and sends the factory defaul
 });
 
 test('a higher manager share is sent as basis points', () => {
-  const result = previewDraft({ ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX', skinBps: 1000 });
+  const result = previewDraft({ ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX', skinBps: 1000, mandateText: 'Hold WETH.', mandateUri: 'ipfs://QmMandate' });
   assert.equal(result.params?.minSkinBps, 1000n);
   assert.equal(result.params?.skinRequired, 10n);
 });
 
 test('contract bounds reject names, prices, supply, and fees', () => {
-  const base = { ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX' };
+  const base = { ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX', mandateText: 'Hold WETH.', mandateUri: 'ipfs://QmMandate' };
   assert.ok(previewDraft({ ...base, name: '' }).issues.some((issue) => issue.field === 'name'));
   assert.ok(previewDraft({ ...base, name: 'a'.repeat(65) }).issues.some((issue) => issue.field === 'name'));
   assert.equal(previewDraft({ ...base, name: 'a'.repeat(64) }).issues.some((issue) => issue.field === 'name'), false);
@@ -140,16 +141,19 @@ test('status follows the vault and the manager gate', () => {
 
 test('list filters and sorts do not change the source order in place', () => {
   const items: FundListItem[] = [
-    { address: '0xaaa', index: 0, name: 'Alpha', symbol: 'ALP', manager: '0x1111111111111111111111111111111111111111', status: 'waiting', raised: 2n },
-    { address: '0xbbb', index: 1, name: 'Beta', symbol: 'BET', manager: '0x2222222222222222222222222222222222222222', status: 'open', raised: 5n },
-    { address: '0xccc', index: 2, name: 'Gamma', symbol: 'GAM', manager: '0x1111111111111111111111111111111111111111', status: 'closed', raised: 1n },
+    { address: '0xaaa', index: 0, name: 'Alpha', symbol: 'ALP', manager: '0x1111111111111111111111111111111111111111', status: 'waiting', vaultStatus: 0, raised: 2n },
+    { address: '0xbbb', index: 1, name: 'Beta', symbol: 'BET', manager: '0x2222222222222222222222222222222222222222', status: 'open', vaultStatus: 0, raised: 5n },
+    { address: '0xccc', index: 2, name: 'Gamma', symbol: 'GAM', manager: '0x1111111111111111111111111111111111111111', status: 'closed', vaultStatus: 1, raised: 1n },
+    { address: '0xddd', index: 3, name: 'Delta', symbol: 'DEL', manager: '0x1111111111111111111111111111111111111111', status: 'closed', vaultStatus: 3, raised: 1n },
   ];
   const newest = sortFunds(items, 'newest').map((item) => item.symbol);
-  assert.deepEqual(newest, ['GAM', 'BET', 'ALP']);
-  assert.deepEqual(items.map((item) => item.symbol), ['ALP', 'BET', 'GAM']);
-  assert.deepEqual(sortFunds(items, 'raised').map((item) => item.symbol), ['BET', 'ALP', 'GAM']);
+  assert.deepEqual(newest, ['DEL', 'GAM', 'BET', 'ALP']);
+  assert.deepEqual(items.map((item) => item.symbol), ['ALP', 'BET', 'GAM', 'DEL']);
+  assert.deepEqual(sortFunds(items, 'raised').map((item) => item.symbol), ['BET', 'ALP', 'DEL', 'GAM']);
   assert.deepEqual(filterFunds(items, 'open', '').map((item) => item.symbol), ['BET']);
-  assert.deepEqual(filterFunds(items, 'mine', '', '0x1111111111111111111111111111111111111111').map((item) => item.symbol), ['ALP', 'GAM']);
+  assert.deepEqual(filterFunds(items, 'refund', '').map((item) => item.symbol), ['DEL']);
+  assert.deepEqual(filterFunds(items, 'closed', '').map((item) => item.symbol), ['GAM', 'DEL']);
+  assert.deepEqual(filterFunds(items, 'mine', '', '0x1111111111111111111111111111111111111111').map((item) => item.symbol), ['ALP', 'GAM', 'DEL']);
   assert.deepEqual(filterFunds(items, 'mine', ''), []);
   assert.deepEqual(filterFunds(items, 'all', 'bet').map((item) => item.symbol), ['BET']);
   assert.deepEqual(filterFunds(items, 'all', '0xccc').map((item) => item.symbol), ['GAM']);
@@ -167,8 +171,16 @@ test('plain labels and wallet errors stay short', () => {
   assert.equal(fundTxError('x'.repeat(400)), 'Transaction failed.');
 });
 
+test('token amounts format in the token’s own decimals', () => {
+  assert.equal(formatTokenAmount(1_000_000n, 6), '1');
+  assert.equal(formatTokenAmount(1_500_000n, 6), '1.5');
+  assert.equal(formatTokenAmount(0n, 6), '0');
+  assert.equal(formatTokenAmount(parseEther('1.5'), 18), '1.5');
+  assert.equal(formatTokenAmount(1_234_567_890_123n, 8), '12,345.67890123');
+});
+
 test('investing draft requires a mandate, a link, a duration, and caps', () => {
-  const base = { ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX', fundKind: 'invest' as const };
+  const base = { ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX' };
   const empty = previewDraft(base);
   assert.ok(empty.issues.some((issue) => issue.field === 'mandateText'));
   assert.ok(empty.issues.some((issue) => issue.field === 'mandateUri'));

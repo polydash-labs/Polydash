@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { FundNFTInvestABI, FundVaultInvestABI } from '@/lib/contracts/fund-abi';
 import { getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
-import { formatFundEth, fundTxError } from '@/lib/fund/model';
+import { formatFundEth, formatTokenAmount, fundTxError } from '@/lib/fund/model';
 import type { FundInvestView } from '@/lib/fund/invest';
 
 const TRANSFER_EVENT = parseAbi([
@@ -44,7 +44,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [acting, setActing] = useState<'refund' | 'exit' | null>(null);
   const [claiming, setClaiming] = useState<string | null>(null);
-  const [owed, setOwed] = useState<{ asset: `0x${string}`; symbol: string; amount: bigint }[]>([]);
+  const [owed, setOwed] = useState<{ asset: `0x${string}`; symbol: string; decimals: number; amount: bigint }[]>([]);
 
   const invest = fund.invest;
   const isFailed = fund.vaultStatus === 3;
@@ -86,13 +86,13 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
       })),
       allowFailure: true,
     });
-    const found: { asset: `0x${string}`; symbol: string; amount: bigint }[] = [];
+    const found: { asset: `0x${string}`; symbol: string; decimals: number; amount: bigint }[] = [];
     rows.forEach((row, index) => {
       const amount = row.status === 'success' && typeof row.result === 'bigint' ? row.result : 0n;
       if (amount > 0n) {
         const asset = assets[index] as `0x${string}`;
         const holding = invest.holdings.find((h) => h.asset.toLowerCase() === asset.toLowerCase());
-        found.push({ asset, symbol: holding?.symbol ?? `${asset.slice(0, 6)}…${asset.slice(-4)}`, amount });
+        found.push({ asset, symbol: holding?.symbol ?? `${asset.slice(0, 6)}…${asset.slice(-4)}`, decimals: holding?.decimals ?? 18, amount });
       }
     });
     setOwed(found);
@@ -296,7 +296,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
               {owed.map((row) => (
                 <div key={row.asset} className="flex items-center justify-between gap-3 text-[12px]">
                   <span className="text-white/60">
-                    {row.symbol}: <span className="font-mono text-white/80">{formatFundEth(row.amount)} ETH value</span>
+                    {row.symbol}: <span className="font-mono text-white/80">{formatTokenAmount(row.amount, row.decimals)}</span>
                   </span>
                   <Button size="sm" variant="secondary" onClick={() => void claim(row.asset)} disabled={claiming !== null}>
                     {claiming === row.asset && <Loader2 className="h-4 w-4 animate-spin" />}
