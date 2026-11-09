@@ -109,7 +109,7 @@ contract UniswapV3RouterAdapterForkTest is Test {
         uint256 usdgHeld = IERC20(USDG).balanceOf(address(vault));
         // 0.5 ETH at ~$2,131/ETH is ~1,065 USDG. Wide band allows for price moves and fees.
         assertGt(usdgHeld, 800e6);
-        assertLt(usdgHeld, 1_400e6);
+        assertLt(usdgHeld, 1400e6);
         assertEq(vault.tradeCount(), 1);
         // NAV stays whole: the feed values the USDG near what the ETH was worth.
         assertGt(vault.nav(), (navBefore * 90) / 100);
