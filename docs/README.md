@@ -51,7 +51,9 @@ Tokens are created by their users. The contracts are unaudited. An outside revie
 | [DEPLOYMENTS.md](DEPLOYMENTS.md) | How to read [`deployments/robinhood-chain.json`](../deployments/robinhood-chain.json) |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Staking v1 pool lifecycle, roles, and fees, plus how v2 differs |
 | [CREATOR_CONTRACTS.md](CREATOR_CONTRACTS.md) | NFT staking, vesting, bonds, gated mints, treasury rules, floor vault, buybacks, tokenized funds |
-| [FUND_CORE_FIX.md](FUND_CORE_FIX.md) | Phase 2 deadline, refund, exit, and feed NAV. Not deployed |
+| [FUND_CORE_FIX.md](FUND_CORE_FIX.md) | Phase 2 deadline, refund, exit, and feed NAV |
+| [security/phase2-live-scan.md](security/phase2-live-scan.md) | Security scan of the live Phase 2 deployment. Not a review |
+| [PHASE3.md](PHASE3.md) | Phase 3 template, high-water mark, skin lock, tape, brake, and distributions. Not deployed |
 | [AUDIT_SCOPE.md](AUDIT_SCOPE.md) | Staking files and behaviours an outside review would focus on |
 | [SECURITY.md](../SECURITY.md) | Reporting a vulnerability and the bug bounty |
 
