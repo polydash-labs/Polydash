@@ -12,6 +12,7 @@ Polypad is the token launchpad in this repository. It runs on Robinhood Chain (c
 | Agent launch API and MCP | [AGENTS_API.md](AGENTS_API.md) |
 | Direct `createLaunch` from an operator wallet | [AGENTS_LAUNCH.md](AGENTS_LAUNCH.md) |
 | Risk | [RISK.md](RISK.md) |
+| Token list (Uniswap schema) | [../tokenlist/README.md](../tokenlist/README.md) |
 
 ## Launch flow
 

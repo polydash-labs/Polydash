@@ -120,6 +120,7 @@ Deployed `.sol` sources under `src/` and `polypad/contracts/src/` match the veri
 ├── deployments/          # Robinhood Chain address manifest
 ├── docs/                 # Public docs index, launch flow, agent API, risk
 ├── assets/               # Logo and banner
+├── tokenlist/            # Uniswap-schema POLYDASH token list
 ├── lib/                  # openzeppelin-contracts v5.0.2, forge-std, v4-core (submodules)
 └── .github/              # CI, Dependabot, issue and PR templates
 ```
@@ -260,7 +261,7 @@ Agent launch rails are in the repository. [docs/AGENTS_API.md](docs/AGENTS_API.m
 
 ## Brand
 
-Logos, colors, and naming: [polypad.family/brand](https://polypad.family/brand). Use "Polydash" for the company, "Polypad" for the launchpad, and "POLYDASH" for the token ticker.
+Logos, colors, and naming: [polypad.family/brand](https://polypad.family/brand). Use "Polydash" for the company, "Polypad" for the launchpad, and "POLYDASH" for the token ticker. The Uniswap-schema token list is [`tokenlist/polydash.tokenlist.json`](tokenlist/polydash.tokenlist.json); raw URL after merge: `https://raw.githubusercontent.com/polydash-labs/Polydash/main/tokenlist/polydash.tokenlist.json`.
 
 ## Contributing
 
