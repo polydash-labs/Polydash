@@ -60,7 +60,7 @@
       "contract": "FundFactoryPhase3",
       "file": "FundFactoryPhase3.creation.hex",
       "creationBytes": 38876,
-      "creationKeccak256": "0xd57f3fd0638199483c61086d19360fc541cfa684103972b4359f5109956fe4a0",
+      "creationKeccak256": "0x8ac7af98e991f16c8a327c02771f06ea9ce1bdc3ff195b643cd6a01d6a75e831",
       "constructor": "constructor(address feeRecipient, address allowlist, address weth, address swapFacet, address templates)",
       "constructorArgs": "Not included. Encode them after the template and facet addresses are computed from the fresh nonce.",
       "suggested": {
@@ -69,7 +69,9 @@
         "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
         "swapFacet": "CREATE address of order 2",
         "templates": "CREATE address of order 1"
-      }
+      },
+      "rebuiltFrom": "ee0bcb7537a355305d8f36c71d9554e902edf571",
+      "note": "Rebuilt from that main commit. The previous payload differed only in embedded IPFS metadata hashes. Opcodes match."
     }
   ],
   "runtimeBytes": {
