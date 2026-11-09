@@ -1,4 +1,9 @@
 import Link from 'next/link';
+import {
+  FUND_FACTORY_PHASE3_ADDRESS,
+  FUND_SWAP_FACET_PHASE3_ADDRESS,
+  STRATEGY_TEMPLATE_ADDRESS,
+} from '@/lib/fund/address';
 
 const ROWS = [
   ['Locked template', 'The mandate, asset list, caps, performance fee, drawdown brake, and skin lock are copied from a published template. There is no edit function on the template or the fund.'],
@@ -15,12 +20,17 @@ export default function Phase3Page() {
       <Link href="/funds" className="text-[12px] text-white/45 hover:text-white">
         Funds
       </Link>
-      <p className="mt-6 text-[12px] uppercase tracking-widest text-white/40">Not deployed</p>
+      <p className="mt-6 text-[12px] uppercase tracking-widest text-white/40">Recorded</p>
       <h1 className="mt-3 text-[28px] font-semibold tracking-tight sm:text-[36px]">Phase 3 manager tools</h1>
       <p className="mt-4 max-w-xl text-[14px] leading-relaxed text-white/60">
-        These contracts are source only. No Phase 3 address is live. This page does not ask a wallet to deploy or
-        sign. Not a review. Not financial advice.
+        The template, facet, and factory are on Robinhood Chain. This page does not ask a wallet to publish a template
+        or create a fund. Not a review. Not financial advice.
       </p>
+      <ul className="mt-4 space-y-1 font-mono text-[12px] text-white/50">
+        <li>Template {STRATEGY_TEMPLATE_ADDRESS}</li>
+        <li>Facet {FUND_SWAP_FACET_PHASE3_ADDRESS}</li>
+        <li>Factory {FUND_FACTORY_PHASE3_ADDRESS}</li>
+      </ul>
       <dl className="mt-8 divide-y divide-white/10 border-y border-white/10">
         {ROWS.map(([title, body]) => (
           <div key={title} className="py-4">
@@ -30,8 +40,8 @@ export default function Phase3Page() {
         ))}
       </dl>
       <p className="mt-6 text-[12px] leading-relaxed text-white/40">
-        The unsigned creation payloads are in <span className="text-white/60">deploy/phase3/unsigned</span>. Nonces are
-        not fixed there. They have to be read at signing time.
+        Source commit 0848c9c6271537ad5601415ad9f43fed5280169c. This route stays off unless the server variable
+        FUND_ROUTES_ENABLED is exactly enabled.
       </p>
     </div>
   );

@@ -4,6 +4,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 
 ## [Unreleased]
 ### Added
+- Record the Phase 3 deployment on Robinhood Chain from commit `0848c9c6271537ad5601415ad9f43fed5280169c`: `StrategyTemplate` `0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba`, `FundSwapFacetPhase3` `0x40Ef3ae910A46aDDC14f45F0983060161884f045`, `FundFactoryPhase3` `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. Sourcify exact match. Fund routes stay off. The header does not link to `/funds`. Not a review. Not financial advice.
 - Phase 3 fund-manager contracts in `src/fund/phase3`: a locked strategy template, a high-water-mark performance fee, a manager skin-transfer lock, a NAV tape, a drawdown brake on new buys, and pull distributions. They do not modify the live Phase 1 or Phase 2 addresses. Nothing in this change was signed or broadcast. Unsigned payloads are in `deploy/phase3/unsigned`. Nonces are computed at signing time. The `/funds/phase3` page stays behind `FUND_ROUTES_ENABLED`. Not a review. Not financial advice.
 ### Security
 - Security scan of the live Phase 2 deployment on Robinhood Chain (chain ID 4663). Source commit `e4ceacaab5175bc4e7724fafe3fedc8831085563`. Creation bytecode matches that source (solc 0.8.24, via-IR, optimizer 200, Paris). Sourcify exact match on the facet, router adapter, allowlist, and invest factory. Findings are in `docs/security/phase2-live-scan.md`. This is a security scan, not a review. No Critical or High finding. Fund routes stay off.
