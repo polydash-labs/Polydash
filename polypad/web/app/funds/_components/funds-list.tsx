@@ -20,18 +20,18 @@ import {
 import { cn } from '@/lib/utils';
 import { FundNotice } from './fund-notice';
 
-const FILTERS: { key: FundFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'open', label: 'Open' },
-  { key: 'waiting', label: 'Waiting on manager' },
-  { key: 'closed', label: 'Closed' },
-  { key: 'investing', label: 'Investing' },
-  { key: 'mine', label: 'My funds' },
+const FILTERS: { key: FundFilter; label: string; hint: string }[] = [
+  { key: 'all', label: 'All funds', hint: 'Every fund created on Polypad.' },
+  { key: 'open', label: 'Open for investments', hint: 'Funds you can join now by buying shares with ETH.' },
+  { key: 'waiting', label: 'Waiting for the manager to join', hint: 'The manager must buy their own shares first. Nobody else can join until they do.' },
+  { key: 'investing', label: 'Investing your money', hint: 'The raise is over and the manager is buying tokens from the approved list.' },
+  { key: 'closed', label: 'Closed', hint: 'No longer taking new money. This includes funds with a refund available.' },
+  { key: 'mine', label: 'My funds', hint: 'Funds where your connected wallet is the manager.' },
 ];
 
 const SORTS: { key: FundSort; label: string }[] = [
-  { key: 'newest', label: 'Newest' },
-  { key: 'raised', label: 'Most raised' },
+  { key: 'newest', label: 'Newest first' },
+  { key: 'raised', label: 'Most ETH raised' },
 ];
 
 const chip = 'inline-flex h-8 shrink-0 items-center rounded-full px-3.5 text-[12px] font-medium transition-colors sm:text-[13px]';
@@ -54,7 +54,7 @@ export function FundsList() {
         <div className="max-w-xl">
           <h1 className="text-[28px] font-semibold tracking-tight text-white sm:text-[36px]">Funds</h1>
           <p className="mt-2 text-[14px] leading-relaxed text-white/60 sm:text-[15px]">
-            A fund raises ETH by minting NFTs at a fixed price. Each NFT is one equal unit and the ownership claim on the ETH in the vault.
+            A fund collects ETH from many people by selling shares at a fixed price. Each share is an equal part of the fund. The money sits in the fund&apos;s vault, and you can get your part out later.
           </p>
         </div>
         <Link
@@ -73,7 +73,7 @@ export function FundsList() {
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Name, ticker, or address"
+            placeholder="Search by name, ticker or address"
             aria-label="Search funds"
             className="h-10 rounded-full border-white/10 bg-white/[0.03] pl-9"
           />
@@ -103,6 +103,9 @@ export function FundsList() {
             </button>
           ))}
         </div>
+        <p className="text-[12px] leading-relaxed text-white/45">
+          {FILTERS.find((item) => item.key === filter)?.hint}
+        </p>
       </div>
 
       <div className="mt-6">
@@ -118,7 +121,7 @@ export function FundsList() {
         ) : (data?.length ?? 0) === 0 ? (
           <div className="py-20 text-center text-white/50">
             <p className="text-lg text-white">No funds yet</p>
-            <p className="mt-1 text-sm">Create one to open a raise. You sign the transaction in your wallet.</p>
+            <p className="mt-1 text-sm">Create the first one. You set the share price, goal and deadline, then sign 1 transaction in your wallet (no ETH sent).</p>
             <Link href="/funds/create" className="mt-4 inline-flex h-9 items-center rounded-full bg-polydash-green px-4 text-[13px] font-medium text-black hover:bg-polydash-green-light">
               Create a fund
             </Link>
@@ -160,11 +163,11 @@ function FundRow({ fund }: { fund: FundSummary }) {
             <StatusPill status={fund.status} />
           </div>
           <p className="mt-1 font-mono text-[12px] text-white/55">
-            {formatFundEth(fund.raised)} / {formatFundEth(fund.raiseCap)} ETH
+            {formatFundEth(fund.raised)} of {formatFundEth(fund.raiseCap)} ETH raised
             <span className="mx-2 text-white/25">·</span>
-            {fund.totalMinted.toString()} / {fund.maxSupply.toString()} NFTs
+            {fund.totalMinted.toString()} / {fund.maxSupply.toString()} shares sold
             <span className="mx-2 text-white/25">·</span>
-            {formatFundEth(fund.mintPrice)} ETH
+            {formatFundEth(fund.mintPrice)} ETH per share
           </p>
           <Progress value={progress} className="mt-3 h-1.5 bg-white/10" />
         </div>

@@ -292,7 +292,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
       issues.push({ field: 'mandateText', message: `Mandate must be ${MAX_MANDATE_TEXT_CHARS} characters or fewer.` });
     }
     const mandateUri = draft.mandateUri.trim();
-    if (!mandateUri) issues.push({ field: 'mandateUri', message: 'Add a link to the mandate text, so LPs can read what the hash commits to.' });
+    if (!mandateUri) issues.push({ field: 'mandateUri', message: 'Add a link to the mandate text, so investors can read what the fingerprint commits to.' });
     else if (!mandateUri.startsWith('ipfs://') && !mandateUri.startsWith('https://')) {
       issues.push({ field: 'mandateUri', message: 'Mandate link must start with ipfs:// or https://.' });
     } else if (utf8Size(mandateUri) > MAX_URI_BYTES) {

@@ -295,7 +295,9 @@ export function CreateFundWizard() {
         <Link href="/funds" className="text-[12px] text-white/50 hover:text-white">Funds</Link>
         <h1 className="text-[22px] font-semibold tracking-tight sm:text-[28px]">Create a fund</h1>
         <p className="text-[13px] leading-relaxed text-white/60">
-          Set a name, a mint price, and how much ETH the raise can take. Buyers mint NFTs at that price. The ETH stays in a vault. You sign the transaction. Nothing is sent for you.
+          {draft.fundKind === 'invest'
+            ? 'Five short steps: name your fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund\u2019s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.'
+            : 'Four short steps: name your fund, set the price and goal, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund\u2019s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.'}
         </p>
         <div className="flex flex-col gap-2 pt-1 sm:flex-row">
           <button
@@ -415,7 +417,7 @@ export function CreateFundWizard() {
           <>
             <h2 className="text-[15px] font-semibold">Mandate</h2>
             <p className="text-[12px] leading-relaxed text-white/55">
-              The mandate is the lock on what this fund may do. LPs read the text at the link below; the hash of that text is stored on the vault and cannot be changed after creation.
+              The mandate is the lock on what this fund may do. Investors read the text at the link below; the fingerprint of that text is stored on the vault and cannot be changed after creation.
             </p>
             <Field label="Mandate text" error={shown('mandateText')}>
               <textarea
@@ -426,12 +428,13 @@ export function CreateFundWizard() {
                 className="w-full rounded-lg border border-white/10 bg-secondary/50 p-3 text-[13px] leading-relaxed text-white placeholder:text-white/30"
               />
               {mandateHash && (
-                <p className="mt-1 break-all font-mono text-[11px] text-white/40">Hash {mandateHash}</p>
+                <p className="mt-1 break-all font-mono text-[11px] text-white/40">Fingerprint of the fund&apos;s rules (mandate hash) {mandateHash}</p>
               )}
+              <p className="mt-1 text-[11px] text-muted-foreground">A short code made from the exact text above. It is saved on-chain so anyone can check the rules were not changed later.</p>
             </Field>
             <Field label="Mandate link (ipfs:// or https://)" error={shown('mandateUri')}>
               <Input value={draft.mandateUri} onChange={(event) => update('mandateUri', event.target.value)} placeholder="ipfs://…" className="bg-secondary/50 font-mono text-[12px]" />
-              <p className="mt-1 text-[11px] text-muted-foreground">Host the same text you wrote above at this link. The vault stores the link next to the hash.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Put the same text you wrote above at this link. The vault saves the link next to the fingerprint.</p>
             </Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={`Raise length (days, ${MIN_RAISE_DURATION_DAYS}–${MAX_RAISE_DURATION_DAYS})`} error={shown('raiseDurationDays')}>
@@ -582,7 +585,7 @@ export function CreateFundWizard() {
           )}
         </div>
       </div>
-      <FundNotice />
+      <FundNotice mode={draft.fundKind === 'invest' ? 'invest' : 'raise'} />
     </div>
   );
 }
