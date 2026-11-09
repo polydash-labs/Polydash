@@ -4,7 +4,7 @@ These contracts are unaudited. An outside review is planned. Not financial advic
 
 Phase 1a is the raise. A manager creates a fund the way a creator creates an NFT collection, as an alternative to launching a token. Buyers mint ERC-721 units at a fixed ETH price. Each NFT is one equal unit. A wallet's share of what has been minted is `balanceOf(wallet) / totalMinted`.
 
-Phase 2 investing is a separate set of contracts in [`phase2`](phase2). It is not deployed. The live `FundFactory` does not create those vaults. See [Phase 2](#phase-2-not-deployed).
+Phase 2 investing is a separate set of contracts in [`phase2`](phase2). It is deployed as its own factory and does not replace this Phase 1a factory. Addresses and the security scan are in [docs/security/phase2-live-scan.md](../../docs/security/phase2-live-scan.md). See [Phase 2](#phase-2).
 
 `FundFactory` deploys one `FundVault` and one `FundNFT` per fund with `new`. That is the same style as the staking, vesting, bond, and NFT staking factories. There is no proxy and no upgrade path.
 
@@ -39,9 +39,9 @@ Direct ETH transfers to the vault revert. ETH forced into the vault stays there,
 
 A carry NFT, token-bound accounts, a floor bid, a secondary market, redeeming units, metadata that changes after mint, and an agent executor. Those are not implemented. Allowlisted swaps are Phase 2, in separate files, and they are not on the deployed factory.
 
-## Phase 2 (not deployed)
+## Phase 2
 
-`FundFactoryInvest`, `FundVaultInvest`, `FundNFTInvest`, `FundSwapFacet`, `FundAllowlist`, and `NAVReader` are unaudited. The swap body is in `FundSwapFacet`. Each vault delegatecalls it, so the factory does not carry a copy of that code. A direct call to the facet reverts. An outside review is planned. Not financial advice. Do not broadcast them until that deploy is intentional. `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It does not call the live factory. There is no proxy and no upgrade of a Phase 1a vault. A Phase 1a fund stays raise-only.
+`FundFactoryInvest`, `FundVaultInvest`, `FundNFTInvest`, `FundSwapFacet`, `FundAllowlist`, `UniswapV3RouterAdapter`, and `NAVReader` have not had an outside review. The swap body is in `FundSwapFacet`. Each vault delegatecalls it, so the factory does not carry a copy of that code. A direct call to the facet reverts. Not financial advice. The live deployment and the security scan are in [docs/security/phase2-live-scan.md](../../docs/security/phase2-live-scan.md). `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It does not call the Phase 1a factory. There is no proxy and no upgrade of a Phase 1a vault. A Phase 1a fund stays raise-only.
 
 The raise and the mint match Phase 1a, including the manager skin gate, plus a raise deadline of 1 hour to 30 days. Filling the supply or the cap at or before the deadline sets `RaisingClosed`. After the deadline, anyone can call `failRaise` if it is still `Raising`. That sets `Failed`. Minting stops. The manager cannot open investing. The current holder of each NFT calls `refund` and receives a pro-rata share of spendable ETH. Unclaimed entry and protocol fees are not part of that payment and can still be pulled. A transferred NFT pays the current holder. The last outstanding units receive the rounding dust.
 

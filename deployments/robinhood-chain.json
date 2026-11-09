@@ -293,8 +293,60 @@
       "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
       "verification": "exact match",
       "source": "src/fund/",
-      "notes": "Phase 1a raise/mint only; unaudited. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Blockscout API verification was blocked by Cloudflare; Sourcify is the verification of record. Phase 2 contracts in src/fund/phase2 are not deployed and have no address here.",
+      "notes": "Phase 1a raise/mint only. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify is the verification of record. This factory is not the Phase 2 factory.",
       "documentedIn": ["README.md", "docs/DEPLOYMENTS.md", "docs/CREATOR_CONTRACTS.md", "src/fund/README.md"]
+    },
+    {
+      "name": "FundSwapFacet",
+      "group": "fund-phase2",
+      "role": "swap-facet",
+      "address": "0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
+      "verification": "exact match",
+      "source": "src/fund/phase2/FundSwapFacet.sol",
+      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+      "deployTx": "0x662d664a123b146f13f7e35ee20a3d3c0841f603ec522a969b2ed404464c9012",
+      "notes": "Phase 2 swap body. Vaults delegatecall it. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 at nonce 34. Creation bytecode matches that commit (solc 0.8.24, via-IR, optimizer 200, Paris). Security scan, not a review: docs/security/phase2-live-scan.md.",
+      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md", "deployments/robinhood-chain.json"]
+    },
+    {
+      "name": "UniswapV3RouterAdapter",
+      "group": "fund-phase2",
+      "role": "router-adapter",
+      "address": "0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
+      "verification": "exact match",
+      "source": "src/fund/phase2/UniswapV3RouterAdapter.sol",
+      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+      "deployTx": "0x351a70eccbff7dbcc82c214ab769b17d06d99b69d025db7b4e5cdd5ba9b1cb47",
+      "notes": "Adapts SwapRouter02 0xCaf681a66D020601342297493863E78C959E5cb2 to IFundSwapRouter.swap. Nonce 35. WETH 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. This adapter is the allowlisted router. Raw SwapRouter02 is not allowlisted.",
+      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md"]
+    },
+    {
+      "name": "FundAllowlist",
+      "group": "fund-phase2",
+      "role": "allowlist",
+      "address": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+      "verification": "exact match",
+      "source": "src/fund/phase2/FundAllowlist.sol",
+      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+      "deployTx": "0x63ef73531d00c303869cfe38de6e45316a4f0aa8cf59366a241214d8a263ec03",
+      "notes": "Nonce 36. Owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. Delay 172800 seconds. Quote WETH. One router, the adapter. No non-quote asset and no feed. Later edits wait the delay. The delay cannot be shortened.",
+      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md"]
+    },
+    {
+      "name": "FundFactoryInvest",
+      "group": "fund-phase2",
+      "role": "factory",
+      "address": "0xd3c6ae470c25989cC8d2876c1855fB570B98894E",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xd3c6ae470c25989cC8d2876c1855fB570B98894E",
+      "verification": "exact match",
+      "source": "src/fund/phase2/FundFactoryInvest.sol",
+      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+      "deployTx": "0xaeae5c14d51d7d81ed44bf3f2c6f1e7babfc05246b8307a7b33c283cc71c32fd",
+      "notes": "Nonce 37. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Protocol fee 20 bps. Fund count 0 at scan. vaultDeployer 0x111aC00A91944477141aDe12ebB6BcB0CEFC3a95. nftDeployer 0x5766A7A937D0De897C2d90df0D045f9067fd72D5. Does not replace the Phase 1a factory.",
+      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md", "polypad/web/lib/fund/address.ts"]
     }
   ],
   "referenced": [

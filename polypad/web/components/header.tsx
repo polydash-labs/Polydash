@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/', label: 'Explore' },
   { href: '/create', label: 'Create' },
-  { href: '/funds', label: 'Funds' },
   { href: '/portfolio', label: 'Portfolio' },
   { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/about', label: 'About' },

@@ -40,4 +40,13 @@ These contracts are unaudited. An outside review is planned. Not financial advic
 
 Phase 1a source is [`src/fund`](../src/fund). Deploy transaction [`0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3`](https://robinhoodchain.blockscout.com/tx/0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3). `owner` and `feeRecipient` are the platform fee wallet `0x9a21c75aC263cC43125E70200636f6397f8776d0`. `createFund` deploys each `FundVault` and `FundNFT`. Blockscout's API verification was blocked by Cloudflare. Sourcify is the verification of record. These contracts are unaudited. An outside review is planned. Not financial advice. Verification is not a review.
 
-Phase 2 (`FundAllowlist`, `FundFactoryInvest`, `FundVaultInvest`, `FundNFTInvest`) is source only. It has no address on Robinhood Chain. `script/DeployFundFactoryInvest.s.sol` is the later broadcast, and it reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It does not modify the factory above. Record addresses here only after that deploy is signed and verified.
+Phase 2 is deployed and is a different factory. It does not modify the Phase 1a factory above. Source commit `e4ceacaab5175bc4e7724fafe3fedc8831085563`. The security scan is [phase2-live-scan.md](security/phase2-live-scan.md). That scan is not a review.
+
+| Contract | Address | Verification |
+| --- | --- | --- |
+| `FundSwapFacet` | [`0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0`](https://robinhoodchain.blockscout.com/address/0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0) |
+| `UniswapV3RouterAdapter` | [`0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581`](https://robinhoodchain.blockscout.com/address/0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581) |
+| `FundAllowlist` | [`0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`](https://robinhoodchain.blockscout.com/address/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19) |
+| `FundFactoryInvest` | [`0xd3c6ae470c25989cC8d2876c1855fB570B98894E`](https://robinhoodchain.blockscout.com/address/0xd3c6ae470c25989cC8d2876c1855fB570B98894E) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xd3c6ae470c25989cC8d2876c1855fB570B98894E) |
+
+`script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. Fund routes stay off unless `FUND_ROUTES_ENABLED=enabled`. `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stays unset in the repo.

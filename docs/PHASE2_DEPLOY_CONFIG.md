@@ -1,7 +1,9 @@
 # Phase 2 deploy config — FINALIZED, WETH-only (Jon go-ahead 2026-11-09)
 
-Status: finalized for the WETH-only launch. Jon gave mainnet go-ahead and delegated the
-remaining decisions to Atlas on 2026-11-09. Nothing here has been broadcast yet.
+Status: the four creation transactions in this note were broadcast on 2026-11-09 from
+source commit `e4ceacaab5175bc4e7724fafe3fedc8831085563`. Addresses, bytecode, and the
+security scan are in [phase2-live-scan.md](security/phase2-live-scan.md). This file is the
+config that was signed. It is not a review. Fund routes stay off.
 
 ## Finalized config (exact)
 
