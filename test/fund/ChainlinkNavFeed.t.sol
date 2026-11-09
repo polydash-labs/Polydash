@@ -121,9 +121,13 @@ contract ChainlinkNavFeedTest is Test {
         assets[1] = FundAllowlist.AssetInit(token, false, address(feed), 1 hours, 1, type(uint256).max);
         FundAllowlist list = new FundAllowlist(address(this), 1 days, routers, assets);
         uint64 heartbeat = uint64(feed.datasetHeartbeat());
-        vm.expectRevert(FundAllowlist.BadDelay.selector);
-        // 86400 cannot be configured as the trading staleness bound.
+        // The heartbeat IS the ceiling now: the stablecoin feeds on this chain update every
+        // 24 h, so a 1-hour ceiling would reject every stablecoin feed as read. The per-asset
+        // bound still applies, and anything above the heartbeat is rejected.
         list.proposeAsset(makeAddr("other"), address(feed), heartbeat, 1, 2);
+        vm.expectRevert(FundAllowlist.BadDelay.selector);
+        // Above the heartbeat cannot be configured as the trading staleness bound.
+        list.proposeAsset(makeAddr("other2"), address(feed), heartbeat + 1, 1, 2);
         vm.expectRevert(FundAllowlist.PriceStale.selector);
         list.quote(token, 1e18);
     }

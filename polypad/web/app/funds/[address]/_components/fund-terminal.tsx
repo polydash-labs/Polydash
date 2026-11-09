@@ -49,11 +49,21 @@ export function FundTerminal({
           <p className="mt-1 font-mono text-[22px] text-white">
             {invest && !invest.navKnown ? 'Unavailable' : totalMinted === 0n ? '—' : `${formatFundEth(perNft)} ETH`}
           </p>
+          {invest && !invest.navKnown && (
+            <p className="mt-2 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-2 text-[12px] leading-relaxed text-yellow-200">
+              NAV is unavailable right now — a price feed cannot be used, so this figure is blank rather than wrong. Holdings below are shown at cost, not at market value. Exits and refunds still pay your share of the vault.
+            </p>
+          )}
           <p className="mt-2 text-[12px] leading-relaxed text-white/50">
             {invest
-              ? 'ETH and WETH at face value, plus other holdings at the feed. A missing or unusable feed leaves this blank. Cost basis is not this figure.'
+              ? 'ETH and WETH at face value, plus other holdings at the feed, minus unclaimed fees. A missing or unusable feed leaves this blank. Cost basis is not this figure.'
               : 'Vault ETH divided by NFTs minted. Phase 1 does not price other assets.'}
           </p>
+          {invest && invest.lastNavCheckpoint > 0 && (
+            <p className="mt-2 text-[12px] text-white/45">
+              Last NAV checkpoint {new Date(invest.lastNavCheckpoint * 1000).toLocaleString()} — {formatFundEth(invest.lastCheckpointNavPerNft)} ETH per NFT. Checkpoints run at most once an hour.
+            </p>
+          )}
           <NavTape points={points} />
           {status === 'investing' && invest && invest.trades.length > 0 && (
             <p className="mt-2 text-[11px] text-white/35">The line uses the latest swaps kept on the vault, then the current figure.</p>
@@ -78,6 +88,14 @@ export function FundTerminal({
           {invest && (
             <p className="mt-3 break-all font-mono text-[11px] text-white/40" title={invest.mandateHash}>
               Mandate {shortenAddress(invest.mandateHash)}
+            </p>
+          )}
+          {invest && invest.mandateUri && (
+            <p className="mt-1 break-all text-[11px] text-white/40">
+              Mandate text:{' '}
+              <a className="text-polydash-green" href={invest.mandateUri} target="_blank" rel="noopener noreferrer">
+                {invest.mandateUri}
+              </a>
             </p>
           )}
         </div>

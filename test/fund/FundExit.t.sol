@@ -53,6 +53,10 @@ contract FundExitTest is Test {
         p.minSkinBps = 10_000;
         p.raiseDuration = 1 hours;
         p.mandateHash = keccak256("exit");
+        p.mandateUri = "ipfs://exit-mandate";
+        p.maxPositionBps = 0;
+        p.maxTradeBps = 0;
+        p.maxDeviationBps = 0;
         p.assets = new address[](1);
         p.assets[0] = address(alpha);
     }
@@ -271,7 +275,7 @@ contract FundExitTest is Test {
         vault.enableInvesting();
         vm.prank(manager);
         vault.swap(address(router), address(0), address(alpha), 0.4 ether, 0.4 ether, "");
-        assertEq(vault.nav(), address(vault).balance + 0.4 ether);
+        assertEq(vault.nav(), address(vault).balance + 0.4 ether - vault.claimableFees());
 
         feed.setPrice(3 ether);
         vm.expectRevert(FundAllowlist.PriceRejected.selector);

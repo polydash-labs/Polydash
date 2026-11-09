@@ -1,4 +1,4 @@
-import { formatEther, parseEther } from 'viem';
+import { keccak256, parseEther, toHex } from 'viem';
 
 /** Bounds copied from FundFactory. Integer math matches the contract. */
 export const BPS = 10_000n;
@@ -11,8 +11,20 @@ export const MAX_MINT_PRICE = 100n * 10n ** 18n;
 export const MAX_NAME_BYTES = 64;
 export const MAX_SYMBOL_BYTES = 16;
 export const MAX_URI_BYTES = 512;
+/** Phase 2 mandate + swap policy bounds. Caps match FundVaultStore defaults. */
+export const MIN_RAISE_DURATION_DAYS = 1;
+export const MAX_RAISE_DURATION_DAYS = 30;
+export const DEFAULT_RAISE_DURATION_DAYS = 7;
+export const MAX_MANDATE_TEXT_CHARS = 2000;
+export const MAX_ASSETS = 16;
+export const DEFAULT_MAX_POSITION_BPS = 7500;
+export const DEFAULT_MAX_TRADE_BPS = 7500;
+export const DEFAULT_MAX_DEVIATION_BPS = 5000;
 
 export type FundStatus = 'waiting' | 'open' | 'closed' | 'investing';
+
+/** Raw vault status from FundVaultStore: 0 Raising, 1 RaisingClosed, 2 Investing, 3 Failed. */
+export const VAULT_STATUS_FAILED = 3;
 
 export const FUND_STATUS_LABEL: Record<FundStatus, string> = {
   waiting: 'Waiting on manager',
@@ -21,7 +33,7 @@ export const FUND_STATUS_LABEL: Record<FundStatus, string> = {
   investing: 'Investing',
 };
 
-export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'investing' | 'mine';
+export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'investing' | 'refund' | 'mine';
 export type FundSort = 'newest' | 'raised';
 
 export type FundDraft = {
@@ -34,6 +46,18 @@ export type FundDraft = {
   entryFeeBps: number;
   /** 500 is the 5% default. The factory is sent 0 so it applies that default. */
   skinBps: number;
+  /** The mandate text the manager publishes. The hash is keccak256 of this text. */
+  mandateText: string;
+  /** Where the mandate text lives (ipfs:// or https://). Stored on the vault. */
+  mandateUri: string;
+  /** Raise length in whole days, 1–30. */
+  raiseDurationDays: string;
+  /** One allowlisted asset address per line. Empty means WETH-only. */
+  assetsText: string;
+  /** Swap caps in BPS of NAV. 7500 / 7500 / 5000 are the contract defaults. */
+  maxPositionBps: number;
+  maxTradeBps: number;
+  maxDeviationBps: number;
 };
 
 export const DEFAULT_FUND_DRAFT: FundDraft = {
@@ -45,6 +69,13 @@ export const DEFAULT_FUND_DRAFT: FundDraft = {
   raiseCapEth: '1',
   entryFeeBps: 0,
   skinBps: 500,
+  mandateText: '',
+  mandateUri: '',
+  raiseDurationDays: String(DEFAULT_RAISE_DURATION_DAYS),
+  assetsText: '',
+  maxPositionBps: DEFAULT_MAX_POSITION_BPS,
+  maxTradeBps: DEFAULT_MAX_TRADE_BPS,
+  maxDeviationBps: DEFAULT_MAX_DEVIATION_BPS,
 };
 
 export type FundField =
@@ -55,7 +86,14 @@ export type FundField =
   | 'mintPriceEth'
   | 'raiseCapEth'
   | 'entryFeeBps'
-  | 'skinBps';
+  | 'skinBps'
+  | 'mandateText'
+  | 'mandateUri'
+  | 'raiseDurationDays'
+  | 'assetsText'
+  | 'maxPositionBps'
+  | 'maxTradeBps'
+  | 'maxDeviationBps';
 
 export type FundIssue = { field: FundField; message: string };
 
@@ -82,7 +120,37 @@ export type FundCreateParams = RaisePreview & {
   entryFeeBps: bigint;
   /** Value passed to createFund. 0 selects the factory's 5% default. */
   minSkinBps: bigint;
+  mandateHash: `0x${string}`;
+  mandateUri: string;
+  /** Raise length in seconds. */
+  raiseDuration: bigint;
+  /** The per-fund universe. Empty means WETH-only. */
+  assets: `0x${string}`[];
+  maxPositionBps: bigint;
+  maxTradeBps: bigint;
+  maxDeviationBps: bigint;
 };
+
+/** Parse the wizard's asset list: one address per line, unique, at most 16. */
+export function parseAssetList(raw: string): { ok: true; assets: `0x${string}`[] } | { ok: false; message: string } {
+  const lines = raw.split('\n').map((line) => line.trim()).filter(Boolean);
+  if (lines.length > MAX_ASSETS) return { ok: false, message: `At most ${MAX_ASSETS} assets.` };
+  const seen = new Set<string>();
+  const assets: `0x${string}`[] = [];
+  for (const line of lines) {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(line)) return { ok: false, message: `"${line}" is not an address.` };
+    const lower = line.toLowerCase();
+    if (seen.has(lower)) return { ok: false, message: 'Each asset can appear only once.' };
+    seen.add(lower);
+    assets.push(line as `0x${string}`);
+  }
+  return { ok: true, assets };
+}
+
+/** keccak256 of the mandate text's UTF-8 bytes, matching what the vault stores. */
+export function mandateHashFor(text: string): `0x${string}` {
+  return keccak256(toHex(text));
+}
 
 export function utf8Size(value: string): number {
   return new TextEncoder().encode(value).length;
@@ -102,12 +170,18 @@ export function bpsLabel(bps: number): string {
 }
 
 export function formatFundEth(wei: bigint): string {
-  if (wei === 0n) return '0';
-  const raw = formatEther(wei);
-  const [whole, frac = ''] = raw.split('.');
-  const trimmed = frac.replace(/0+$/, '');
-  const shown = trimmed.length > 8 ? `${trimmed.slice(0, 8)}…` : trimmed;
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return formatTokenAmount(wei, 18);
+}
+
+/** Format a token amount in its own smallest units (e.g. 6 decimals for USDC). */
+export function formatTokenAmount(amount: bigint, decimals: number): string {
+  if (amount === 0n) return '0';
+  const dec = Number.isInteger(decimals) && decimals >= 0 && decimals <= 36 ? decimals : 18;
+  const scale = 10n ** BigInt(dec);
+  const whole = amount / scale;
+  const frac = (amount % scale).toString().padStart(dec, '0').replace(/0+$/, '');
+  const shown = frac.length > 8 ? `${frac.slice(0, 8)}…` : frac;
+  const grouped = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return shown ? `${grouped}.${shown}` : grouped;
 }
 
@@ -204,6 +278,53 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
   const skinOk = draft.skinBps === 0 || (Number.isInteger(draft.skinBps) && draft.skinBps >= Number(DEFAULT_MIN_SKIN_BPS) && draft.skinBps <= Number(BPS));
   if (!skinOk) issues.push({ field: 'skinBps', message: 'Manager share must be from 5% to 100%.' });
 
+  // The mandate is always required: every fund created here is an invest fund.
+  let invest: {
+    mandateHash: `0x${string}`;
+    mandateUri: string;
+    raiseDuration: bigint;
+    assets: `0x${string}`[];
+    maxPositionBps: bigint;
+    maxTradeBps: bigint;
+    maxDeviationBps: bigint;
+  } | null = null;
+  {
+    const mandateText = draft.mandateText.trim();
+    if (!mandateText) issues.push({ field: 'mandateText', message: 'Write the mandate: what this fund may buy, and the limits.' });
+    else if (mandateText.length > MAX_MANDATE_TEXT_CHARS) {
+      issues.push({ field: 'mandateText', message: `Mandate must be ${MAX_MANDATE_TEXT_CHARS} characters or fewer.` });
+    }
+    const mandateUri = draft.mandateUri.trim();
+    if (!mandateUri) issues.push({ field: 'mandateUri', message: 'Add a link to the mandate text, so investors can read what the fingerprint commits to.' });
+    else if (!mandateUri.startsWith('ipfs://') && !mandateUri.startsWith('https://')) {
+      issues.push({ field: 'mandateUri', message: 'Mandate link must start with ipfs:// or https://.' });
+    } else if (utf8Size(mandateUri) > MAX_URI_BYTES) {
+      issues.push({ field: 'mandateUri', message: 'Mandate link must be 512 bytes or fewer.' });
+    }
+    const days = Number(draft.raiseDurationDays);
+    if (!Number.isInteger(days) || days < MIN_RAISE_DURATION_DAYS || days > MAX_RAISE_DURATION_DAYS) {
+      issues.push({ field: 'raiseDurationDays', message: `Raise must run ${MIN_RAISE_DURATION_DAYS} to ${MAX_RAISE_DURATION_DAYS} days.` });
+    }
+    const parsedAssets = parseAssetList(draft.assetsText);
+    if (!parsedAssets.ok) issues.push({ field: 'assetsText', message: parsedAssets.message });
+    for (const [field, value] of [['maxPositionBps', draft.maxPositionBps], ['maxTradeBps', draft.maxTradeBps], ['maxDeviationBps', draft.maxDeviationBps]] as const) {
+      if (!Number.isInteger(value) || value < 1 || value > 10_000) {
+        issues.push({ field, message: 'Cap must be from 1 to 10,000 BPS (0.01% to 100% of NAV).' });
+      }
+    }
+    if (issues.length === 0 && mandateText && parsedAssets.ok && Number.isInteger(days)) {
+      invest = {
+        mandateHash: mandateHashFor(mandateText),
+        mandateUri,
+        raiseDuration: BigInt(days) * 86_400n,
+        assets: parsedAssets.assets,
+        maxPositionBps: BigInt(draft.maxPositionBps),
+        maxTradeBps: BigInt(draft.maxTradeBps),
+        maxDeviationBps: BigInt(draft.maxDeviationBps),
+      };
+    }
+  }
+
   let preview: RaisePreview | null = null;
   if (price.ok && cap.ok && price.wei > 0n) {
     const { maxSupply, dust } = previewSupply(cap.wei, price.wei);
@@ -237,7 +358,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
     };
   }
 
-  if (issues.length || !preview) return { issues, preview, params: null };
+  if (issues.length || !preview || !invest) return { issues, preview, params: null };
   const minSkinBps = minSkinBpsForDraft(draft.skinBps);
   return {
     issues,
@@ -250,6 +371,7 @@ export function previewDraft(draft: FundDraft): { issues: FundIssue[]; preview: 
       baseURI,
       entryFeeBps: BigInt(draft.entryFeeBps),
       minSkinBps,
+      ...invest,
     },
   };
 }
@@ -268,6 +390,12 @@ export function fundTxError(message: string): string {
   if (m.includes('notauthorized')) return 'Only the manager or an authorized wallet can do that.';
   if (m.includes('notclosed')) return 'The raise is still open.';
   if (m.includes('paused')) return 'Swaps are paused.';
+  if (m.includes('positioncap')) return 'That swap would leave more than the fund’s single-asset cap in one asset.';
+  if (m.includes('tradecap')) return 'That swap is larger than the fund’s per-trade cap.';
+  if (m.includes('deviation')) return 'That swap executes too far from the feed price.';
+  if (m.includes('toosoon')) return 'The next NAV checkpoint is not due yet. Checkpoints run once an hour.';
+  if (m.includes('raiseended')) return 'The raise deadline has passed.';
+  if (m.includes('baduri')) return 'The mandate link is missing or too long.';
   if (m.includes('badvalue')) return 'The ETH amount does not match the mint price.';
   if (m.includes('badquantity')) return 'Enter at least 1 NFT.';
   if (m.includes('invalidparams')) return 'Those settings are outside the allowed limits.';
@@ -282,6 +410,8 @@ export type FundListItem = {
   symbol: string;
   manager: string;
   status: FundStatus;
+  /** Raw vault status (FundVaultStore): 3 means the raise failed and a refund is available. */
+  vaultStatus: number;
   raised: bigint;
   generation?: number;
 };
@@ -298,6 +428,7 @@ export function filterFunds<T extends FundListItem>(
     if (filter === 'waiting' && item.status !== 'waiting') return false;
     if (filter === 'closed' && item.status !== 'closed') return false;
     if (filter === 'investing' && item.status !== 'investing') return false;
+    if (filter === 'refund' && item.vaultStatus !== VAULT_STATUS_FAILED) return false;
     if (filter === 'mine') {
       if (!account) return false;
       if (item.manager.toLowerCase() !== account.toLowerCase()) return false;

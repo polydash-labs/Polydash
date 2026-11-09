@@ -21,6 +21,16 @@ abstract contract FundVaultStore {
     uint8 public constant BIT_TIMELOCK = 32;
     uint8 public constant PROTECTION_TOTAL = 6;
 
+    /// @notice Defaults used when a fund is created with a 0 cap. 7500 = at most 75% of NAV in one
+    ///         asset or in one trade, 5000 = execution within 50% of the feed. The 75% defaults are
+    ///         deliberately above 50%: NAV excludes unclaimed fees, so a trade that is exactly half
+    ///         of the gross balance is slightly over half of net NAV.
+    uint256 public constant DEFAULT_MAX_POSITION_BPS = 7500;
+    uint256 public constant DEFAULT_MAX_TRADE_BPS = 7500;
+    uint256 public constant DEFAULT_MAX_DEVIATION_BPS = 5000;
+    /// @notice Minimum time between permissionless NAV checkpoints.
+    uint256 public constant NAV_CHECKPOINT_INTERVAL = 1 hours;
+
     enum Status {
         Raising,
         RaisingClosed,
@@ -76,6 +86,17 @@ abstract contract FundVaultStore {
     mapping(address => mapping(address => uint256)) public tokenOwed;
     mapping(address => uint256) public tokenReserved;
 
+    /// @dev Appended after the PR 24 layout. Keep new storage at the end so the vault/facet layout
+    ///      stays in lockstep. Phase 2 is not deployed, so there is no live storage to migrate.
+    /// @dev Per-fund swap policy, in BPS of NAV. Set once at creation; there is no setter, so the
+    ///      manager cannot loosen them later. 0 at creation means "use the default" (handled in the vault).
+    uint256 public maxPositionBps;
+    uint256 public maxTradeBps;
+    uint256 public maxDeviationBps;
+    /// @dev Last hourly NAV checkpoint. 0 until the first `checkpointNav()` call.
+    uint64 public lastNavCheckpoint;
+    uint256 public lastCheckpointNavPerNft;
+
     event Bound(address indexed nft);
     event Deposited(uint256 gross, uint256 principalAdded, uint256 entryFee, uint256 protocolFee);
     event RaiseClosed(uint256 raised, uint256 minted);
@@ -91,6 +112,11 @@ abstract contract FundVaultStore {
     event Trade(address indexed asset, uint8 side, uint256 size, uint256 price, uint256 navAfter);
     event ExecutorSet(address indexed executor, bool allowed);
     event SwapsPaused(bool paused);
+    /// @notice Emitted once, at fund creation, with the mandate text location. The hash alone does not
+    ///         let LPs read the mandate; the URI must point at the same text the hash was taken from.
+    event MandatePublished(bytes32 indexed mandateHash, string mandateUri);
+    event PositionCapsSet(uint256 maxPositionBps, uint256 maxTradeBps, uint256 maxDeviationBps);
+    event NavCheckpoint(uint64 indexed timestamp, uint256 nav, uint256 navPerNft);
 
     error NotFactory();
     error NotNft();
@@ -125,4 +151,9 @@ abstract contract FundVaultStore {
     error TooMany();
     error BadExecutor();
     error DirectFacetCall();
+    error PositionCap();
+    error TradeCap();
+    error Deviation();
+    error TooSoon();
+    error BadUri();
 }

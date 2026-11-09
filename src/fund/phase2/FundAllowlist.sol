@@ -16,8 +16,13 @@ contract FundAllowlist {
     uint256 public constant MIN_DELAY = 1 days;
     uint256 public constant MAX_DELAY = 30 days;
     uint256 public constant MIN_STALE = 1 minutes;
-    /// @notice Trading freshness ceiling. The Chainlink dataset heartbeat is 86400 seconds and is not this value.
-    uint256 public constant MAX_STALE = 1 hours;
+    /// @notice Trading freshness ceiling. The Chainlink dataset heartbeat on Robinhood Chain is
+    ///         86400 seconds for the stablecoin feeds, so a 1-hour ceiling would reject every
+    ///         stablecoin feed as read, permanently. The ceiling is the heartbeat, not a trading
+    ///         bound: each asset still gets its own `maxStale` (1 day for USDG, tighter for an
+    ///         asset whose feed updates hourly), and the min/max price band plus the vault's
+    ///         execution-deviation check are the guards that catch a bad price.
+    uint256 public constant MAX_STALE = 1 days;
     uint256 public constant MAX_LIST = 64;
 
     struct Feed {

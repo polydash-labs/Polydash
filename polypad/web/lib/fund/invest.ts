@@ -42,6 +42,8 @@ export type BlotterRow = {
 
 export type FundInvestView = {
   mandateHash: `0x${string}`;
+  /** Where the mandate text lives. Empty on funds created before the mandate URI was stored. */
+  mandateUri: string;
   universeHash: `0x${string}`;
   weth: `0x${string}`;
   allowlist: `0x${string}`;
@@ -49,6 +51,9 @@ export type FundInvestView = {
   navPerNft: bigint;
   /** False when the vault read reverted. A zero figure is not a price in that case. */
   navKnown: boolean;
+  /** Unix time of the last hourly NAV checkpoint, 0 when no checkpoint has been written yet. */
+  lastNavCheckpoint: number;
+  lastCheckpointNavPerNft: bigint;
   spendableEth: bigint;
   claimableFees: bigint;
   swapsPaused: boolean;

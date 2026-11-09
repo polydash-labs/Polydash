@@ -26,7 +26,11 @@ contract FundVaultDeployer {
         bytes32 mandateHash,
         address[] memory assets,
         address swapFacet,
-        uint64 raiseDeadline
+        uint64 raiseDeadline,
+        string memory mandateUri,
+        uint256 maxPositionBps,
+        uint256 maxTradeBps,
+        uint256 maxDeviationBps
     ) external returns (FundVaultInvest vault) {
         if (msg.sender != factory) revert NotFactory();
         vault = new FundVaultInvest(
@@ -41,7 +45,11 @@ contract FundVaultDeployer {
             assets,
             swapFacet,
             raiseDeadline,
-            factory
+            factory,
+            mandateUri,
+            maxPositionBps,
+            maxTradeBps,
+            maxDeviationBps
         );
     }
 }

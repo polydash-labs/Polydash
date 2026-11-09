@@ -111,6 +111,97 @@ export const FundNFTABI = [
   { type: 'error', name: 'SoldOut', inputs: [] },
 ] as const;
 
+export const FundNFTInvestABI = [
+  ...FundNFTABI,
+  {
+    type: 'function',
+    name: 'refund',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'ids', type: 'uint256[]' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'exit',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'ids', type: 'uint256[]' }],
+    outputs: [],
+  },
+  { type: 'function', name: 'totalBurned', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'error', name: 'NotHolder', inputs: [] },
+  { type: 'error', name: 'RaiseEnded', inputs: [] },
+] as const;
+
+export const FundFactoryInvestABI = [
+  {
+    type: 'function',
+    name: 'allFunds',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'uint256' }],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    type: 'function',
+    name: 'allFundsLength',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'isFund',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'createFund',
+    stateMutability: 'nonpayable',
+    inputs: [{
+      name: 'p',
+      type: 'tuple',
+      components: [
+        { name: 'name', type: 'string' },
+        { name: 'symbol', type: 'string' },
+        { name: 'imageUri', type: 'string' },
+        { name: 'baseURI', type: 'string' },
+        { name: 'mintPrice', type: 'uint256' },
+        { name: 'raiseCap', type: 'uint256' },
+        { name: 'entryFeeBps', type: 'uint256' },
+        { name: 'minSkinBps', type: 'uint256' },
+        { name: 'raiseDuration', type: 'uint256' },
+        { name: 'mandateHash', type: 'bytes32' },
+        { name: 'assets', type: 'address[]' },
+        { name: 'mandateUri', type: 'string' },
+        { name: 'maxPositionBps', type: 'uint256' },
+        { name: 'maxTradeBps', type: 'uint256' },
+        { name: 'maxDeviationBps', type: 'uint256' },
+      ],
+    }],
+    outputs: [{ name: 'fund', type: 'address' }],
+  },
+  {
+    type: 'event',
+    name: 'FundCreated',
+    inputs: [
+      { name: 'fund', type: 'address', indexed: true },
+      { name: 'vault', type: 'address', indexed: true },
+      { name: 'manager', type: 'address', indexed: true },
+      { name: 'mintPrice', type: 'uint256', indexed: false },
+      { name: 'raiseCap', type: 'uint256', indexed: false },
+      { name: 'maxSupply', type: 'uint256', indexed: false },
+      { name: 'entryFeeBps', type: 'uint256', indexed: false },
+      { name: 'minSkinBps', type: 'uint256', indexed: false },
+      { name: 'skinRequired', type: 'uint256', indexed: false },
+      { name: 'mandateHash', type: 'bytes32', indexed: false },
+      { name: 'mandateUri', type: 'string', indexed: false },
+    ],
+  },
+  { type: 'error', name: 'InvalidParams', inputs: [] },
+  { type: 'error', name: 'NotOwner', inputs: [] },
+] as const;
+
 export const FundVaultABI = [
   { type: 'function', name: 'raiseCap', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
   { type: 'function', name: 'raised', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
@@ -129,6 +220,31 @@ const tradeRecord = [
 export const FundVaultInvestABI = [
   ...FundVaultABI,
   { type: 'function', name: 'mandateHash', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bytes32' }] },
+  { type: 'function', name: 'mandateUri', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'string' }] },
+  { type: 'function', name: 'raiseDeadline', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint64' }] },
+  { type: 'function', name: 'maxPositionBps', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'maxTradeBps', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'maxDeviationBps', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  { type: 'function', name: 'lastNavCheckpoint', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint64' }] },
+  { type: 'function', name: 'lastCheckpointNavPerNft', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+  {
+    type: 'function',
+    name: 'tokenOwed',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'holder', type: 'address' },
+      { name: 'asset', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  { type: 'function', name: 'checkpointNav', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  {
+    type: 'function',
+    name: 'claimOwed',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'asset', type: 'address' }],
+    outputs: [],
+  },
   { type: 'function', name: 'universeHash', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bytes32' }] },
   { type: 'function', name: 'weth', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
   { type: 'function', name: 'allowlist', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
@@ -219,6 +335,10 @@ export const FundVaultInvestABI = [
   { type: 'error', name: 'Paused', inputs: [] },
   { type: 'error', name: 'Slippage', inputs: [] },
   { type: 'error', name: 'SkinRequired', inputs: [] },
+  { type: 'error', name: 'PositionCap', inputs: [] },
+  { type: 'error', name: 'TradeCap', inputs: [] },
+  { type: 'error', name: 'Deviation', inputs: [] },
+  { type: 'error', name: 'TooSoon', inputs: [] },
 ] as const;
 
 export const FundAllowlistABI = [

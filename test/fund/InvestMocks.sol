@@ -162,6 +162,51 @@ contract RateRouter {
     receive() external payable {}
 }
 
+/// @dev Minimal SwapRouter02 stand-in: exactInputSingle at a fixed rate, WETH9() returns the WETH.
+///      Pulls tokenIn from the caller and pays tokenOut to the recipient. Fund it before use.
+contract MockSwapRouter02 {
+    address public immutable weth;
+    uint256 public tokensPerEth;
+    uint256 public ethPerToken;
+    uint24 public lastFee;
+
+    struct ExactInputSingleParams {
+        address tokenIn;
+        address tokenOut;
+        uint24 fee;
+        address recipient;
+        uint256 amountIn;
+        uint256 amountOutMinimum;
+        uint160 sqrtPriceLimitX96;
+    }
+
+    constructor(address _weth, uint256 _tokensPerEth, uint256 _ethPerToken) {
+        weth = _weth;
+        tokensPerEth = _tokensPerEth;
+        ethPerToken = _ethPerToken;
+    }
+
+    function WETH9() external view returns (address) {
+        return weth;
+    }
+
+    function setEthPerToken(uint256 next) external {
+        ethPerToken = next;
+    }
+
+    function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut) {
+        lastFee = params.fee;
+        require(IERC20(params.tokenIn).transferFrom(msg.sender, address(this), params.amountIn), "pull");
+        if (params.tokenIn == weth) {
+            amountOut = (params.amountIn * tokensPerEth) / 1e18;
+        } else {
+            amountOut = (params.amountIn * ethPerToken) / 1e18;
+        }
+        require(amountOut >= params.amountOutMinimum, "min");
+        require(IERC20(params.tokenOut).transfer(params.recipient, amountOut), "pay");
+    }
+}
+
 contract FailRouter {
     function swap(address, address, uint256, uint256, bytes calldata) external payable returns (uint256) {
         revert("no");
