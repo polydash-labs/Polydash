@@ -10,6 +10,6 @@ The manager's skin token ids cannot be transferred until the lock ends. A burn f
 
 `NavTape` records net value, the high-water mark, and the drawdown. `Trade` is still the blotter event.
 
-The site page is `/funds/phase3`. The funds layout still renders the not-live page unless `FUND_ROUTES_ENABLED` is exactly `enabled`. The header does not link to it.
+The public site is https://polypad.family/funds, including `/funds/phase3`. In this repository the funds layout still renders the not-live page unless `FUND_ROUTES_ENABLED` is exactly `enabled`.
 
 Unsigned creation payloads, compiler settings, deploy order, and gas measured on a fork of the live Phase 2 allowlist are in [deploy/phase3/unsigned](../deploy/phase3/unsigned). Nonces are not recorded. Read the signer's nonce immediately before signing. Do not reuse one from this note.

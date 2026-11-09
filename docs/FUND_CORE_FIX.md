@@ -1,6 +1,6 @@
 # Fund core fix status
 
-These contracts are unaudited. An outside review is planned. Not financial advice. This note is not a completion claim.
+Phase 2 and Phase 3 are deployed on Robinhood Chain. Addresses are in [DEPLOYMENTS.md](DEPLOYMENTS.md). The notes below describe this change before that deployment. Not audited. Not financial advice. This note is not a completion claim.
 
 ## What landed before this change
 
@@ -25,11 +25,9 @@ Phase 2 source from PR 23 is on `main` at `5757b07` and was not deployed. This c
 - Router: SwapRouter02 does not implement the vault's `swap(address,address,uint256,uint256,bytes)` (verified on live bytecode, 2026-11-09), so it cannot be allowlisted directly. `UniswapV3RouterAdapter` translates `swap` into `exactInputSingle` (pool fee from `data`, empty = 3000); the deploy script deploys it and seeds it as the only router when `FUND_INVEST_SWAP_ROUTER02` is set. First non-WETH asset is USDG (verified pools vs WETH at fees 500/3000/10000; bridged USDC/USDT/WBTC have no pools and negligible bridged supply). See `docs/PHASE2_DEPLOY_CONFIG.md` for the full verified config.
 - UI: the Create Fund wizard has a fund-type choice. "Raise only" is the live Phase 1 path. "Investing fund" targets `FundFactoryInvest` with mandate text + link, raise length (1–30 days), extra assets (one address per line, empty means WETH-only), and the caps; it is disabled until `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` is set. The fund page has a holder panel for Phase 2 funds: Refund (failed raise), Exit (closed/investing), and Claim owed, with token IDs read from the fund's Transfer log and a manual-ID fallback. NAV shows "Unavailable" with an explicit warning when a feed cannot be used. Fund routes stay off unless `FUND_ROUTES_ENABLED=enabled`; nothing here enables them.
 
-Still not deployed, still unaudited. The deploy script still starts WETH-only with no router and no non-quote asset; see `docs/PHASE2_DEPLOY_CONFIG.md` for the proposed config.
+The deploy script starts WETH-only with no non-quote asset. The live config is in [PHASE2_DEPLOY_CONFIG.md](PHASE2_DEPLOY_CONFIG.md) and [DEPLOYMENTS.md](DEPLOYMENTS.md). Not audited. Not financial advice.
 
-Not ready to sign as a public fund, and not deployed.
-
-`script/DeployFundFactoryInvest.s.sol` still reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. It was not broadcast. Compiled ABIs are in `polypad/abi/phase2/`. They match this source, not an on-chain deployment.
+`script/DeployFundFactoryInvest.s.sol` still reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. The creation transactions are in [DEPLOYMENTS.md](DEPLOYMENTS.md). Compiled ABIs are in `polypad/abi/phase2/`.
 
 Feeds are published. They are not allowlisted and not deployed into a fund.
 
@@ -62,7 +60,7 @@ Do not set `FUND_ROUTES_ENABLED`. Do not set `NEXT_PUBLIC_FUND_INVEST_FACTORY_AD
 
 ## Abacus sync
 
-Do not enable public Funds. Leave `FUND_ROUTES_ENABLED` unset. Leave `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` unset. Do not broadcast `DeployFundFactoryInvest`. Do not allowlist SwapRouter02, UniversalRouter, or V3Factory from this note. Phase 2 is not deployed. Non-quote assets stay disabled until a reviewed feed is set. Phase 1 factory `0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878` is unchanged.
+Phase 2 and Phase 3 are deployed. Addresses are in [DEPLOYMENTS.md](DEPLOYMENTS.md). The site is https://polypad.family/funds. `FUND_ROUTES_ENABLED` and `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stay unset in this repository. Do not allowlist SwapRouter02, UniversalRouter, or V3Factory from this note. Non-quote assets stay disabled until a reviewed feed is set. Phase 1 factory `0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878` is unchanged.
 
 ## Still later
 

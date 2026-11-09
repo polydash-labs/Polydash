@@ -94,7 +94,7 @@ Staking v1 behaviour, roles, and fees are written up in [docs/ARCHITECTURE.md](d
 | Gated mints | NFT collections with an optional token-holder phase. | [`src/gatedmint/`](src/gatedmint) |
 | Treasury rules | Per-token treasury. Operator tasks run only inside published rules and a timelock. | [`src/treasury/`](src/treasury) |
 | Floor vault | Fixed-price NFT collections whose mint share funds an ETH and launch-token vault. | [`src/floorvault/`](src/floorvault) |
-| Tokenized funds | Phase 1a raise: fixed-price ERC-721 units, ETH held in a vault, no principal withdraw. | [`src/fund/`](src/fund) |
+| Tokenized funds | Phase 1a raise, Phase 2 invest and swap through an allowlist, and Phase 3 strategy templates with a high-water-mark fee, a manager stake lock, and a drawdown brake. Live at [polypad.family/funds](https://polypad.family/funds). Addresses in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md). | [`src/fund/`](src/fund) |
 | Buybacks | Capped POLYDASH buys from a fee share: 62.5% burned, 37.5% to stakers. | [`src/buyback/`](src/buyback) |
 | Poly Agent | Read-only staking monitor: pool sizes, reward rates, inflows and outflows. | [`agents/poly-agent/`](agents/poly-agent) |
 | PolyCTO | Read-only multi-role agent for a launch: community, marketing drafts, token stats, and a heuristic source scan. The scan is not a review. | [`agents/polycto/`](agents/polycto) |
@@ -198,7 +198,7 @@ Web unit tests, from `polypad/web`: `corepack enable && corepack prepare yarn@4.
 forge script script/Deploy.s.sol --rpc-url robinhood --broadcast
 ```
 
-`script/DeployFundFactory.s.sol` deployed `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT` on the machine that signs. `createFund` deploys each `FundVault` and `FundNFT`. The live factory is [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878). Commands and Sourcify status are in [`src/fund/README.md`](src/fund/README.md). `script/DeployFundFactoryInvest.s.sol` is the later Phase 2 broadcast. It reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`, and it was not run here. These contracts are unaudited. Not financial advice.
+`script/DeployFundFactory.s.sol` deployed `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT` on the machine that signs. `createFund` deploys each `FundVault` and `FundNFT`. The live Phase 1a factory is [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878). Commands and Sourcify status are in [`src/fund/README.md`](src/fund/README.md). Phase 2 and Phase 3 addresses, creation transactions, and Blockscout links are in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md). `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. Not audited. Not financial advice.
 
 The Polypad launchpad deploy script in `polypad/contracts/script/Deploy.s.sol` refuses chain ID 4663 unless `MAINNET` and `I_HAVE_WRITTEN_APPROVAL_AND_AUDIT` are both set. That guard is a script check. It is not a statement that a review has been completed. The live addresses below were already deployed; their sources are in this repository where noted.
 
@@ -239,7 +239,7 @@ Explorer links use [robinhoodchain.blockscout.com](https://robinhoodchain.blocks
 
 V2 pools are deployed with `new` from the verified pool source. Two example pools are in [`src/v2/README.md`](src/v2/README.md): [`0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518`](https://robinhoodchain.blockscout.com/address/0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518) and [`0x0F50043E172B8652bb786C4F14f30c415E5760AB`](https://robinhoodchain.blockscout.com/address/0x0F50043E172B8652bb786C4F14f30c415E5760AB). They are not the full set.
 
-`FundVault` and `FundNFT` are created per fund by `createFund` on `FundFactory`. Phase 1a is a raise that mints ERC-721 units. Phase 2 investing contracts are in `src/fund/phase2` and are not deployed. It is unaudited. Not financial advice.
+`FundVault` and `FundNFT` are created per fund by `createFund` on `FundFactory`. Phase 1a is a raise that mints ERC-721 units. Phase 2 and Phase 3 are deployed on Robinhood Chain and listed in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md): `FundSwapFacet` `0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0`, `UniswapV3RouterAdapter` `0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581`, `FundAllowlist` `0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`, `FundFactoryInvest` `0xd3c6ae470c25989cC8d2876c1855fB570B98894E`, `StrategyTemplate` `0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba`, `FundSwapFacetPhase3` `0x40Ef3ae910A46aDDC14f45F0983060161884f045`, and `FundFactoryPhase3` `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. Sourcify exact match. The site is [polypad.family/funds](https://polypad.family/funds). Not audited. Not financial advice.
 
 ## Security
 
