@@ -37,6 +37,14 @@ contract FundFactoryInvest is ReentrancyGuard {
         uint256 raiseDuration;
         bytes32 mandateHash;
         address[] assets;
+        /// @notice Where the mandate text lives (ipfs:// or https://). Required: the hash alone does
+        ///         not let LPs read the mandate. Emitted in `MandatePublished` and stored on the vault.
+        string mandateUri;
+        /// @notice Swap policy, in BPS of NAV. 0 means "use the default" (75% position / 75% trade /
+        ///         50% deviation). Non-zero values must be 1..10000. Set once at creation; no setter.
+        uint256 maxPositionBps;
+        uint256 maxTradeBps;
+        uint256 maxDeviationBps;
     }
 
     address public owner;
@@ -63,7 +71,8 @@ contract FundFactoryInvest is ReentrancyGuard {
         uint256 entryFeeBps,
         uint256 minSkinBps,
         uint256 skinRequired,
-        bytes32 mandateHash
+        bytes32 mandateHash,
+        string mandateUri
     );
     event FeeRecipientSet(address indexed recipient);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
@@ -116,6 +125,8 @@ contract FundFactoryInvest is ReentrancyGuard {
         if (p.mintPrice < MIN_MINT_PRICE || p.mintPrice > MAX_MINT_PRICE) revert InvalidParams();
         if (p.raiseCap < p.mintPrice || p.entryFeeBps > MAX_ENTRY_FEE_BPS) revert InvalidParams();
         if (p.mandateHash == bytes32(0) || p.assets.length > MAX_ASSETS) revert InvalidParams();
+        if (bytes(p.mandateUri).length == 0 || bytes(p.mandateUri).length > 512) revert InvalidParams();
+        if (p.maxPositionBps > BPS || p.maxTradeBps > BPS || p.maxDeviationBps > BPS) revert InvalidParams();
         if (p.raiseDuration < MIN_RAISE_DURATION || p.raiseDuration > MAX_RAISE_DURATION) revert InvalidParams();
 
         uint256 maxSupply = p.raiseCap / p.mintPrice;
@@ -138,7 +149,11 @@ contract FundFactoryInvest is ReentrancyGuard {
             p.mandateHash,
             p.assets,
             swapFacet,
-            uint64(block.timestamp + p.raiseDuration)
+            uint64(block.timestamp + p.raiseDuration),
+            p.mandateUri,
+            p.maxPositionBps,
+            p.maxTradeBps,
+            p.maxDeviationBps
         );
         FundNFTInvest nft = nftDeployer.deploy(
             FundNFTInvest.Init({
@@ -175,7 +190,8 @@ contract FundFactoryInvest is ReentrancyGuard {
             p.entryFeeBps,
             skinBps,
             skinRequired,
-            p.mandateHash
+            p.mandateHash,
+            p.mandateUri
         );
     }
 

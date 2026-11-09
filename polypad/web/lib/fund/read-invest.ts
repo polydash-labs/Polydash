@@ -16,6 +16,10 @@ const HEAD = [
   'mandateAssetCount',
   'tradeCount',
   'protectionBits',
+  // Appended after the PR 24 set. Do not reorder: indices below are positional.
+  'mandateUri',
+  'lastNavCheckpoint',
+  'lastCheckpointNavPerNft',
 ] as const;
 
 type CallResult = { status: string; result?: unknown };
@@ -182,6 +186,9 @@ export async function readInvest(
 
   return {
     mandateHash,
+    mandateUri: head[13]?.status === 'success' && typeof head[13].result === 'string' ? head[13].result : '',
+    lastNavCheckpoint: Number(ok(head[14], 0n)),
+    lastCheckpointNavPerNft: ok(head[15], 0n),
     universeHash: ok(head[1], `0x${'0'.repeat(64)}` as `0x${string}`),
     weth,
     allowlist,

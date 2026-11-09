@@ -69,7 +69,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         uint256 got = _wethBalance() - before;
         if (got != amountIn || got < minAmountOut) revert Slippage();
         if (address(this).balance < _claimableFees()) revert FeesShort();
-        _record(weth, SIDE_BUY, got, NAVReader.executionPrice(amountIn, got));
+        _record(weth, SIDE_BUY, got, NAVReader.executionPrice(amountIn, got), _navTotal());
     }
 
     function _unwrap(uint256 amountIn, uint256 minAmountOut) internal {
@@ -80,7 +80,7 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         inSwap = false;
         uint256 got = address(this).balance - ethBefore;
         if (got != amountIn || got < minAmountOut) revert Slippage();
-        _record(weth, SIDE_SELL, amountIn, NAVReader.executionPrice(got, amountIn));
+        _record(weth, SIDE_SELL, amountIn, NAVReader.executionPrice(got, amountIn), _navTotal());
     }
 
     function _swap(
@@ -96,6 +96,9 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         uint256 fees = _claimableFees();
         if (assetIn == address(0) && _spendableEth() < amountIn) revert BadAmount();
         if (assetIn != address(0) && IERC20(assetIn).balanceOf(address(this)) < amountIn) revert BadAmount();
+
+        uint256 navBefore = _navTotal();
+        _checkTradeCap(asset, buying, amountIn, navBefore);
 
         uint256 quoteBefore = address(this).balance + _wethBalance();
         uint256 assetBefore = IERC20(asset).balanceOf(address(this));
@@ -119,9 +122,13 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
             if (assetAfter <= assetBefore) revert Slippage();
             uint256 got = assetAfter - assetBefore;
             if (got < minAmountOut) revert Slippage();
+            uint256 execPrice = NAVReader.executionPrice(spent, got);
+            _checkDeviation(asset, execPrice, true);
+            uint256 navAfter = _navTotal();
+            _checkPositionCap(asset, assetAfter, navAfter);
             costBasis[asset] += spent;
             totalCostBasis += spent;
-            _record(asset, SIDE_BUY, got, NAVReader.executionPrice(spent, got));
+            _record(asset, SIDE_BUY, got, execPrice, navAfter);
         } else {
             if (assetAfter >= assetBefore) revert BadAmount();
             uint256 sold = assetBefore - assetAfter;
@@ -129,16 +136,48 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
             if (quoteAfter <= quoteBefore) revert Slippage();
             uint256 got = quoteAfter - quoteBefore;
             if (got < minAmountOut) revert Slippage();
+            uint256 execPrice = NAVReader.executionPrice(got, sold);
+            _checkDeviation(asset, execPrice, false);
             uint256 basis = costBasis[asset];
             uint256 removed = sold == assetBefore ? basis : (basis * sold) / assetBefore;
             costBasis[asset] = basis - removed;
             totalCostBasis -= removed;
-            _record(asset, SIDE_SELL, sold, NAVReader.executionPrice(got, sold));
+            _record(asset, SIDE_SELL, sold, execPrice, _navTotal());
         }
     }
 
-    function _record(address asset, uint8 side, uint256 size, uint256 unitPrice) internal {
-        uint256 navAfter = _navPerNft();
+    /// @notice Quote-side size of one trade must stay under `maxTradeBps` of pre-trade NAV.
+    ///         Buys are measured by quote spent; sells by the feed value of the asset sold.
+    ///         WETH wrap/unwrap never reaches this function (the quote asset has no cap).
+    function _checkTradeCap(address asset, bool buying, uint256 amountIn, uint256 navBefore) internal view {
+        uint256 quoteSize = buying ? amountIn : allowlist.quote(asset, amountIn);
+        if (quoteSize > (navBefore * maxTradeBps) / BPS) revert TradeCap();
+    }
+
+    /// @notice A buy must not leave more than `maxPositionBps` of post-trade NAV in one asset.
+    ///         Sells only shrink a position, so they are not checked here.
+    function _checkPositionCap(address asset, uint256 assetBalance, uint256 navAfter) internal view {
+        uint256 positionValue = allowlist.quote(asset, assetBalance);
+        if (positionValue > (navAfter * maxPositionBps) / BPS) revert PositionCap();
+    }
+
+    /// @notice Executed price must stay within `maxDeviationBps` of the feed price. A buy caps how
+    ///         much above the feed the vault may pay; a sell floors how much below the feed it may
+    ///         accept. The feed price is `allowlist.quote(asset, 1e18)`, ETH wei per 1e18 raw units.
+    ///         Setting `maxDeviationBps` to 10000 removes the sell floor (0) and lets a buy pay up
+    ///         to 2x the feed; that is an explicit opt-out, not a default.
+    function _checkDeviation(address asset, uint256 execPrice, bool buying) internal view {
+        uint256 feedPrice = allowlist.quote(asset, 1e18);
+        if (buying) {
+            if (execPrice > (feedPrice * (BPS + maxDeviationBps)) / BPS) revert Deviation();
+        } else {
+            if (execPrice < (feedPrice * (BPS - maxDeviationBps)) / BPS) revert Deviation();
+        }
+    }
+
+    function _record(address asset, uint8 side, uint256 size, uint256 unitPrice, uint256 navTotal) internal {
+        uint256 live = nft == address(0) ? 0 : IFundUnit(nft).outstanding();
+        uint256 navAfter = NAVReader.perNft(navTotal, live);
         trades[tradeCount % BLOT_CAP] = TradeRecord({
             asset: asset, side: side, timestamp: uint64(block.timestamp), size: size, price: unitPrice, navAfter: navAfter
         });
@@ -160,10 +199,16 @@ contract FundSwapFacet is ReentrancyGuard, FundVaultStore {
         return bal <= fees ? 0 : bal - fees;
     }
 
+    /// @notice Fee-excluded NAV total. The facet shares the vault's storage by delegatecall, so this
+    ///         reads the same balances and fees as `FundVaultInvest.nav()`.
+    function _navTotal() internal view returns (uint256) {
+        return NAVReader.netTotal(
+            address(this).balance, _wethBalance(), _mandateAssets, allowlist, _claimableFees()
+        );
+    }
+
     function _navPerNft() internal view returns (uint256) {
         uint256 live = nft == address(0) ? 0 : IFundUnit(nft).outstanding();
-        return NAVReader.perNft(
-            NAVReader.total(address(this).balance, _wethBalance(), _mandateAssets, allowlist), live
-        );
+        return NAVReader.perNft(_navTotal(), live);
     }
 }

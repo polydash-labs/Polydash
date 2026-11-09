@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { getAddress, parseEther } from 'viem';
-import { FundFactoryABI } from '../contracts/fund-abi';
+import { FundFactoryABI, FundFactoryInvestABI } from '../contracts/fund-abi';
 import { FUND_FACTORY_ADDRESS, getFundFactoryAddress } from './address';
 import {
   DEFAULT_FUND_DRAFT,
@@ -13,6 +13,8 @@ import {
   formatFundEth,
   fundStatus,
   fundTxError,
+  mandateHashFor,
+  parseAssetList,
   previewDraft,
   previewSupply,
   quoteMint,
@@ -163,4 +165,69 @@ test('plain labels and wallet errors stay short', () => {
   assert.equal(fundTxError('User rejected the request'), 'Transaction cancelled');
   assert.equal(fundTxError('execution reverted: SkinRequired()'), 'The manager has to mint their share before anyone else can.');
   assert.equal(fundTxError('x'.repeat(400)), 'Transaction failed.');
+});
+
+test('investing draft requires a mandate, a link, a duration, and caps', () => {
+  const base = { ...DEFAULT_FUND_DRAFT, name: 'Example', symbol: 'EX', fundKind: 'invest' as const };
+  const empty = previewDraft(base);
+  assert.ok(empty.issues.some((issue) => issue.field === 'mandateText'));
+  assert.ok(empty.issues.some((issue) => issue.field === 'mandateUri'));
+  assert.equal(empty.params, null);
+
+  const badUri = previewDraft({ ...base, mandateText: 'Hold WETH.', mandateUri: 'example.com/mandate' });
+  assert.ok(badUri.issues.some((issue) => issue.field === 'mandateUri'));
+  const badDays = previewDraft({ ...base, mandateText: 'Hold WETH.', mandateUri: 'ipfs://mandate', raiseDurationDays: '31' });
+  assert.ok(badDays.issues.some((issue) => issue.field === 'raiseDurationDays'));
+  const badAsset = previewDraft({ ...base, mandateText: 'Hold WETH.', mandateUri: 'ipfs://mandate', assetsText: 'not-an-address' });
+  assert.ok(badAsset.issues.some((issue) => issue.field === 'assetsText'));
+  const badCap = previewDraft({ ...base, mandateText: 'Hold WETH.', mandateUri: 'ipfs://mandate', maxPositionBps: 10_001 });
+  assert.ok(badCap.issues.some((issue) => issue.field === 'maxPositionBps'));
+
+  const ok = previewDraft({
+    ...base,
+    mandateText: 'Hold WETH and up to 60% USDC. No leverage.',
+    mandateUri: 'ipfs://QmMandate',
+    raiseDurationDays: '7',
+    assetsText: '0x0000000000000000000000000000000000000002',
+  });
+  assert.equal(ok.issues.length, 0);
+  assert.equal(ok.params?.mandateHash, mandateHashFor('Hold WETH and up to 60% USDC. No leverage.'));
+  assert.equal(ok.params?.mandateUri, 'ipfs://QmMandate');
+  assert.equal(ok.params?.raiseDuration, 7n * 86_400n);
+  assert.deepEqual(ok.params?.assets, ['0x0000000000000000000000000000000000000002']);
+  assert.equal(ok.params?.maxPositionBps, 7500n);
+  assert.equal(ok.params?.maxTradeBps, 7500n);
+  assert.equal(ok.params?.maxDeviationBps, 5000n);
+});
+
+test('mandate hash is keccak256 of the text and asset list rejects duplicates', () => {
+  const hash = mandateHashFor('Hold WETH.');
+  assert.match(hash, /^0x[0-9a-f]{64}$/);
+  assert.equal(mandateHashFor('Hold WETH.'), hash);
+  assert.notEqual(mandateHashFor('Hold WETH.'), mandateHashFor('Hold USDC.'));
+  const parsed = parseAssetList('0x0000000000000000000000000000000000000002\n0x0000000000000000000000000000000000000003');
+  assert.equal(parsed.ok, true);
+  assert.equal(parseAssetList('0x0000000000000000000000000000000000000002\n0x0000000000000000000000000000000000000002').ok, false);
+  assert.equal(parseAssetList('').ok, true);
+});
+
+test('createFund argument order matches FundFactoryInvest.Params', () => {
+  const fn = FundFactoryInvestABI.find((item) => item.type === 'function' && item.name === 'createFund');
+  assert.ok(fn && fn.type === 'function');
+  if (!fn || fn.type !== 'function') return;
+  const tuple = fn.inputs[0];
+  assert.equal(tuple?.type, 'tuple');
+  if (tuple?.type !== 'tuple') return;
+  assert.deepEqual(tuple.components.map((component) => component.name), [
+    'name', 'symbol', 'imageUri', 'baseURI', 'mintPrice', 'raiseCap', 'entryFeeBps', 'minSkinBps',
+    'raiseDuration', 'mandateHash', 'assets', 'mandateUri', 'maxPositionBps', 'maxTradeBps', 'maxDeviationBps',
+  ]);
+});
+
+test('cap and deadline errors map to plain language', () => {
+  assert.match(fundTxError('execution reverted: PositionCap()'), /single-asset cap/);
+  assert.match(fundTxError('execution reverted: TradeCap()'), /per-trade cap/);
+  assert.match(fundTxError('execution reverted: Deviation()'), /feed price/);
+  assert.match(fundTxError('execution reverted: TooSoon()'), /once an hour/);
+  assert.match(fundTxError('execution reverted: RaiseEnded()'), /deadline/);
 });

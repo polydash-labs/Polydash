@@ -27,6 +27,7 @@ import { shortenAddress } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { FundNotice } from '../../_components/fund-notice';
 import { FundTerminal } from './fund-terminal';
+import { HolderExit } from './holder-exit';
 import { ManagerDesk } from './manager-desk';
 
 export function FundDetail({ address, focusMint }: { address: string; focusMint?: boolean }) {
@@ -240,6 +241,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
         publicOpen={fund.publicOpen}
         invest={fund.invest}
       />
+      <HolderExit fund={fund} account={account} />
       <ManagerDesk vault={fund.vault} status={fund.status} isManager={isManager} invest={fund.invest} />
 
       <div className="space-y-1 text-[12px] text-white/50">

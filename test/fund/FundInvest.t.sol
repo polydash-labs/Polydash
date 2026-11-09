@@ -83,6 +83,10 @@ contract FundInvestTest is Test {
         p.minSkinBps = 10_000;
         p.raiseDuration = 7 days;
         p.mandateHash = mandate;
+        p.mandateUri = "ipfs://example-mandate";
+        p.maxPositionBps = 0; // 0 = defaults (75% position / 75% trade / 50% deviation)
+        p.maxTradeBps = 0;
+        p.maxDeviationBps = 0;
         p.assets = _assets();
     }
 
@@ -132,9 +136,14 @@ contract FundInvestTest is Test {
         assertEq(uint8(vault.status()), uint8(FundVaultStore.Status.RaisingClosed));
         assertEq(vault.raised(), 2 ether);
         assertEq(vault.principal() + vault.claimableProtocolFee(), 2 ether);
-        assertEq(nft.navPerNft(), address(vault).balance / 2);
+        assertEq(vault.mandateUri(), "ipfs://example-mandate");
+        assertEq(vault.maxPositionBps(), 7500);
+        assertEq(vault.maxTradeBps(), 7500);
+        assertEq(vault.maxDeviationBps(), 5000);
+        // NAV excludes unclaimed fees: the 0.2% protocol fee on the 2 ETH mint is not LP value.
+        assertEq(nft.navPerNft(), (address(vault).balance - vault.claimableFees()) / 2);
         assertEq(nft.navPerNft(), vault.navPerNft());
-        assertEq(vault.nav(), address(vault).balance);
+        assertEq(vault.nav(), address(vault).balance - vault.claimableFees());
     }
 
     function test_skin_gate_still_blocks_other_wallets() public {
@@ -199,7 +208,7 @@ contract FundInvestTest is Test {
         assertEq(vault.costBasis(address(alpha)), 1 ether);
         assertEq(vault.totalCostBasis(), 1 ether);
         assertEq(alpha.balanceOf(address(vault)), 1 ether);
-        assertEq(vault.spendableEth(), navBefore - fees - 1 ether);
+        assertEq(vault.spendableEth(), navBefore - 1 ether);
         assertEq(vault.tradeCount(), 1);
         FundVaultStore.TradeRecord memory buy = vault.blotter(0);
         assertEq(buy.asset, address(alpha));
@@ -227,7 +236,11 @@ contract FundInvestTest is Test {
     }
 
     function test_loss_on_a_sale_reduces_nav() public {
-        FundNFTInvest nft = _create(_params());
+        // The sale below executes at 0.4 ETH per token against a 1.0 feed price (60% deviation).
+        // That is a simulated distressed sale, so this fund opts out of the deviation bound.
+        FundFactoryInvest.Params memory p = _params();
+        p.maxDeviationBps = 10_000;
+        FundNFTInvest nft = _create(p);
         FundVaultInvest vault = _ready(nft);
         uint256 navBefore = vault.nav();
         vm.prank(manager);
@@ -245,7 +258,11 @@ contract FundInvestTest is Test {
     }
 
     function test_refund_counts_only_quote_that_left() public {
-        FundNFTInvest nft = _create(_params());
+        // The router refunds half the ETH, so the buy executes at 2.0 ETH per token against a 1.0
+        // feed price (100% deviation). That is a simulated partial fill, so this fund opts out.
+        FundFactoryInvest.Params memory p = _params();
+        p.maxDeviationBps = 10_000;
+        FundNFTInvest nft = _create(p);
         FundVaultInvest vault = _ready(nft);
         uint256 navBefore = vault.nav();
         router.setRefundBps(5000);
@@ -443,7 +460,7 @@ contract FundInvestTest is Test {
         allowlist.unpause();
 
         vm.prank(manager);
-        vault.swap(address(router), address(0), address(alpha), spendable - 0.2 ether, 1, "");
+        vault.swap(address(router), address(0), address(alpha), 0.8 ether, 1, "");
         assertGe(address(vault).balance, fees);
         uint256 feeBal = feeTo.balance;
         vault.withdrawProtocolFee();
@@ -594,7 +611,7 @@ contract FundInvestTest is Test {
         vault.blotter(31);
         vm.expectRevert(FundVaultStore.BadIndex.selector);
         vault.blotter(32);
-        assertEq(vault.nav(), address(vault).balance);
+        assertEq(vault.nav(), address(vault).balance - vault.claimableFees());
     }
 
     function testFuzz_raise_then_round_trip_conserves_fees(uint96 buyRaw, uint16 entryRaw) public {
@@ -606,7 +623,7 @@ contract FundInvestTest is Test {
         FundVaultInvest vault = _ready(nft);
         uint256 fees = vault.claimableFees();
         uint256 navBefore = vault.nav();
-        assertEq(navBefore, address(vault).balance);
+        assertEq(navBefore, address(vault).balance - vault.claimableFees());
         assertLe(buy, vault.spendableEth());
 
         vm.prank(manager);

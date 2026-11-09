@@ -15,9 +15,15 @@ import {FundVaultStore} from "./FundVaultStore.sol";
 ///         A failed raise refunds the current holder their share of spendable ETH. Fees stay separate.
 ///         After a successful close, a holder can exit for ETH, WETH, and mandate tokens, including dust on the last units.
 ///         `nav()` quotes mandate assets from the allowlist feed and reverts when that price cannot be used.
-///         Cost basis is not NAV.
+///         It excludes unclaimed entry and protocol fees, so NAV is what LPs own, not the gross balance.
+///         Swaps are bounded by per-fund caps set at creation (max position, max trade, max deviation
+///         from the feed). Cost basis is not NAV.
 contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
     address public immutable swapFacet;
+    /// @notice Where the mandate text lives (ipfs:// or https://). Stored at creation with the hash,
+    ///         so LPs can read the mandate the hash commits to. Declared here, not in the shared store,
+    ///         because the swap facet never reads it.
+    string public mandateUri;
 
     modifier onlyNft() {
         if (msg.sender != nft || nft == address(0)) revert NotNft();
@@ -36,7 +42,11 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         address[] memory assets,
         address _swapFacet,
         uint64 _raiseDeadline,
-        address _factory
+        address _factory,
+        string memory _mandateUri,
+        uint256 _maxPositionBps,
+        uint256 _maxTradeBps,
+        uint256 _maxDeviationBps
     ) {
         if (
             _manager == address(0) || _allowlist == address(0) || _weth == address(0) || _swapFacet == address(0)
@@ -44,6 +54,8 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         ) revert ZeroAddress();
         if (_swapFacet.code.length == 0) revert BadRouter();
         if (_mandateHash == bytes32(0) || _raiseDeadline <= block.timestamp) revert BadValue();
+        if (bytes(_mandateUri).length == 0 || bytes(_mandateUri).length > 512) revert BadUri();
+        if (_maxPositionBps > BPS || _maxTradeBps > BPS || _maxDeviationBps > BPS) revert BadValue();
         if (assets.length > MAX_ASSETS) revert TooMany();
         if (!IFundAllowlist(_allowlist).assetAllowed(_weth)) revert NotAllowlisted();
 
@@ -57,10 +69,16 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         allowlist = IFundAllowlist(_allowlist);
         weth = _weth;
         mandateHash = _mandateHash;
+        mandateUri = _mandateUri;
+        maxPositionBps = _maxPositionBps == 0 ? DEFAULT_MAX_POSITION_BPS : _maxPositionBps;
+        maxTradeBps = _maxTradeBps == 0 ? DEFAULT_MAX_TRADE_BPS : _maxTradeBps;
+        maxDeviationBps = _maxDeviationBps == 0 ? DEFAULT_MAX_DEVIATION_BPS : _maxDeviationBps;
         universeHash = keccak256(abi.encode(assets));
         payoutWallet = _manager;
         raiseDeadline = _raiseDeadline;
         status = Status.Raising;
+        emit MandatePublished(_mandateHash, _mandateUri);
+        emit PositionCapsSet(maxPositionBps, maxTradeBps, maxDeviationBps);
 
         for (uint256 i; i < assets.length; ++i) {
             address asset = assets[i];
@@ -209,15 +227,42 @@ contract FundVaultInvest is ReentrancyGuard, FundVaultStore {
         return trades[index];
     }
 
-    /// @notice ETH + WETH at face value, plus mandate balances at the feed. Reverts on a bad price.
-    ///         This includes unclaimed fees, because that ETH is still in the contract. It is not cost basis.
+    /// @notice ETH + WETH at face value, plus mandate balances at the feed, minus unclaimed fees.
+    ///         Fees are still in the contract, but they belong to the manager / protocol, not the LPs.
+    ///         Reverts on a bad price. This is what `navPerNft()` divides, and what an exit is worth.
     function nav() public view returns (uint256) {
-        return NAVReader.total(address(this).balance, IERC20(weth).balanceOf(address(this)), _mandateAssets, allowlist);
+        return NAVReader.netTotal(
+            address(this).balance,
+            IERC20(weth).balanceOf(address(this)),
+            _mandateAssets,
+            allowlist,
+            claimableFees()
+        );
     }
 
     function navPerNft() public view returns (uint256) {
         uint256 live = nft == address(0) ? 0 : IFundUnit(nft).outstanding();
         return NAVReader.perNft(nav(), live);
+    }
+
+    /// @notice Permissionless hourly NAV checkpoint. Anyone may call it once `NAV_CHECKPOINT_INTERVAL`
+    ///         has passed since the last checkpoint. It records the fee-excluded NAV per NFT and emits
+    ///         `NavCheckpoint`, so the tape has an hourly point even when nobody trades. The blotter
+    ///         still records `navAfter` on every trade. Reverts when a feed cannot be used, same
+    ///         fail-closed rule as `nav()`; the keeper just retries later.
+    /// @notice Permissionless hourly NAV tape. The first checkpoint is always allowed
+    ///         (`lastNavCheckpoint == 0` means "never checkpointed"); afterwards at least
+    ///         `NAV_CHECKPOINT_INTERVAL` must pass. Reverts when a feed cannot be used, same
+    ///         fail-closed rule as `nav()`.
+    function checkpointNav() external {
+        if (lastNavCheckpoint != 0 && block.timestamp < uint256(lastNavCheckpoint) + NAV_CHECKPOINT_INTERVAL) {
+            revert TooSoon();
+        }
+        uint256 total = nav();
+        uint256 perNft = navPerNft();
+        lastNavCheckpoint = uint64(block.timestamp);
+        lastCheckpointNavPerNft = perNft;
+        emit NavCheckpoint(uint64(block.timestamp), total, perNft);
     }
 
     /// @notice Custody, allowlist, skin, published source, and allowlist timelock. High-water mark is unset.

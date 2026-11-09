@@ -103,7 +103,11 @@ contract FundInvestForkTest is Test {
                     minSkinBps: 10_000,
                     raiseDuration: 1 hours,
                     mandateHash: keccak256("fork-mandate"),
-                    assets: universe
+                    assets: universe,
+                    mandateUri: "ipfs://fork-mandate",
+                    maxPositionBps: 0,
+                    maxTradeBps: 0,
+                    maxDeviationBps: 0
                 })
             )
         );
@@ -259,7 +263,11 @@ contract FundInvestForkTest is Test {
                     minSkinBps: 10_000,
                     raiseDuration: 1 hours,
                     mandateHash: keccak256("weth-check"),
-                    assets: new address[](0)
+                    assets: new address[](0),
+                    mandateUri: "ipfs://weth-check",
+                    maxPositionBps: 0,
+                    maxTradeBps: 0,
+                    maxDeviationBps: 0
                 })
             )
         );

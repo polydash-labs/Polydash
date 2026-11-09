@@ -27,6 +27,20 @@ library NAVReader {
         }
     }
 
+    /// @notice `total()` minus unclaimed entry and protocol fees, floored at zero. Fees are still in
+    ///         the contract, but they belong to the manager / protocol, not the LPs, so they are not
+    ///         part of NAV. `spendableEth()` already excludes them; NAV now matches what an exit pays.
+    function netTotal(
+        uint256 ethBalance,
+        uint256 wethBalance,
+        address[] storage assets,
+        IFundAllowlist allowlist,
+        uint256 fees
+    ) internal view returns (uint256) {
+        uint256 sum = total(ethBalance, wethBalance, assets, allowlist);
+        return sum <= fees ? 0 : sum - fees;
+    }
+
     /// @notice `nav / outstanding`, or zero when nothing is outstanding.
     function perNft(uint256 nav, uint256 outstanding) internal pure returns (uint256) {
         if (outstanding == 0) return 0;
