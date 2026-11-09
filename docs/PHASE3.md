@@ -1,6 +1,6 @@
 # Phase 3
 
-Phase 3 is a new factory. It does not modify the live Phase 1a factory or the live Phase 2 factory, facet, allowlist, or router adapter. No Phase 3 contract is deployed. This note is not a review. Not financial advice.
+Phase 3 is a new factory. It does not modify the live Phase 1a factory or the live Phase 2 factory, facet, allowlist, or router adapter. It is deployed from commit `0848c9c6271537ad5601415ad9f43fed5280169c`. Addresses and Sourcify links are in [DEPLOYMENTS.md](DEPLOYMENTS.md). This note is not a review. Not financial advice.
 
 A fund is created from a `StrategyTemplate`. Publishing a template does not have an edit function. The fund copies the mandate hash, mandate URI, asset list, position cap, trade cap, deviation cap, high-water-mark fee, drawdown brake, and skin-lock duration. The manager does not pass different values.
 

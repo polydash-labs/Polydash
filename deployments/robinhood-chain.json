@@ -347,6 +347,45 @@
       "deployTx": "0xaeae5c14d51d7d81ed44bf3f2c6f1e7babfc05246b8307a7b33c283cc71c32fd",
       "notes": "Nonce 37. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Protocol fee 20 bps. Fund count 0 at scan. vaultDeployer 0x111aC00A91944477141aDe12ebB6BcB0CEFC3a95. nftDeployer 0x5766A7A937D0De897C2d90df0D045f9067fd72D5. Does not replace the Phase 1a factory.",
       "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md", "polypad/web/lib/fund/address.ts"]
+    },
+    {
+      "name": "StrategyTemplate",
+      "group": "fund-phase3",
+      "role": "template",
+      "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+      "verification": "exact match",
+      "source": "src/fund/phase3/StrategyTemplate.sol",
+      "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
+      "deployTx": "0x6cf3598a2be973c1f35a6febc015e432b5e5efb6b894a4e578c7a7c40cf01265",
+      "notes": "Nonce 38 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Owner is that wallet. Sourcify exact match on 2026-11-09. Does not change Phase 2.",
+      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
+    },
+    {
+      "name": "FundSwapFacetPhase3",
+      "group": "fund-phase3",
+      "role": "swap-facet",
+      "address": "0x40Ef3ae910A46aDDC14f45F0983060161884f045",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x40Ef3ae910A46aDDC14f45F0983060161884f045",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundSwapFacetPhase3.sol",
+      "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
+      "deployTx": "0xad686b96634519ad554b7a39a8c4f0259c32e45df7f787acae1486188528f6b5",
+      "notes": "Nonce 39. No constructor arguments. Sourcify exact match. Not the live Phase 2 facet.",
+      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
+    },
+    {
+      "name": "FundFactoryPhase3",
+      "group": "fund-phase3",
+      "role": "factory",
+      "address": "0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundFactoryPhase3.sol",
+      "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
+      "deployTx": "0x51afc05a8d6bca09ecaafb2dc08b8fcb87ed93d30bd872e5349de014b699cdd5",
+      "notes": "Nonce 40. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x40Ef3ae910A46aDDC14f45F0983060161884f045. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. Protocol fee 20 bps. Sourcify exact match. Does not replace the Phase 1a or Phase 2 factories.",
+      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
     }
   ],
   "referenced": [

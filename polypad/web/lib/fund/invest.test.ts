@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseEther } from 'viem';
-import { FUND_INVEST_FACTORY_ADDRESS, PHASE2_SOURCE_COMMIT, getFundInvestFactoryAddress } from './address';
+import {
+  FUND_FACTORY_PHASE3_ADDRESS,
+  FUND_INVEST_FACTORY_ADDRESS,
+  FUND_SWAP_FACET_PHASE3_ADDRESS,
+  PHASE2_SOURCE_COMMIT,
+  PHASE3_SOURCE_COMMIT,
+  STRATEGY_TEMPLATE_ADDRESS,
+  getFundInvestFactoryAddress,
+} from './address';
 import {
   PROTECTION_BITS,
   ZERO_ADDRESS,
@@ -23,6 +31,10 @@ test('invest factory stays unset until an address is configured', () => {
   assert.equal(getFundInvestFactoryAddress(), null);
   assert.equal(PHASE2_SOURCE_COMMIT, 'e4ceacaab5175bc4e7724fafe3fedc8831085563');
   assert.equal(FUND_INVEST_FACTORY_ADDRESS, '0xd3c6ae470c25989cC8d2876c1855fB570B98894E');
+  assert.equal(PHASE3_SOURCE_COMMIT, '0848c9c6271537ad5601415ad9f43fed5280169c');
+  assert.equal(STRATEGY_TEMPLATE_ADDRESS, '0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba');
+  assert.equal(FUND_SWAP_FACET_PHASE3_ADDRESS, '0x40Ef3ae910A46aDDC14f45F0983060161884f045');
+  assert.equal(FUND_FACTORY_PHASE3_ADDRESS, '0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B');
   process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = '0x0000000000000000000000000000000000000000';
   assert.equal(getFundInvestFactoryAddress(), null);
   process.env.NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS = '0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878';

@@ -49,4 +49,14 @@ Phase 2 is deployed and is a different factory. It does not modify the Phase 1a 
 | `FundAllowlist` | [`0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`](https://robinhoodchain.blockscout.com/address/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19) |
 | `FundFactoryInvest` | [`0xd3c6ae470c25989cC8d2876c1855fB570B98894E`](https://robinhoodchain.blockscout.com/address/0xd3c6ae470c25989cC8d2876c1855fB570B98894E) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xd3c6ae470c25989cC8d2876c1855fB570B98894E) |
 
-`script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. Fund routes stay off unless `FUND_ROUTES_ENABLED=enabled`. `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stays unset in the repo.
+`script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. Fund routes stay off unless `FUND_ROUTES_ENABLED=enabled`. `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stays unset in the repo. The header does not link to `/funds`.
+
+Phase 3 is deployed from commit `0848c9c6271537ad5601415ad9f43fed5280169c`. It does not modify the Phase 1a or Phase 2 contracts. Sourcify exact match was confirmed by lookup on 2026-11-09. This record is not a review. Not financial advice.
+
+| Contract | Address | Verification |
+| --- | --- | --- |
+| `StrategyTemplate` | [`0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba`](https://robinhoodchain.blockscout.com/address/0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba) |
+| `FundSwapFacetPhase3` | [`0x40Ef3ae910A46aDDC14f45F0983060161884f045`](https://robinhoodchain.blockscout.com/address/0x40Ef3ae910A46aDDC14f45F0983060161884f045) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x40Ef3ae910A46aDDC14f45F0983060161884f045) |
+| `FundFactoryPhase3` | [`0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`](https://robinhoodchain.blockscout.com/address/0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B) |
+
+Deploy transactions: [`0x6cf3598a…1265`](https://robinhoodchain.blockscout.com/tx/0x6cf3598a2be973c1f35a6febc015e432b5e5efb6b894a4e578c7a7c40cf01265) (nonce 38), [`0xad686b96…f6b5`](https://robinhoodchain.blockscout.com/tx/0xad686b96634519ad554b7a39a8c4f0259c32e45df7f787acae1486188528f6b5) (nonce 39), [`0x51afc05a…cdd5`](https://robinhoodchain.blockscout.com/tx/0x51afc05a8d6bca09ecaafb2dc08b8fcb87ed93d30bd872e5349de014b699cdd5) (nonce 40). Signer `0x9a21c75aC263cC43125E70200636f6397f8776d0`. The factory fee recipient is that wallet. Its allowlist is the live Phase 2 allowlist and its WETH is `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73`. Its facet and template are the two contracts above.
