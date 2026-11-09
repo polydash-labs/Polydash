@@ -30,7 +30,7 @@ Each deployed address above was checked with `eth_getCode` on the Robinhood Chai
 
 ### Tokenized funds (Phase 1a)
 
-Unaudited. An outside review is planned. Not financial advice. Phase 1a is the raise and the mint. `createFund` deploys one `FundVault` and one `FundNFT` per fund. Source is `src/fund/` in the repository root, compiled with solc 0.8.24, optimizer 200 runs, via-IR, and EVM `paris`. That is separate from the launchpad compiler settings above. Phase 2 allowlisted swaps live in `src/fund/phase2` and are not deployed. The table below is the live raise factory only.
+Unaudited. An outside review is planned. Not financial advice. Phase 1a is the raise and the mint. `createFund` deploys one `FundVault` and one `FundNFT` per fund. Source is `src/fund/` in the repository root, compiled with solc 0.8.24, optimizer 200 runs, via-IR, and EVM `paris`. That is separate from the launchpad compiler settings above. Phase 2 and Phase 3 are deployed on Robinhood Chain. Addresses, creation transactions, and Blockscout links are in [docs/DEPLOYMENTS.md](../docs/DEPLOYMENTS.md). The table below is the Phase 1a raise factory. The site is [polypad.family/funds](https://polypad.family/funds).
 
 | Contract | Address | Deploy tx | ABI | Source | Notes |
 | --- | --- | --- | --- | --- | --- |

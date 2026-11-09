@@ -65,11 +65,9 @@ below that point — config, tests, fork/testnet lifecycle — uses only local t
 
 ---
 
-# Phase 2 deploy config — proposal (not deployed)
+# Phase 2 deploy config — earlier proposal
 
-Status: proposal on paper only. Nothing here has been broadcast, and no address below is
-live in the allowlist or the front end. Do not deploy to mainnet without Jon's explicit
-go-ahead, an audit, and the multisig in §1.
+The signed config and the broadcast are at the top of this file and in [DEPLOYMENTS.md](DEPLOYMENTS.md). The text below is the earlier proposal. Do not treat it as the live record.
 
 All on-chain facts were verified read-only on Robinhood Chain (chain ID 4663) on 2026-11-09
 via `cast` against https://rpc.mainnet.chain.robinhood.com (latest block ~109,829,000).

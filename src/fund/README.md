@@ -71,7 +71,7 @@ export PRIVATE_KEY=0xYOUR_DEPLOYER_PRIVATE_KEY_HERE
 forge script script/DeployFundFactoryInvest.s.sol --rpc-url robinhood --broadcast
 ```
 
-That command is not a broadcast from this change. The site fund routes stay off unless the server variable `FUND_ROUTES_ENABLED` is exactly `enabled`. Do not set that for a public resync. `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stays unset. The header and footer do not link to `/funds`.
+The live Phase 2 and Phase 3 addresses, creation transactions, and Blockscout links are in [docs/DEPLOYMENTS.md](../../docs/DEPLOYMENTS.md). The site is https://polypad.family/funds. `FUND_ROUTES_ENABLED` and `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stay unset in this repository. The script reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`.
 
 ## Tests
 
@@ -87,7 +87,7 @@ These contracts are unaudited. An outside review is planned. Not financial advic
 | --- | --- | --- |
 | `FundFactory` | [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878) |
 
-Deploy transaction: [`0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3`](https://robinhoodchain.blockscout.com/tx/0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3) (block 107836877). `owner` and `feeRecipient` are `0x9a21c75aC263cC43125E70200636f6397f8776d0`. Phase 1a is the raise and the mint. `createFund` deploys one `FundVault` and one `FundNFT` per fund. Blockscout's API verification was blocked by Cloudflare. Sourcify is the verification of record, the same pattern as the other factories.
+Deploy transaction: [`0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3`](https://robinhoodchain.blockscout.com/tx/0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3) (block 107836877). `owner` and `feeRecipient` are `0x9a21c75aC263cC43125E70200636f6397f8776d0`. Phase 1a is the raise and the mint. `createFund` deploys one `FundVault` and one `FundNFT` per fund. Blockscout's API verification was blocked by Cloudflare. Sourcify is the verification of record, the same pattern as the other factories. Phase 2 and Phase 3 addresses are in [docs/DEPLOYMENTS.md](../../docs/DEPLOYMENTS.md).
 
 The NatSpec titles in `src/fund` still say "DRAFT - not reviewed, not deployed". They are left unchanged so the source stays the verified exact match.
 

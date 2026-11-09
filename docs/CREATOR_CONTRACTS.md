@@ -15,7 +15,7 @@ Contracts that Polypad token creators use after launch: NFT staking, creator ves
 | [`src/treasury`](../src/treasury) | `TreasuryRulesFactory`, `TreasuryRules` | Per-token treasury with on-chain rules and a timelock for operator-run tasks | 30 |
 | [`src/floorvault`](../src/floorvault) | `PolypadTokenFloorFactory`, `PolypadTokenFloorCollection` | Fixed-price NFT collections whose mint share funds an ETH + launch-token vault redeemable pro rata by burning | 115 |
 | [`src/buyback`](../src/buyback) | `PolydashBuybackVault`, `PolydashRewardsPool` | Capped on-chain POLYDASH buys from the fee share: 62.5% burned, 37.5% streamed to stakers | 70 |
-| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT`, plus Phase 2 `FundAllowlist`, `FundFactoryInvest`, `FundVaultInvest`, `FundSwapFacet`, `FundNFTInvest`, `NAVReader` | Phase 1a raise is deployed. Phase 2 adds allowlisted swaps and NAV after the raise closes. Phase 2 is not deployed | 35 |
+| [`src/fund`](../src/fund) | `FundFactory`, `FundVault`, `FundNFT`, plus Phase 2 `FundAllowlist`, `FundFactoryInvest`, `FundVaultInvest`, `FundSwapFacet`, `FundNFTInvest`, `NAVReader`, and Phase 3 `StrategyTemplate`, `FundFactoryPhase3`, `FundSwapFacetPhase3` | Phase 1a raise, Phase 2 invest/swap via allowlist, and Phase 3 strategy templates are deployed on Robinhood Chain. Addresses are in [DEPLOYMENTS.md](DEPLOYMENTS.md) | 35 |
 | [`test/fork`](../test/fork) | | Fork tests against Robinhood Chain state | 11 |
 
 ## Deployed addresses (Robinhood Chain, chain ID 4663)
