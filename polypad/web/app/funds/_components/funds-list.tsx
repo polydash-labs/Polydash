@@ -67,6 +67,9 @@ export function FundsList() {
       </div>
 
       <FundNotice className="mt-4 max-w-xl" />
+      <Link href="/funds/phase3" className="mt-3 inline-block text-[12px] text-white/45 hover:text-white">
+        Phase 3 manager tools
+      </Link>
 
       <div className="mt-6 flex flex-col gap-3">
         <div className="relative sm:max-w-xs">

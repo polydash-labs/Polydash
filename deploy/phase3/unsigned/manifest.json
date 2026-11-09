@@ -1,0 +1,87 @@
+{
+  "purpose": "Unsigned creation payloads for Phase 3. Not a broadcast. Not a review. Not financial advice.",
+  "chainId": 4663,
+  "sourceNote": "Compile from this repository with the fund profile in foundry.toml. Do not reuse a nonce from the Phase 2 deployment or from this file. None is recorded here.",
+  "compiler": {
+    "solc": "0.8.24",
+    "evmVersion": "paris",
+    "optimizer": true,
+    "optimizerRuns": 200,
+    "viaIR": true,
+    "bytecodeHash": "ipfs",
+    "foundry": "1.9.0"
+  },
+  "livePhase2": {
+    "allowlist": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+    "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    "note": "The factory constructor may point at these live addresses. That does not change their code."
+  },
+  "deployOrder": [
+    "StrategyTemplate",
+    "FundSwapFacetPhase3",
+    "FundFactoryPhase3"
+  ],
+  "nonce": {
+    "hardcoded": false,
+    "instruction": "Immediately before signing, read eth_getTransactionCount(signer, pending). Send the three creations in deployOrder with no transaction between them. The factory constructor arguments include the template address and the facet address created by the first two transactions. Compute those with CREATE from the nonce you just read. If the nonce moves, recompute. Do not paste a nonce from this file."
+  },
+  "forkGasUsed": {
+    "chainId": 4663,
+    "method": "gasleft() around each new() in test/fork/FundPhase3Fork.t.sol on a fork of the public Robinhood RPC",
+    "StrategyTemplate": 706250,
+    "FundSwapFacetPhase3": 2108915,
+    "FundFactoryPhase3": 8422472,
+    "total": 11237637,
+    "note": "Gas used, not a fee. The base fee at signing time is a separate read."
+  },
+  "transactions": [
+    {
+      "order": 1,
+      "contract": "StrategyTemplate",
+      "file": "StrategyTemplate.creation.hex",
+      "creationBytes": 2938,
+      "creationKeccak256": "0x8757309d02dd4b25d1ad72240441b2f4e716e9aa93efbc745974260342dd905a",
+      "constructor": "constructor(address owner)",
+      "intendedOwner": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+      "constructorArgs": "0x0000000000000000000000009a21c75ac263cc43125e70200636f6397f8776d0",
+      "append": "Append constructorArgs to the creation hex before signing. The owner is an argument, not a nonce."
+    },
+    {
+      "order": 2,
+      "contract": "FundSwapFacetPhase3",
+      "file": "FundSwapFacetPhase3.creation.hex",
+      "creationBytes": 9306,
+      "creationKeccak256": "0x1103db33af340662f754e9a46077d46681aa0dea37f87ba601edf84d76e5a7fd",
+      "constructor": "constructor()",
+      "constructorArgs": "0x"
+    },
+    {
+      "order": 3,
+      "contract": "FundFactoryPhase3",
+      "file": "FundFactoryPhase3.creation.hex",
+      "creationBytes": 38876,
+      "creationKeccak256": "0xd57f3fd0638199483c61086d19360fc541cfa684103972b4359f5109956fe4a0",
+      "constructor": "constructor(address feeRecipient, address allowlist, address weth, address swapFacet, address templates)",
+      "constructorArgs": "Not included. Encode them after the template and facet addresses are computed from the fresh nonce.",
+      "suggested": {
+        "feeRecipient": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+        "allowlist": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+        "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+        "swapFacet": "CREATE address of order 2",
+        "templates": "CREATE address of order 1"
+      }
+    }
+  ],
+  "runtimeBytes": {
+    "FundFactoryPhase3": 5498,
+    "FundSwapFacetPhase3": 9253,
+    "StrategyTemplate": 2734,
+    "FundVaultPhase3": 15088,
+    "FundNFTPhase3": 9669
+  },
+  "notDeployed": [
+    "No Phase 3 address is live",
+    "FUND_ROUTES_ENABLED is not set to enabled",
+    "The header does not link to /funds/phase3"
+  ]
+}

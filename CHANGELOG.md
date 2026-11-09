@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- Phase 3 fund-manager contracts in `src/fund/phase3`: a locked strategy template, a high-water-mark performance fee, a manager skin-transfer lock, a NAV tape, a drawdown brake on new buys, and pull distributions. They do not modify the live Phase 1 or Phase 2 addresses. Nothing in this change was signed or broadcast. Unsigned payloads are in `deploy/phase3/unsigned`. Nonces are computed at signing time. The `/funds/phase3` page stays behind `FUND_ROUTES_ENABLED`. Not a review. Not financial advice.
 ### Security
 - Security scan of the live Phase 2 deployment on Robinhood Chain (chain ID 4663). Source commit `e4ceacaab5175bc4e7724fafe3fedc8831085563`. Creation bytecode matches that source (solc 0.8.24, via-IR, optimizer 200, Paris). Sourcify exact match on the facet, router adapter, allowlist, and invest factory. Findings are in `docs/security/phase2-live-scan.md`. This is a security scan, not a review. No Critical or High finding. Fund routes stay off.
 ### Changed
