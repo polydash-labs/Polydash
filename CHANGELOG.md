@@ -4,7 +4,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](htt
 
 ## [Unreleased]
 ### Added
-- Phase 4 fund add-on in `src/fund/phase4`: clone planning for a live Phase 3 mandate, an expiring swap agent, season report cards, bidder-funded NAV bids, and per-share ERC-6551 wallets through the canonical registry already on Robinhood Chain. It does not modify the live Phase 1, Phase 2, or Phase 3 contracts. Nothing in this change was signed or broadcast. Unsigned payload is in `deploy/phase4/unsigned`. `script/DeployFundPhase4.s.sol` reverts unless `CONFIRM_FUND_PHASE4_DEPLOY=yes`. Not audited. Not financial advice.
+- Record the Phase 4 deployment on Robinhood Chain from commit `8786fac1775c66d77deb3138771a740b3e466d0a`: `FundPhase4` `0x3cd372e32Da71321D795a32b244eAa16724531dB`, `FundShareAccount` `0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E` (created in the FundPhase4 constructor). Creation tx `0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653` (nonce 44) from `0x9a21c75aC263cC43125E70200636f6397f8776d0`. Constructor arg is Phase 3 factory `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. Sourcify exact match. Does not modify Phase 1, Phase 2, or Phase 3 contracts. Not audited. Not a review. Not financial advice.
 
 ## [1.3.0] - 2026-11-09
 ### Added
