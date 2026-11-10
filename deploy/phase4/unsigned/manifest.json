@@ -1,0 +1,73 @@
+{
+  "purpose": "Unsigned creation payload for Phase 4. Not a broadcast. Not a review. Not financial advice.",
+  "chainId": 4663,
+  "sourceNote": "Compile from this repository with the fund profile in foundry.toml. Do not reuse a nonce from an earlier deployment or from this file. None is recorded here.",
+  "compiler": {
+    "solc": "0.8.24",
+    "evmVersion": "paris",
+    "optimizer": true,
+    "optimizerRuns": 200,
+    "viaIR": true,
+    "bytecodeHash": "ipfs",
+    "foundry": "1.9.0"
+  },
+  "livePhase3": {
+    "factory": "0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
+    "templates": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+    "swapFacet": "0x40Ef3ae910A46aDDC14f45F0983060161884f045",
+    "allowlist": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+    "weth": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    "note": "The constructor reads weth() on the live factory. It does not change that factory."
+  },
+  "erc6551": {
+    "registry": "0x000000006551c19487814612e58FE06813775758",
+    "codeBytesAtCheck": 571,
+    "block": 110469147,
+    "note": "Canonical registry already on Robinhood Chain. This package does not deploy a registry. FundShareAccount is the implementation, created inside the FundPhase4 constructor."
+  },
+  "deployOrder": ["FundPhase4"],
+  "nonce": {
+    "hardcoded": false,
+    "instruction": "Immediately before signing, read eth_getTransactionCount(signer, pending). Send one creation transaction. FundShareAccount is deployed by the constructor at nonce 1 of the new FundPhase4 address (CREATE, not a second signed transaction). If the signer nonce moves, the FundPhase4 address changes and the inner account address changes with it. Do not paste a nonce from this file."
+  },
+  "forkGasUsed": {
+    "chainId": 4663,
+    "blockBaseFeeWei": 20028000,
+    "ethGasPriceWei": 20000000,
+    "method": "gasleft() around new FundPhase4(liveFactory) in test/fork/FundPhase4Fork.t.sol, plus 21000 and the calldata cost of the creation bytes (4 per zero byte, 16 per nonzero byte).",
+    "constructorGas": 3533364,
+    "calldataGas": 253500,
+    "intrinsicGas": 21000,
+    "totalGas": 3807864,
+    "estimatedEthAtBaseFee": "0.000076263900192",
+    "runtimeBytes": {
+      "FundPhase4": 12510,
+      "FundShareAccount": 3135
+    },
+    "feesWallet": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+    "feesWalletEthAtBlock": "0.002083971417225406",
+    "note": "The estimate is under 0.00013 ETH at this base fee. It includes no tip. Re-read the base fee and the balance before signing. A tip near 1 gwei on this gas would cost more than the balance above."
+  },
+  "transactions": [
+    {
+      "order": 1,
+      "contract": "FundPhase4",
+      "file": "FundPhase4.creation.hex",
+      "creationBytes": 16353,
+      "creationKeccak256": "0x07f4b753c508cd9924f3f8c5a4e4c6d4035e3f50535e8a2df0c1c88df79f1c1d",
+      "constructor": "constructor(address phase3Factory)",
+      "constructorArgs": "0x000000000000000000000000b9ba453677a6b2c49290cfd4d0713502ec6bf82b",
+      "append": "Append constructorArgs to the creation hex before signing. The argument is the live Phase 3 factory.",
+      "innerCreate": {
+        "contract": "FundShareAccount",
+        "nonce": 1,
+        "note": "Deployed by the constructor. Address is CREATE(FundPhase4, 1) after FundPhase4's address is known from the signer nonce."
+      }
+    }
+  ],
+  "notDeployed": [
+    "No Phase 4 address is live",
+    "This package was not signed or broadcast",
+    "Secondary listings, living NAV metadata, and conviction locks are not in this package"
+  ]
+}
