@@ -438,6 +438,59 @@
       "address": "0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc",
       "notes": "Hook address recorded for the buyback vault's POLYDASH/WETH pool in src/buyback/README.md.",
       "documentedIn": ["src/buyback/README.md", "test/fork/BuybackFork.t.sol"]
+    },
+    {
+      "name": "FundSwapFacetPhase3V2",
+      "group": "fund-phase6",
+      "role": "swap-facet",
+      "address": "0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundSwapFacetPhase3V2.sol",
+      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+      "deployTx": "0xc92c6bc47d3f713b42c1b185da279b3fd7e4ffd4456bab56c43b21c1234bebf1",
+      "notes": "Nonce 46 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V2 swap facet for manager-proposed assets (Option 3). Same interface as FundSwapFacetPhase3 plus proposal-gated buys and sell-after-removal. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+      "documentedIn": ["deployments/robinhood-chain.json"]
+    },
+    {
+      "name": "FundFactoryPhase3V2",
+      "group": "fund-phase6",
+      "role": "factory",
+      "address": "0xe50Da719947E83f316977d9c425DF95672E7B27e",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xe50Da719947E83f316977d9c425DF95672E7B27e",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundFactoryPhase3V2.sol",
+      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+      "deployTx": "0x27d76e70d63541618f3d6d672be292bab752c7b61cec77cf9c7d0ef00557a314",
+      "notes": "Nonce 47 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. New factory alongside the live Phase 3 factory; does not replace it. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+      "documentedIn": ["deployments/robinhood-chain.json"]
+    },
+    {
+      "name": "PolydashTwapFeed",
+      "group": "fund-phase6",
+      "role": "price-feed",
+      "address": "0x5FDE0DB5AAFa8E20E76ca0D763C2c3eD49Af84fC",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x5FDE0DB5AAFa8E20E76ca0D763C2c3eD49Af84fC",
+      "verification": "exact match",
+      "source": "src/fund/growth/PolydashTwapFeed.sol",
+      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+      "deployTx": "0x4dfa8884248433ca15beb5ea77d8031cefc556d12c406063bf172946c34810d4",
+      "notes": "Nonce 48 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Self-observing 30-min TWAP feed for the POLYDASH/WETH Uniswap V4 pool (poolId 0xc37d18932ac3bf4d8482ae1b210bbc640a367e708fedda95cfa6724f685274b5, hook 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc, dynamic fee 0x800000, tickSpacing 200). latestPrice reverts until poked; a poke keeper is required (poke every ~15 min) or the feed fails closed within 30 min. Allowlist proposal id 1 (POLYDASH asset, band 60,000,000-260,000,000 priceX18, maxStale 3600) queued 2026-11-10, executable 2026-11-12 07:17 PST. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+      "documentedIn": ["deployments/robinhood-chain.json"]
+    },
+    {
+      "name": "UniswapV4RouterAdapter",
+      "group": "fund-phase6",
+      "role": "swap-router",
+      "address": "0x25EB10357213f17b2862b54773287fccfeb92B7a",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x25EB10357213f17b2862b54773287fccfeb92B7a",
+      "verification": "exact match",
+      "source": "src/fund/growth/UniswapV4RouterAdapter.sol",
+      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+      "deployTx": "0xf3ed2caf9328131fbf046f963e99bec4e2824194e83af83129151d09214ee137",
+      "notes": "Nonce 49 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V4 router adapter for the POLYDASH/WETH pool (PoolManager 0x8366a39CC670B4001A1121B8F6A443A643e40951, hook 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc, dynamic fee 0x800000, tickSpacing 200). Allowlist proposal id 2 (router, allowed) queued 2026-11-10, executable 2026-11-12 07:17 PST. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+      "documentedIn": ["deployments/robinhood-chain.json"]
     }
+
   ]
 }
