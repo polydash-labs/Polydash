@@ -1,6 +1,6 @@
 # Phase 5
 
-Phase 5 is an add-on for a fund created by `FundFactoryPhase3`. It does not modify the live Phase 1a factory, the live Phase 2 contracts, or the live Phase 3 template, facet, factory, vault, or share. One broadcast of `script/DeployPhase5.s.sol` deploys `FundPhase5`. Its constructor deploys the market, the share renderer, the carry token, the conviction lock, and the nav-floor queue. Nothing in this change was signed or broadcast. Not audited. Not a review. Not financial advice.
+Phase 5 is an add-on for a fund created by `FundFactoryPhase3`. It does not modify the live Phase 1a factory, the live Phase 2 contracts, or the live Phase 3 template, facet, factory, vault, or share. One broadcast of `script/DeployPhase5.s.sol` deploys `FundPhase5`. Its constructor deploys the market, the share renderer, the carry token, the conviction lock, and the nav-floor queue. Deployed on Robinhood Chain from commit `63d4f745b83d89a2863ff3a82f010ff1da2c501c`. Addresses are in [DEPLOYMENTS.md](../DEPLOYMENTS.md). Not audited. Not a review. Not financial advice.
 
 The share NFT remains the ownership claim. These contracts read it. They do not replace `exit` or `refund` on the share.
 
@@ -47,6 +47,19 @@ The share's own `exit` stays available to a holder who has not queued here. A sk
 
 ## Deploy
 
+Live addresses (Robinhood Chain, chain ID 4663), commit `63d4f745b83d89a2863ff3a82f010ff1da2c501c`:
+
+| Contract | Address |
+| --- | --- |
+| `FundPhase5` | [`0x0c98b0E09E4Aa425BD2A85060BE58282E21d0c81`](https://robinhoodchain.blockscout.com/address/0x0c98b0E09E4Aa425BD2A85060BE58282E21d0c81) |
+| `FundSecondaryMarket` | [`0xa2bE46731340A9a5C53DA7D21b6bB8DA3faaC23C`](https://robinhoodchain.blockscout.com/address/0xa2bE46731340A9a5C53DA7D21b6bB8DA3faaC23C) |
+| `FundShareRenderer` | [`0x6DbC2Df3AE18a610978Ac3c0b765057800CABd0b`](https://robinhoodchain.blockscout.com/address/0x6DbC2Df3AE18a610978Ac3c0b765057800CABd0b) |
+| `FundCarryRights` | [`0x37d171924Af4072F62ad564C954E977E1D3967c9`](https://robinhoodchain.blockscout.com/address/0x37d171924Af4072F62ad564C954E977E1D3967c9) |
+| `FundConvictionLock` | [`0x4D216Ad3f28e9eF183483f37b7Ec05b9b46C9B95`](https://robinhoodchain.blockscout.com/address/0x4D216Ad3f28e9eF183483f37b7Ec05b9b46C9B95) |
+| `FundNavFloor` | [`0x8e4f163e6dCe71Ef1290Ed264c6F11f13F309afb`](https://robinhoodchain.blockscout.com/address/0x8e4f163e6dCe71Ef1290Ed264c6F11f13F309afb) |
+
+Creation transaction [`0xfa8af1123322d5d171997be0961333b94c1633ee728697df3af2d321a77e004f`](https://robinhoodchain.blockscout.com/tx/0xfa8af1123322d5d171997be0961333b94c1633ee728697df3af2d321a77e004f) (nonce 45) from `0x9a21c75aC263cC43125E70200636f6397f8776d0`. Constructor arg: Phase 3 factory `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. The five modules are created inside that constructor. Sourcify exact match for all six contracts. Not a review. Not audited. Not financial advice.
+
 Do not broadcast this from the repository. The script reverts unless `CONFIRM_FUND_PHASE5_DEPLOY=yes`. It reads `PRIVATE_KEY` unless `DEPLOY_FUND_PHASE5_PK` is set. The unit test sets the latter. Optional `FUND_PHASE3_FACTORY` overrides the default live factory. Do not commit a key.
 
 ```bash
@@ -58,3 +71,5 @@ forge script script/DeployPhase5.s.sol --rpc-url robinhood --broadcast
 ```
 
 `0xYOUR_DEPLOYER_PRIVATE_KEY_HERE` is a placeholder. Not audited. Not financial advice.
+
+The frontend note is [PHASE5_ABACUS_PROMPT.md](PHASE5_ABACUS_PROMPT.md).

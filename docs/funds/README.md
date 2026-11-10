@@ -10,4 +10,4 @@ These notes describe the fund contracts in this repository. They are not a revie
 | [FUND_CORE_FIX.md](../FUND_CORE_FIX.md) | Phase 2 deadline, refund, exit, and feed NAV |
 | [DEPLOYMENTS.md](../DEPLOYMENTS.md) | Addresses on Robinhood Chain |
 
-Phase 5 does not modify a deployed fund contract. The source is in [`src/fund/phase5`](../../src/fund/phase5). Nothing in that change was signed or broadcast.
+Phase 5 does not modify a deployed fund contract. The source is in [`src/fund/phase5`](../../src/fund/phase5). Live addresses are in [DEPLOYMENTS.md](../DEPLOYMENTS.md) and [PHASE5.md](PHASE5.md).
