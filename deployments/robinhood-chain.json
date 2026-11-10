@@ -386,6 +386,32 @@
       "deployTx": "0x51afc05a8d6bca09ecaafb2dc08b8fcb87ed93d30bd872e5349de014b699cdd5",
       "notes": "Nonce 40. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x40Ef3ae910A46aDDC14f45F0983060161884f045. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. Protocol fee 20 bps. Sourcify exact match. Does not replace the Phase 1a or Phase 2 factories.",
       "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
+    },
+    {
+      "name": "FundPhase4",
+      "group": "fund-phase4",
+      "role": "addon",
+      "address": "0x3cd372e32Da71321D795a32b244eAa16724531dB",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x3cd372e32Da71321D795a32b244eAa16724531dB",
+      "verification": "exact match",
+      "source": "src/fund/phase4/FundPhase4.sol",
+      "sourceCommit": "8786fac1775c66d77deb3138771a740b3e466d0a",
+      "deployTx": "0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653",
+      "notes": "Nonce 44 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Constructor arg is the live Phase 3 factory 0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B. Constructor also creates FundShareAccount. Does not modify Phase 1, Phase 2, or Phase 3 contracts. Sourcify exact match on 2026-11-09 (America/Los_Angeles).",
+      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE4.md", "docs/PHASE4_ABACUS_PROMPT.md"]
+    },
+    {
+      "name": "FundShareAccount",
+      "group": "fund-phase4",
+      "role": "share-account-implementation",
+      "address": "0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E",
+      "verification": "exact match",
+      "source": "src/fund/phase4/FundShareAccount.sol",
+      "sourceCommit": "8786fac1775c66d77deb3138771a740b3e466d0a",
+      "deployTx": "0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653",
+      "notes": "Created inside the FundPhase4 constructor (CREATE nonce 1 of 0x3cd372e32Da71321D795a32b244eAa16724531dB). Canonical ERC-6551 registry is 0x000000006551c19487814612e58FE06813775758. Sourcify exact match on 2026-11-09 (America/Los_Angeles).",
+      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE4.md", "docs/PHASE4_ABACUS_PROMPT.md"]
     }
   ],
   "referenced": [
