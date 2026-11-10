@@ -27,9 +27,28 @@ compilation_restrictions = [
     {paths = "src/bond/**", evm_version = "paris"},
     {paths = "src/gatedmint/**", evm_version = "paris"},
     {paths = "src/treasury/**", evm_version = "paris"},
-    {paths = "src/fund/**", evm_version = "paris"},
+    {paths = "src/fund/FundFactory.sol", evm_version = "paris"},
+    {paths = "src/fund/FundNFT.sol", evm_version = "paris"},
+    {paths = "src/fund/FundVault.sol", evm_version = "paris"},
+    # src/fund/phase2/Interfaces.sol is interfaces only (no bytecode, nothing deployed from
+    # it), so it is deliberately left unrestricted: the cancun growth contracts import it
+    # alongside v4-core, and a paris restriction on it would make their import graphs
+    # uncompilable (paris vs v4-core's min cancun).
+    {paths = "src/fund/phase2/ChainlinkNavFeed.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundAllowlist.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundFactoryInvest.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundNFTInvest.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundSpawn.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundSwapFacet.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundVaultInvest.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/FundVaultStore.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/NAVReader.sol", evm_version = "paris"},
+    {paths = "src/fund/phase2/UniswapV3RouterAdapter.sol", evm_version = "paris"},
+    {paths = "src/fund/phase3/**", evm_version = "paris"},
+    {paths = "src/fund/phase4/**", evm_version = "paris"},
     {paths = "src/floorvault/**", min_evm_version = "cancun"},
     {paths = "src/buyback/**", min_evm_version = "cancun"},
+    {paths = "src/fund/growth/**", min_evm_version = "cancun"},
     {paths = "lib/v4-core/**", min_evm_version = "cancun"},
 ]
 
