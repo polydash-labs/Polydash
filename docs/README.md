@@ -55,7 +55,8 @@ Tokens are created by their users. The contracts are unaudited. An outside revie
 | [FUND_CORE_FIX.md](FUND_CORE_FIX.md) | Phase 2 deadline, refund, exit, and feed NAV |
 | [security/phase2-live-scan.md](security/phase2-live-scan.md) | Security scan of the live Phase 2 deployment. Not a review |
 | [PHASE3.md](PHASE3.md) | Phase 3 template, high-water mark, skin lock, tape, brake, and distributions |
-| [PHASE4.md](PHASE4.md) | Phase 4 clone planning, agent, season cards, NAV bids, and per-share wallets. Not deployed |
+| [PHASE4.md](PHASE4.md) | Phase 4 clone planning, agent, season cards, NAV bids, and per-share wallets |
+| [funds/PHASE5.md](funds/PHASE5.md) | Phase 5 listings, share art, conviction locks, carry, and the nav-floor queue. Not deployed |
 | [AUDIT_SCOPE.md](AUDIT_SCOPE.md) | Staking files and behaviours an outside review would focus on |
 | [SECURITY.md](../SECURITY.md) | Reporting a vulnerability and the bug bounty |
 
