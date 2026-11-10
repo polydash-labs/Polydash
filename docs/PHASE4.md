@@ -20,7 +20,7 @@ The NFT remains the ownership claim. A clone, an agent, a season card, a bid, an
 
 ## Not in this change
 
-Secondary listings, metadata that changes with net value, and conviction locks are not in this change. Stock tokens are not in this change.
+Secondary listings, metadata that changes with net value, and conviction locks are not in this change. They are in [funds/PHASE5.md](funds/PHASE5.md). Stock tokens are not in this change.
 
 ## Deploy
 
