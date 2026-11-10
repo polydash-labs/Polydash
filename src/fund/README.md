@@ -37,7 +37,7 @@ Direct ETH transfers to the vault revert. ETH forced into the vault stays there,
 
 ## Not in Phase 1a
 
-A carry NFT, token-bound accounts, a floor bid, a secondary market, redeeming units, metadata that changes after mint, and an agent executor. Those are not implemented. Allowlisted swaps are Phase 2, in separate files, and they are not on the deployed factory.
+Phase 1a does not include a carry NFT, a secondary listing, metadata that changes after mint, or a conviction lock. Phase 4, in separate contracts, plans a clone of a Phase 3 mandate, an expiring swap agent, season readings, a bidder-funded NAV bid, and a per-share wallet when the canonical ERC-6551 registry has code. See [docs/PHASE4.md](../../docs/PHASE4.md). Those contracts are not deployed. Allowlisted swaps are Phase 2, in separate files, and they are not on this Phase 1a factory.
 
 ## Phase 2
 

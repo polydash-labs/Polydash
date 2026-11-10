@@ -1,0 +1,18 @@
+Phase 4 deploy gas, measured on a fork of Robinhood Chain. Not a broadcast. Not a review. Not financial advice.
+
+Method: gasleft() around `new FundPhase4(0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B)` in test/fork/FundPhase4Fork.t.sol, plus 21000, plus calldata (4 gas per zero byte, 16 per nonzero byte) of deploy/phase4/unsigned/FundPhase4.creation.hex.
+
+constructor gas: 3533364
+creation bytes: 16353 (679 zero, 15674 nonzero)
+calldata gas: 253500
+intrinsic: 21000
+total gas: 3807864
+
+Base fee during the fork measurement: 20028000 wei
+eth_gasPrice read near block 110469147: 20000000 wei
+Estimated fee at the fork base fee: 0.000076263900192 ETH
+Fees wallet 0x9a21c75aC263cC43125E70200636f6397f8776d0 balance at that block: 0.002083971417225406 ETH
+
+The estimate is under 0.00013 ETH at this base fee. It includes no tip. Re-read both numbers before signing.
+
+Runtime size: FundPhase4 12510 bytes. FundShareAccount 3135 bytes, created inside the constructor.

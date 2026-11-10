@@ -3,6 +3,8 @@
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- Phase 4 fund add-on in `src/fund/phase4`: clone planning for a live Phase 3 mandate, an expiring swap agent, season report cards, bidder-funded NAV bids, and per-share ERC-6551 wallets through the canonical registry already on Robinhood Chain. It does not modify the live Phase 1, Phase 2, or Phase 3 contracts. Nothing in this change was signed or broadcast. Unsigned payload is in `deploy/phase4/unsigned`. `script/DeployFundPhase4.s.sol` reverts unless `CONFIRM_FUND_PHASE4_DEPLOY=yes`. Not audited. Not financial advice.
 
 ## [1.3.0] - 2026-11-09
 ### Added
