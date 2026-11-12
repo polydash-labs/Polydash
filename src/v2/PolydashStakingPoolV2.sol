@@ -23,6 +23,9 @@ interface IPolydashStakingFactoryV2 {
 ///         - Principal and rewards are tracked separately; reward payouts can never consume
 ///           principal, and if the pool ever holds less than it owes (negative rebase / transfer
 ///           fees) losses are shared pro-rata instead of first-come-first-served.
+///         - Reward payouts are sized for the reward token's sender-side fee (learned from
+///           observed outflows), and partial claims are always available, so a fee-on-transfer
+///           reward token can never freeze unclaimed rewards.
 contract PolydashStakingPoolV2 is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -62,6 +65,12 @@ contract PolydashStakingPoolV2 is ReentrancyGuard {
     /// @notice Learned sender-side transfer fee of the stake token (bps). For tokens that take an
     ///         extra fee from the sender, withdrawals send less so the withdrawer bears their own fee.
     uint256 public stakeOutFeeBps;
+    /// @notice Learned sender-side transfer fee of the reward token (bps). For tokens that take an
+    ///         extra fee from the sender, claims are sized so the real outflow (net + fee) fits
+    ///         the reward room left; without it a claim near the room would revert and, since
+    ///         claim() takes no amount, the rewards would be frozen. Learned from observed
+    ///         outflows, the same way stakeOutFeeBps works for principal.
+    uint256 public rewardOutFeeBps;
 
     mapping(address => uint256) public balanceOf;
     mapping(address => uint256) public userRewardPerTokenPaid;
@@ -238,15 +247,20 @@ contract PolydashStakingPoolV2 is ReentrancyGuard {
     }
 
     /// @dev Caps an outgoing reward-side amount to what the reward reserve can cover.
+    ///      The cap is on the real outflow (amount + any sender-side token fee), so the
+    ///      transfer can never need more than the reserve holds.
     function _capReward(uint256 amount) internal view returns (uint256) {
         uint256 avail = rewardAvailable();
+        uint256 maxSend = (avail * BPS) / (BPS + rewardOutFeeBps);
         // slither-disable-next-line timestamp
-        return amount < avail ? amount : avail;
+        return amount < maxSend ? amount : maxSend;
     }
 
     /// @dev Pays `amount` (already capped) out of the reward reserve. The real outflow, including any
     ///      sender-side token fee, is charged to the reward reserve so it can never consume principal.
-    ///      All callers are nonReentrant; the post-call write is needed to measure the real outflow.
+    ///      The sender-side fee rate is learned from the observed outflow (mirrors _sendPrincipal),
+    ///      so later payouts can be sized to fit. All callers are nonReentrant; the post-call write
+    ///      is needed to measure the real outflow.
     // slither-disable-next-line reentrancy-benign,reentrancy-no-eth
     function _sendReward(address to, uint256 amount) internal {
         // slither-disable-next-line incorrect-equality,timestamp
@@ -254,6 +268,11 @@ contract PolydashStakingPoolV2 is ReentrancyGuard {
         uint256 before = rewardToken.balanceOf(address(this));
         rewardToken.safeTransfer(to, amount);
         uint256 out = before - rewardToken.balanceOf(address(this));
+        if (out > amount) {
+            uint256 feeBps = Math.mulDiv(out - amount, BPS, amount, Math.Rounding.Ceil);
+            if (feeBps > BPS) feeBps = BPS;
+            if (feeBps > rewardOutFeeBps) rewardOutFeeBps = feeBps;
+        }
         // slither-disable-next-line reentrancy-no-eth
         rewardReserve -= out < rewardReserve ? out : rewardReserve;
     }
@@ -320,12 +339,21 @@ contract PolydashStakingPoolV2 is ReentrancyGuard {
     }
 
     function claim() external nonReentrant {
-        _claim(msg.sender);
+        _claim(msg.sender, type(uint256).max);
+    }
+
+    /// @notice Claim up to `grossAmount` of earned rewards (gross, before the claim fee).
+    ///         Partial claims always work: even if the reward token raised its sender-side
+    ///         fee after the pool was funded, a small enough claim still fits the room, so
+    ///         rewards can never be frozen by a fee the pool has not learned yet.
+    function claimAmount(uint256 grossAmount) external nonReentrant {
+        if (grossAmount == 0) revert ZeroAmount();
+        _claim(msg.sender, grossAmount);
     }
 
     function exit() external nonReentrant {
         _withdraw(msg.sender, balanceOf[msg.sender]);
-        _claim(msg.sender);
+        _claim(msg.sender, type(uint256).max);
     }
 
     /// @notice Withdraw principal without claiming (rewards forfeited to the creator). Always available.
@@ -359,7 +387,7 @@ contract PolydashStakingPoolV2 is ReentrancyGuard {
         _sendPrincipal(user, amount);
     }
 
-    function _claim(address user) internal {
+    function _claim(address user, uint256 maxGross) internal {
         _updateReward(user);
         uint256 owedScaled = rewardsScaled[user];
         uint256 gross = owedScaled / ACC;
@@ -370,12 +398,39 @@ contract PolydashStakingPoolV2 is ReentrancyGuard {
         uint256 room = avail > committed ? avail - committed : 0;
         // slither-disable-next-line timestamp
         if (gross > room) gross = room; // reward side short: pay what exists, the rest stays owed
+        if (gross > maxGross) gross = maxGross; // partial claim: only take what was asked for
+        // Size the claim so the real outflow fits the room. The reward token may take a
+        // sender-side fee on top of the payout (net + tax), so the net that can be sent is
+        // room / (1 + learned fee); the gross is backed out from that net. Without this,
+        // a claim near the room would revert and the rewards would be frozen, because
+        // claim() takes no amount. For a plain token the learned fee is 0 and this cap
+        // is exactly the room cap above, so behaviour is unchanged. The learned rate can
+        // go stale if the token raises its fee mid-pool; then a full claim may revert,
+        // but a small claimAmount still fits and re-learns the higher rate.
+        uint256 maxNet = (room * BPS) / (BPS + rewardOutFeeBps);
+        uint256 maxGrossByFee = Math.mulDiv(maxNet, BPS, BPS - claimFeeBps);
+        if (gross > maxGrossByFee) gross = maxGrossByFee;
         // slither-disable-next-line incorrect-equality,incorrect-equality,timestamp
         if (gross == 0) return;
         uint256 fee = Math.mulDiv(gross, claimFeeBps, BPS);
         uint256 platformFee = Math.mulDiv(gross, claimFeeBps * PLATFORM_SHARE_BPS, BPS * BPS);
         uint256 creatorFee = fee - platformFee;
         uint256 net = gross - fee;
+        // Final guard against rounding dust: the fee on the reduced gross is at most a few
+        // wei of rounding, so one trim makes the worst-case outflow fit the room. If it
+        // still would not fit, pay nothing and leave the balance owed rather than reverting.
+        uint256 out = Math.mulDiv(net, BPS + rewardOutFeeBps, BPS, Math.Rounding.Ceil);
+        if (out > room) {
+            uint256 excess = out - room;
+            if (gross <= excess + 1) return;
+            gross -= excess + 1;
+            fee = Math.mulDiv(gross, claimFeeBps, BPS);
+            platformFee = Math.mulDiv(gross, claimFeeBps * PLATFORM_SHARE_BPS, BPS * BPS);
+            creatorFee = fee - platformFee;
+            net = gross - fee;
+            out = Math.mulDiv(net, BPS + rewardOutFeeBps, BPS, Math.Rounding.Ceil);
+            if (out > room) return;
+        }
         // exact: only whole tokens leave the scaled balance, the fractional part stays with the user
         // slither-disable-next-line divide-before-multiply
         rewardsScaled[user] = owedScaled - gross * ACC;
