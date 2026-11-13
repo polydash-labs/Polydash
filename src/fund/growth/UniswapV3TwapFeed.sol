@@ -182,7 +182,7 @@ contract UniswapV3TwapFeed is IFundPriceFeed {
     /// @notice ETH wei per 1e18 raw asset at the TWAP tick.
     function _twapPrice() internal view returns (uint256 priceX18) {
         int256 avgTick = _twapTick();
-        priceX18 = TwapPriceMath.priceX18FromTick(avgTick, assetIsToken0, assetDecimals, quoteDecimals);
+        priceX18 = TwapPriceMath.priceX18FromTick(avgTick, assetIsToken0);
         if (priceX18 == 0) revert PriceUnavailable();
     }
 
