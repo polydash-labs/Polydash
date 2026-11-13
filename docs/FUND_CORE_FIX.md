@@ -58,7 +58,7 @@ Until `proposeAsset` receives a reviewed feed and the timelock elapses, every as
 
 Do not set `FUND_ROUTES_ENABLED`. Do not set `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS`. Header and footer do not link to `/funds`. Direct `/funds` routes render a not-live page.
 
-## Abacus sync
+## Web deployment
 
 Phase 2 and Phase 3 are deployed. Addresses are in [DEPLOYMENTS.md](DEPLOYMENTS.md). The site is https://polypad.family/funds. `FUND_ROUTES_ENABLED` and `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` stay unset in this repository. Do not allowlist SwapRouter02, UniversalRouter, or V3Factory from this note. Non-quote assets stay disabled until a reviewed feed is set. Phase 1 factory `0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878` is unchanged.
 

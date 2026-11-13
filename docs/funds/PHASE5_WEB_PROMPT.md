@@ -1,8 +1,8 @@
-# Abacus prompt: Phase 5 on the public fund pages
+# Web prompt: Phase 5 on the public fund pages
 
 Add Phase 5 to the existing public fund pages at polypad.family/funds. Keep the current black background and white text. Use short sentences. Put a plain-language tip under each control. Do not add a new visual theme. Share art from `FundShareRenderer` is black and white (`#000000` and `#ffffff` only).
 
-Copy rules for every string you write are the same as [PHASE4_ABACUS_PROMPT.md](../PHASE4_ABACUS_PROMPT.md). Write "Not audited" if you mention review status. Write "Not financial advice" on every panel that moves ETH or a share. Write "Robinhood Chain" in full. The chain id is 4663.
+Copy rules for every string you write are the same as [PHASE4_WEB_PROMPT.md](../PHASE4_WEB_PROMPT.md). Write "Not audited" if you mention review status. Write "Not financial advice" on every panel that moves ETH or a share. Write "Robinhood Chain" in full. The chain id is 4663.
 
 Contracts are live on Robinhood Chain (chain ID 4663). Set:
 
@@ -13,7 +13,7 @@ Contracts are live on Robinhood Chain (chain ID 4663). Set:
 - `NEXT_PUBLIC_FUND_CONVICTION_LOCK_ADDRESS=0x4D216Ad3f28e9eF183483f37b7Ec05b9b46C9B95`
 - `NEXT_PUBLIC_FUND_NAV_FLOOR_ADDRESS=0x8e4f163e6dCe71Ef1290Ed264c6F11f13F309afb`
 
-Until those env vars are set in the Abacus deploy, show the panels as not live and do not ask a wallet to send a Phase 5 transaction. Do not broadcast from the app. The wallet owner signs.
+Until those env vars are set in the web deployment, show the panels as not live and do not ask a wallet to send a Phase 5 transaction. Do not broadcast from the app. The wallet owner signs.
 
 Read the ABIs from `src/fund/phase5`. `FundPhase5` is `0x0c98b0E09E4Aa425BD2A85060BE58282E21d0c81`. The market, renderer, carry token, conviction lock, and nav-floor queue are the addresses above, created in that constructor. The live Phase 3 factory stays `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`.
 

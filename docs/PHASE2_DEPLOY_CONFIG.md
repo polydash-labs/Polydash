@@ -20,7 +20,7 @@ config that was signed. It is not a review. Fund routes stay off.
 | Caps (defaults) | Max position 75%, max trade 75%, max execution deviation 50% |
 | Fees | Protocol 0.2%, entry 0–5% per fund |
 | Alchemy | Off-chain only: RPC / Token Prices API for UI/keeper/fork tests. Not a router, not an on-chain feed. |
-| Front end | `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` = the deployed FundFactoryInvest address (set in Abacus after a successful mainnet deploy). `FUND_ROUTES_ENABLED` stays an Abacus server var — do NOT enable it in the repo. |
+| Front end | `NEXT_PUBLIC_FUND_INVEST_FACTORY_ADDRESS` = the deployed FundFactoryInvest address (set on the web app host after a successful mainnet deploy). `FUND_ROUTES_ENABLED` stays a server var on the web app host — do NOT enable it in the repo. |
 
 Deploy command (WETH-only, with the finalized fee recipient):
 
@@ -241,6 +241,6 @@ allowlist anything Alchemy-shaped on-chain.
   the sequencer guard by necessity, not by choice.
 - The 500-fee USDG pool is the deepest, but pool liquidity was measured once (2026-11-09);
   re-check depth before any large first trade, and keep the first fund small.
-- The front end (`polypad.family`) is a separate Abacus project; getting the Phase 2 UI
-  live there is a manual resync + env + deploy in Abacus (see §9 of the report). The repo
+- The front end (`polypad.family`) is a separate web app project; getting the Phase 2 UI
+  live there is a manual resync + env + deploy on the web app host (see §9 of the report). The repo
   has no deploy pipeline to polypad.family.

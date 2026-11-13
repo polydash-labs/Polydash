@@ -1,4 +1,4 @@
-# Abacus prompt: Phase 4 on the public fund pages
+# Web prompt: Phase 4 on the public fund pages
 
 Add Phase 4 to the existing public fund pages at polypad.family/funds. Keep the current black background and white text. Use short sentences. Put a plain-language tip under each control. Do not add a new visual theme.
 
@@ -10,7 +10,7 @@ Copy rules for every string you write:
 - Write "Not financial advice" on every panel that moves ETH or a share.
 - Write "Robinhood Chain" in full. The chain id is 4663.
 
-Contracts are live on Robinhood Chain (chain ID 4663). Set `NEXT_PUBLIC_FUND_PHASE4_ADDRESS=0x3cd372e32Da71321D795a32b244eAa16724531dB` and `NEXT_PUBLIC_FUND_SHARE_ACCOUNT_ADDRESS=0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E`. Until those env vars are set in the Abacus deploy, show the panels as not live and do not ask a wallet to send a Phase 4 transaction. Do not broadcast from the app. The wallet owner signs.
+Contracts are live on Robinhood Chain (chain ID 4663). Set `NEXT_PUBLIC_FUND_PHASE4_ADDRESS=0x3cd372e32Da71321D795a32b244eAa16724531dB` and `NEXT_PUBLIC_FUND_SHARE_ACCOUNT_ADDRESS=0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E`. Until those env vars are set in the web deployment, show the panels as not live and do not ask a wallet to send a Phase 4 transaction. Do not broadcast from the app. The wallet owner signs.
 
 Use the ABIs in `polypad/abi/phase4`. `FundPhase4` is `0x3cd372e32Da71321D795a32b244eAa16724531dB`. `FundShareAccount` is `0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E`. The live Phase 3 factory stays `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`.
 
