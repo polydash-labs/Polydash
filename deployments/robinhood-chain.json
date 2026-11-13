@@ -1,599 +1,942 @@
 {
-  "name": "Polydash",
-  "description": "Addresses recorded in this repository for Robinhood Chain. This file does not add deployments that are not already documented elsewhere in the repo. Contracts are unaudited. An outside review is planned.",
-  "chain": {
-    "name": "Robinhood Chain",
-    "chainId": 4663,
-    "rpc": "https://rpc.mainnet.chain.robinhood.com",
-    "explorer": "https://robinhoodchain.blockscout.com"
+ "name": "Polydash",
+ "description": "Addresses recorded in this repository for Robinhood Chain. This file does not add deployments that are not already documented elsewhere in the repo. Contracts are unaudited. An outside review is planned.",
+ "chain": {
+  "name": "Robinhood Chain",
+  "chainId": 4663,
+  "rpc": "https://rpc.mainnet.chain.robinhood.com",
+  "explorer": "https://robinhoodchain.blockscout.com"
+ },
+ "contracts": [
+  {
+   "name": "POLYDASH token",
+   "group": "token",
+   "role": "token",
+   "address": "0x319525528f42167eF7fC18b77b889958080568e4",
+   "sourceInRepo": false,
+   "notes": "Deployed via Clanker. Not in this repository. LP is described as locked in the README.",
+   "documentedIn": [
+    "README.md",
+    "docs/AUDIT_SCOPE.md",
+    "SECURITY.md"
+   ]
   },
-  "contracts": [
-    {
-      "name": "POLYDASH token",
-      "group": "token",
-      "role": "token",
-      "address": "0x319525528f42167eF7fC18b77b889958080568e4",
-      "sourceInRepo": false,
-      "notes": "Deployed via Clanker. Not in this repository. LP is described as locked in the README.",
-      "documentedIn": ["README.md", "docs/AUDIT_SCOPE.md", "SECURITY.md"]
-    },
-    {
-      "name": "PolydashFactory",
-      "group": "polypad-launchpad",
-      "role": "current",
-      "address": "0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2",
-      "verification": "match",
-      "source": "polypad/contracts/src/PolydashFactory.sol",
-      "notes": "Current launch factory. Permissionless createLaunch. Creator fee cap 500 bps.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json", "docs/AGENTS_LAUNCH.md"]
-    },
-    {
-      "name": "PolydashLaunch",
-      "group": "polypad-launchpad",
-      "role": "current-implementation",
-      "address": "0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad",
-      "verification": "match",
-      "source": "polypad/contracts/src/PolydashLaunch.sol",
-      "notes": "Current launch implementation. Launches are EIP-1167 clones.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
-    },
-    {
-      "name": "PolydashHook",
-      "group": "polypad-launchpad",
-      "role": "current",
-      "address": "0x4d3066bBfF889023def912D2fDe36c44357fA0cC",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x4d3066bBfF889023def912D2fDe36c44357fA0cC",
-      "verification": "match",
-      "source": "polypad/contracts/src/PolydashHook.sol",
-      "notes": "Current Uniswap V4 hook used after graduation.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
-    },
-    {
-      "name": "PolydashCommitVault",
-      "group": "polypad-launchpad",
-      "role": "current",
-      "address": "0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4",
-      "verification": "match",
-      "sourcifyName": "PolydashCommitVault",
-      "notes": "Listed in the root README as the current commit vault. Sourcify contract name is PolydashCommitVault (solc 0.8.26, match). This address is not the commit-vault entry in polypad/deployments.json.",
-      "documentedIn": ["README.md"]
-    },
-    {
-      "name": "PolydashFactory",
-      "group": "polypad-launchpad",
-      "role": "earlier",
-      "address": "0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2",
-      "sourcify": "https://repo.sourcify.dev/4663/0x2c84cfcd8d283ef750e09fbed735d67f67845db2",
-      "verification": "match",
-      "notes": "Earlier launch factory. Creator fee cap 200 bps. Launches created here stay listed.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
-    },
-    {
-      "name": "PolydashLaunch",
-      "group": "polypad-launchpad",
-      "role": "earlier-implementation",
-      "address": "0xef7684268f13bc06cb02755642ceabef422b8b70",
-      "sourcify": "https://repo.sourcify.dev/4663/0xef7684268f13bc06cb02755642ceabef422b8b70",
-      "verification": "match",
-      "notes": "Earlier launch implementation.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
-    },
-    {
-      "name": "PolydashHook",
-      "group": "polypad-launchpad",
-      "role": "earlier",
-      "address": "0x04990E6671C98e1B43034E52366Af11396d960CC",
-      "sourcify": "https://repo.sourcify.dev/4663/0x04990e6671c98e1b43034e52366af11396d960cc",
-      "verification": "match",
-      "notes": "Earlier Uniswap V4 hook.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
-    },
-    {
-      "name": "PolydashCommitVault",
-      "group": "polypad-launchpad",
-      "role": "earlier",
-      "address": "0x8f125c9ec7acd52b9cd39f2a7441085559d84104",
-      "sourcify": "https://repo.sourcify.dev/4663/0x8f125c9ec7acd52b9cd39f2a7441085559d84104",
-      "verification": "match",
-      "notes": "Commit vault deployed with the earlier factory. This is the PolydashCommitVault entry in polypad/deployments.json. Constructor argument is the earlier factory.",
-      "documentedIn": ["README.md", "polypad/README.md", "polypad/deployments.json"]
-    },
-    {
-      "name": "PolypadNFTFactory",
-      "group": "nfts",
-      "role": "factory",
-      "address": "0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd",
-      "verification": "match",
-      "sourcifyName": "PolypadNFTFactory",
-      "notes": "Listed in the README as the NFT factory. Source is not in this repository.",
-      "documentedIn": ["README.md", "test/fork/CreatorFork.t.sol"]
-    },
-    {
-      "name": "PolypadCurveFactory",
-      "group": "nfts",
-      "role": "factory",
-      "address": "0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94",
-      "verification": "match",
-      "sourcifyName": "PolypadCurveFactory",
-      "notes": "Listed in the README as the NFT bonding-curve factory. Source is not in this repository.",
-      "documentedIn": ["README.md", "test/fork/CreatorFork.t.sol"]
-    },
-    {
-      "name": "PolypadNFTMarket",
-      "group": "nfts",
-      "role": "marketplace",
-      "address": "0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A",
-      "verification": "match",
-      "sourcifyName": "PolypadNFTMarket",
-      "notes": "Listed in the README as the NFT marketplace. Source is not in this repository.",
-      "documentedIn": ["README.md"]
-    },
-    {
-      "name": "PolypadTokenLink",
-      "group": "nfts",
-      "role": "token-link",
-      "address": "0xCD96D8e10a82b41A08342c03a176c20336bD0b38",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xCD96D8e10a82b41A08342c03a176c20336bD0b38",
-      "verification": "match",
-      "sourcifyName": "PolypadTokenLink",
-      "notes": "Listed in the README as NFT token rewards. Sourcify contract name is PolypadTokenLink. Source is not in this repository.",
-      "documentedIn": ["README.md"]
-    },
-    {
-      "name": "PolydashStakingFactoryV2",
-      "group": "staking",
-      "role": "current",
-      "address": "0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0",
-      "sourcify": "https://repo.sourcify.dev/4663/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0",
-      "verification": "exact match",
-      "source": "src/v2/PolydashStakingFactoryV2.sol",
-      "notes": "Recommended factory for new pools. Source is byte-for-byte the verified source. See src/v2/README.md.",
-      "documentedIn": ["README.md", "src/v2/README.md", "docs/ARCHITECTURE.md"]
-    },
-    {
-      "name": "PolydashStakingPoolV2",
-      "group": "staking",
-      "role": "example-pool",
-      "address": "0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518",
-      "source": "src/v2/PolydashStakingPoolV2.sol",
-      "notes": "Example pool deployed by the V2 factory, not a proxy. Pools are not individually verified on the explorer. Runtime bytecode check is described in src/v2/README.md. The factory can have more pools than this list.",
-      "documentedIn": ["src/v2/README.md"]
-    },
-    {
-      "name": "PolydashStakingPoolV2",
-      "group": "staking",
-      "role": "example-pool",
-      "address": "0x0F50043E172B8652bb786C4F14f30c415E5760AB",
-      "source": "src/v2/PolydashStakingPoolV2.sol",
-      "notes": "Example pool deployed by the V2 factory. See src/v2/README.md.",
-      "documentedIn": ["src/v2/README.md", "test/fork/BuybackFork.t.sol"]
-    },
-    {
-      "name": "PolydashStakingFactory",
-      "group": "staking",
-      "role": "legacy",
-      "address": "0x0aAEa47d2e7303EC5a809062eafa59e7F011D857",
-      "source": "src/PolydashStakingFactory.sol",
-      "notes": "Legacy v1 factory. Do not use for new pools, and do not use it with 6-decimal reward tokens. Not yet verified on the explorer. See the warning in the README.",
-      "documentedIn": ["README.md", "docs/AUDIT_SCOPE.md", "SECURITY.md"]
-    },
-    {
-      "name": "NftStakingFactory",
-      "group": "creator",
-      "role": "factory",
-      "address": "0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1",
-      "sourcify": "https://repo.sourcify.dev/4663/0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1",
-      "verification": "exact match",
-      "source": "src/nftstaking/",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/nftstaking/README.md"]
-    },
-    {
-      "name": "CreatorVestingFactory",
-      "group": "creator",
-      "role": "factory",
-      "address": "0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022",
-      "sourcify": "https://repo.sourcify.dev/4663/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022",
-      "verification": "exact match",
-      "source": "src/vesting/",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/vesting/README.md"]
-    },
-    {
-      "name": "CreatorBondFactory",
-      "group": "creator",
-      "role": "factory",
-      "address": "0x876170251e30F99E27119AF0e90648A88D508f97",
-      "sourcify": "https://repo.sourcify.dev/4663/0x876170251e30F99E27119AF0e90648A88D508f97",
-      "verification": "exact match",
-      "source": "src/bond/",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/bond/README.md"]
-    },
-    {
-      "name": "PolypadGatedNFTFactory",
-      "group": "creator",
-      "role": "factory",
-      "address": "0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d",
-      "sourcify": "https://repo.sourcify.dev/4663/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d",
-      "verification": "exact match",
-      "source": "src/gatedmint/",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/gatedmint/README.md"]
-    },
-    {
-      "name": "TreasuryRulesFactory",
-      "group": "creator",
-      "role": "factory",
-      "address": "0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f",
-      "sourcify": "https://repo.sourcify.dev/4663/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f",
-      "verification": "exact match",
-      "source": "src/treasury/",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/treasury/README.md"]
-    },
-    {
-      "name": "TreasuryRules",
-      "group": "creator",
-      "role": "implementation",
-      "address": "0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb",
-      "sourcify": "https://repo.sourcify.dev/4663/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb",
-      "verification": "exact match",
-      "source": "src/treasury/",
-      "notes": "Implementation created by TreasuryRulesFactory. Treasury vaults are EIP-1167 clones.",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/treasury/README.md"]
-    },
-    {
-      "name": "PolypadTokenFloorFactory",
-      "group": "floor-vault",
-      "role": "factory",
-      "address": "0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c",
-      "sourcify": "https://repo.sourcify.dev/4663/0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c",
-      "verification": "match",
-      "source": "src/floorvault/",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/floorvault/README.md"]
-    },
-    {
-      "name": "PolypadTokenFloorCollection",
-      "group": "floor-vault",
-      "role": "implementation",
-      "address": "0xFa23E496f7244d1674fA8bE5C42556bd054140EA",
-      "sourcify": "https://repo.sourcify.dev/4663/0xFa23E496f7244d1674fA8bE5C42556bd054140EA",
-      "verification": "match",
-      "source": "src/floorvault/",
-      "notes": "Implementation created by PolypadTokenFloorFactory. Collections are EIP-1167 clones.",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/floorvault/README.md"]
-    },
-    {
-      "name": "PolydashBuybackVault",
-      "group": "buybacks",
-      "role": "vault",
-      "address": "0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193",
-      "sourcify": "https://repo.sourcify.dev/4663/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193",
-      "verification": "match",
-      "source": "src/buyback/PolydashBuybackVault.sol",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/buyback/README.md"]
-    },
-    {
-      "name": "PolydashRewardsPool",
-      "group": "buybacks",
-      "role": "rewards-pool",
-      "address": "0x608d106Bb58A804fcd45823e0C6087801dee2aCa",
-      "sourcify": "https://repo.sourcify.dev/4663/0x608d106Bb58A804fcd45823e0C6087801dee2aCa",
-      "verification": "match",
-      "source": "src/buyback/PolydashRewardsPool.sol",
-      "documentedIn": ["docs/CREATOR_CONTRACTS.md", "src/buyback/README.md"]
-    },
-    {
-      "name": "FundFactory",
-      "group": "fund",
-      "role": "factory",
-      "address": "0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
-      "verification": "exact match",
-      "source": "src/fund/",
-      "notes": "Phase 1a raise/mint only. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify is the verification of record. This factory is not the Phase 2 factory.",
-      "documentedIn": ["README.md", "docs/DEPLOYMENTS.md", "docs/CREATOR_CONTRACTS.md", "src/fund/README.md"]
-    },
-    {
-      "name": "FundSwapFacet",
-      "group": "fund-phase2",
-      "role": "swap-facet",
-      "address": "0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
-      "verification": "exact match",
-      "source": "src/fund/phase2/FundSwapFacet.sol",
-      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
-      "deployTx": "0x662d664a123b146f13f7e35ee20a3d3c0841f603ec522a969b2ed404464c9012",
-      "notes": "Phase 2 swap body. Vaults delegatecall it. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 at nonce 34. Creation bytecode matches that commit (solc 0.8.24, via-IR, optimizer 200, Paris). Security scan, not a review: docs/security/phase2-live-scan.md.",
-      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md", "deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "UniswapV3RouterAdapter",
-      "group": "fund-phase2",
-      "role": "router-adapter",
-      "address": "0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
-      "verification": "exact match",
-      "source": "src/fund/phase2/UniswapV3RouterAdapter.sol",
-      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
-      "deployTx": "0x351a70eccbff7dbcc82c214ab769b17d06d99b69d025db7b4e5cdd5ba9b1cb47",
-      "notes": "Adapts SwapRouter02 0xCaf681a66D020601342297493863E78C959E5cb2 to IFundSwapRouter.swap. Nonce 35. WETH 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. This adapter is the allowlisted router. Raw SwapRouter02 is not allowlisted.",
-      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md"]
-    },
-    {
-      "name": "FundAllowlist",
-      "group": "fund-phase2",
-      "role": "allowlist",
-      "address": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
-      "verification": "exact match",
-      "source": "src/fund/phase2/FundAllowlist.sol",
-      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
-      "deployTx": "0x63ef73531d00c303869cfe38de6e45316a4f0aa8cf59366a241214d8a263ec03",
-      "notes": "Nonce 36. Owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. Delay 172800 seconds. Quote WETH. One router, the adapter. No non-quote asset and no feed. Later edits wait the delay. The delay cannot be shortened.",
-      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md"]
-    },
-    {
-      "name": "FundFactoryInvest",
-      "group": "fund-phase2",
-      "role": "factory",
-      "address": "0xd3c6ae470c25989cC8d2876c1855fB570B98894E",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xd3c6ae470c25989cC8d2876c1855fB570B98894E",
-      "verification": "exact match",
-      "source": "src/fund/phase2/FundFactoryInvest.sol",
-      "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
-      "deployTx": "0xaeae5c14d51d7d81ed44bf3f2c6f1e7babfc05246b8307a7b33c283cc71c32fd",
-      "notes": "Nonce 37. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Protocol fee 20 bps. Fund count 0 at scan. vaultDeployer 0x111aC00A91944477141aDe12ebB6BcB0CEFC3a95. nftDeployer 0x5766A7A937D0De897C2d90df0D045f9067fd72D5. Does not replace the Phase 1a factory.",
-      "documentedIn": ["docs/security/phase2-live-scan.md", "docs/DEPLOYMENTS.md", "polypad/web/lib/fund/address.ts"]
-    },
-    {
-      "name": "StrategyTemplate",
-      "group": "fund-phase3",
-      "role": "template",
-      "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
-      "verification": "exact match",
-      "source": "src/fund/phase3/StrategyTemplate.sol",
-      "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
-      "deployTx": "0x6cf3598a2be973c1f35a6febc015e432b5e5efb6b894a4e578c7a7c40cf01265",
-      "notes": "Nonce 38 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Owner is that wallet. Sourcify exact match on 2026-11-09. Does not change Phase 2.",
-      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
-    },
-    {
-      "name": "FundSwapFacetPhase3",
-      "group": "fund-phase3",
-      "role": "swap-facet",
-      "address": "0x40Ef3ae910A46aDDC14f45F0983060161884f045",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x40Ef3ae910A46aDDC14f45F0983060161884f045",
-      "verification": "exact match",
-      "source": "src/fund/phase3/FundSwapFacetPhase3.sol",
-      "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
-      "deployTx": "0xad686b96634519ad554b7a39a8c4f0259c32e45df7f787acae1486188528f6b5",
-      "notes": "Nonce 39. No constructor arguments. Sourcify exact match. Not the live Phase 2 facet.",
-      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
-    },
-    {
-      "name": "FundFactoryPhase3",
-      "group": "fund-phase3",
-      "role": "factory",
-      "address": "0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
-      "verification": "exact match",
-      "source": "src/fund/phase3/FundFactoryPhase3.sol",
-      "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
-      "deployTx": "0x51afc05a8d6bca09ecaafb2dc08b8fcb87ed93d30bd872e5349de014b699cdd5",
-      "notes": "Nonce 40. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x40Ef3ae910A46aDDC14f45F0983060161884f045. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. Protocol fee 20 bps. Sourcify exact match. Does not replace the Phase 1a or Phase 2 factories.",
-      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE3.md", "polypad/web/lib/fund/address.ts"]
-    },
-    {
-      "name": "FundPhase4",
-      "group": "fund-phase4",
-      "role": "addon",
-      "address": "0x3cd372e32Da71321D795a32b244eAa16724531dB",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x3cd372e32Da71321D795a32b244eAa16724531dB",
-      "verification": "exact match",
-      "source": "src/fund/phase4/FundPhase4.sol",
-      "sourceCommit": "8786fac1775c66d77deb3138771a740b3e466d0a",
-      "deployTx": "0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653",
-      "notes": "Nonce 44 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Constructor arg is the live Phase 3 factory 0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B. Constructor also creates FundShareAccount. Does not modify Phase 1, Phase 2, or Phase 3 contracts. Sourcify exact match on 2026-11-09 (America/Los_Angeles).",
-      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE4.md", "docs/PHASE4_ABACUS_PROMPT.md"]
-    },
-    {
-      "name": "FundShareAccount",
-      "group": "fund-phase4",
-      "role": "share-account-implementation",
-      "address": "0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E",
-      "verification": "exact match",
-      "source": "src/fund/phase4/FundShareAccount.sol",
-      "sourceCommit": "8786fac1775c66d77deb3138771a740b3e466d0a",
-      "deployTx": "0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653",
-      "notes": "Created inside the FundPhase4 constructor (CREATE nonce 1 of 0x3cd372e32Da71321D795a32b244eAa16724531dB). Canonical ERC-6551 registry is 0x000000006551c19487814612e58FE06813775758. Sourcify exact match on 2026-11-09 (America/Los_Angeles).",
-      "documentedIn": ["docs/DEPLOYMENTS.md", "docs/PHASE4.md", "docs/PHASE4_ABACUS_PROMPT.md"]
-    }
-  ],
-  "referenced": [
-    {
-      "name": "Uniswap V4 PoolManager",
-      "address": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
-      "notes": "Third-party contract on Robinhood Chain, recorded in polypad/contracts/README.md. Not a Polydash deployment.",
-      "documentedIn": ["polypad/contracts/README.md"]
-    },
-    {
-      "name": "Uniswap V4 PositionManager",
-      "address": "0x58daec3116aae6D93017bAAea7749052E8a04fA7",
-      "notes": "Third-party contract on Robinhood Chain, recorded in polypad/contracts/README.md. Not a Polydash deployment.",
-      "documentedIn": ["polypad/contracts/README.md"]
-    },
-    {
-      "name": "Platform fee wallet",
-      "address": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
-      "notes": "Wallet recorded as a constructor argument of the launch factories in polypad/README.md. Also the owner and feeRecipient of FundFactory. Not a product contract.",
-      "documentedIn": ["polypad/README.md", "src/buyback/README.md", "src/fund/README.md"]
-    },
-    {
-      "name": "POLYDASH/WETH pool hook",
-      "address": "0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc",
-      "notes": "Hook address recorded for the buyback vault's POLYDASH/WETH pool in src/buyback/README.md.",
-      "documentedIn": ["src/buyback/README.md", "test/fork/BuybackFork.t.sol"]
-    },
-    {
-      "name": "FundSwapFacetPhase3V2",
-      "group": "fund-phase6",
-      "role": "swap-facet",
-      "address": "0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7",
-      "verification": "exact match",
-      "source": "src/fund/phase3/FundSwapFacetPhase3V2.sol",
-      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
-      "deployTx": "0xc92c6bc47d3f713b42c1b185da279b3fd7e4ffd4456bab56c43b21c1234bebf1",
-      "notes": "Nonce 46 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V2 swap facet for manager-proposed assets (Option 3). Same interface as FundSwapFacetPhase3 plus proposal-gated buys and sell-after-removal. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundFactoryPhase3V2",
-      "group": "fund-phase6",
-      "role": "factory",
-      "address": "0xe50Da719947E83f316977d9c425DF95672E7B27e",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xe50Da719947E83f316977d9c425DF95672E7B27e",
-      "verification": "exact match",
-      "source": "src/fund/phase3/FundFactoryPhase3V2.sol",
-      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
-      "deployTx": "0x27d76e70d63541618f3d6d672be292bab752c7b61cec77cf9c7d0ef00557a314",
-      "notes": "Nonce 47 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. New factory alongside the live Phase 3 factory; does not replace it. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "PolydashTwapFeed",
-      "group": "fund-phase6",
-      "role": "price-feed",
-      "address": "0x5FDE0DB5AAFa8E20E76ca0D763C2c3eD49Af84fC",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x5FDE0DB5AAFa8E20E76ca0D763C2c3eD49Af84fC",
-      "verification": "exact match",
-      "source": "src/fund/growth/PolydashTwapFeed.sol",
-      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
-      "deployTx": "0x4dfa8884248433ca15beb5ea77d8031cefc556d12c406063bf172946c34810d4",
-      "notes": "Nonce 48 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Self-observing 30-min TWAP feed for the POLYDASH/WETH Uniswap V4 pool (poolId 0xc37d18932ac3bf4d8482ae1b210bbc640a367e708fedda95cfa6724f685274b5, hook 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc, dynamic fee 0x800000, tickSpacing 200). latestPrice reverts until poked; a poke keeper is required (poke every ~15 min) or the feed fails closed within 30 min. Allowlist proposal id 1 (POLYDASH asset, band 60,000,000-260,000,000 priceX18, maxStale 3600) queued 2026-11-10, executable 2026-11-12 07:17 PST. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "UniswapV4RouterAdapter",
-      "group": "fund-phase6",
-      "role": "swap-router",
-      "address": "0x25EB10357213f17b2862b54773287fccfeb92B7a",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x25EB10357213f17b2862b54773287fccfeb92B7a",
-      "verification": "exact match",
-      "source": "src/fund/growth/UniswapV4RouterAdapter.sol",
-      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
-      "deployTx": "0xf3ed2caf9328131fbf046f963e99bec4e2824194e83af83129151d09214ee137",
-      "notes": "Nonce 49 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V4 router adapter for the POLYDASH/WETH pool (PoolManager 0x8366a39CC670B4001A1121B8F6A443A643e40951, hook 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc, dynamic fee 0x800000, tickSpacing 200). Allowlist proposal id 2 (router, allowed) queued 2026-11-10, executable 2026-11-12 07:17 PST. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "UniswapV3TwapFeed",
-      "group": "fund-phase6",
-      "role": "price-feed",
-      "address": "0x2707FdBdf3e108c0040150D712E385B59Fd3dA2C",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x2707FdBdf3e108c0040150D712E385B59Fd3dA2C",
-      "verification": "exact match",
-      "source": "src/fund/growth/UniswapV3TwapFeed.sol",
-      "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
-      "deployTx": "0x596565f0c845917cc92623393875e974818ba3c344160884f9dc4b3e85fd367b",
-      "notes": "Nonce 52 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V3 TWAP feed for the RNJ/WETH Pons V1 pool (pool 0x4d59CFd33331A4d9611274b5997099b57DDd445c, RNJ 0x66e3F409c0bf871b26977a85f7287839748699dD, 30-min window). Deployed 2026-11-10, block 110992490. Allowlist proposal id 3 (RNJ asset, band 2,327,107,335-9,308,429,342 priceX18, maxStale 3600) queued 2026-11-10, executable 2026-11-12 07:40 PST. The V3 adapter 0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581 needed no proposal - already an allowed router since Phase 2. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "Template #2 (Polydash Growth Fund)",
-      "group": "fund-phase6",
-      "role": "strategy-template",
-      "templateId": 2,
-      "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
-      "mandateUri": "ipfs://bafybeidy4qmoeg2mo4xz2czni7pxgmycv4ttsxt2spgif7pxzp2tv4zmki",
-      "mandateHash": "0xb91e61541569597375f6a8024d337e3fa1b63499660e914b6714969711326c27",
-      "publishTx": "0x4c731fd6d02ec81575706f1540d24bf00c197ed337f65d1dd2bcd55fb3c325e6",
-      "notes": "Nonce 54 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Published 2026-11-10, block 110994365, on the live StrategyTemplate. Assets [POLYDASH] only (WETH is the quote asset and is always in the mandate implicitly). Params: maxPositionBps 8000, maxTradeBps 1000, maxDeviationBps 500, hwmFeeBps 500, maxDrawdownBps 2000, skinLock 2592000 (30 days). Mandate document (Polydash Growth Fund Season 1) pinned to IPFS; CID computed with ipfs-car and the .car bundle saved in the goal workspace. The fund cannot buy POLYDASH until the allowlist executes (Nov 12, 2026 07:17 PST) and the TWAP feed is returning prices (poke keeper live since 2026-11-10 ~07:31 PST).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundPhase5",
-      "group": "fund-phase6",
-      "role": "phase5-v2",
-      "address": "0x0827e73353beb5c688c96723bb33834cac202d0e",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x0827e73353beb5c688c96723bb33834cac202d0e",
-      "verification": "exact match",
-      "source": "src/fund/phase5/FundPhase5.sol",
-      "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
-      "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
-      "notes": "Nonce 55 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Second FundPhase5 deployment, bound to the V2 factory 0xe50Da719947E83f316977d9c425DF95672E7B27e (via FUND_PHASE3_FACTORY env on the Phase 5 deploy script). Constructor deploys the five modules below. Source checked out from origin/main @ 1dd92ea (the Phase 5 record commit) into the manager-proposed-assets branch for this deploy; the branch itself does not contain Phase 5 history. Deployed 2026-11-10, block 110994796. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundSecondaryMarket",
-      "group": "fund-phase6",
-      "role": "secondary-market",
-      "address": "0xd4976811617274570a9EdB64caAe2575340502b8",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xd4976811617274570a9EdB64caAe2575340502b8",
-      "verification": "exact match",
-      "source": "src/fund/phase5/FundSecondaryMarket.sol",
-      "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
-      "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
-      "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 1. Fixed-price share listings for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash (the deploy compiled phase5 under paris, not the default cancun profile). Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundShareRenderer",
-      "group": "fund-phase6",
-      "role": "share-renderer",
-      "address": "0x67bBA87395577afdA707Aae648C4d2ef36CdF089",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x67bBA87395577afdA707Aae648C4d2ef36CdF089",
-      "verification": "pending - not yet matched on Sourcify as of 2026-11-10 ~08:05 PST (contract has code and is live; verification display only)",
-      "source": "src/fund/phase5/FundShareRenderer.sol",
-      "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
-      "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
-      "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 2. On-chain B&W SVG share art for V2-factory funds. Two paris-profile verification submissions (with --creation-transaction-hash) had not matched as of 2026-11-10 ~08:05 PST; the other four modules matched with the same invocation. Re-check and re-submit before calling verification complete.",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundConvictionLock",
-      "group": "fund-phase6",
-      "role": "conviction-lock",
-      "address": "0x5D65f992AC4BfD2fA7Ed335E68F2523889987f45",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x5D65f992AC4BfD2fA7Ed335E68F2523889987f45",
-      "verification": "exact match",
-      "source": "src/fund/phase5/FundConvictionLock.sol",
-      "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
-      "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
-      "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 4. Lock a share 30/90/180 days for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundCarryRights",
-      "group": "fund-phase6",
-      "role": "carry-rights",
-      "address": "0xE4808a20F88E14fab12e05e8AB516ceC45786c0f",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xE4808a20F88E14fab12e05e8AB516ceC45786c0f",
-      "verification": "exact match",
-      "source": "src/fund/phase5/FundCarryRights.sol",
-      "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
-      "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
-      "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 3. ERC-721 carry token for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    },
-    {
-      "name": "FundNavFloor",
-      "group": "fund-phase6",
-      "role": "nav-floor",
-      "address": "0x3faD1ccEaE1Ce77A56Ce9296D267Ddc99d006d11",
-      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x3faD1ccEaE1Ce77A56Ce9296D267Ddc99d006d11",
-      "verification": "exact match",
-      "source": "src/fund/phase5/FundNavFloor.sol",
-      "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
-      "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
-      "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 5. Queue a share 1 day, then exit/refund in-kind for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
-      "documentedIn": ["deployments/robinhood-chain.json"]
-    }
-
-  ]
+  {
+   "name": "PolydashFactory",
+   "group": "polypad-launchpad",
+   "role": "current",
+   "address": "0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xfDfD0A095966c8B56639f7eAa13f4B0188Fc08c2",
+   "verification": "match",
+   "source": "polypad/contracts/src/PolydashFactory.sol",
+   "notes": "Current launch factory. Permissionless createLaunch. Creator fee cap 500 bps.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json",
+    "docs/AGENTS_LAUNCH.md"
+   ]
+  },
+  {
+   "name": "PolydashLaunch",
+   "group": "polypad-launchpad",
+   "role": "current-implementation",
+   "address": "0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x2e0026da8f2E151f63A4313aCD1a579172D9D2Ad",
+   "verification": "match",
+   "source": "polypad/contracts/src/PolydashLaunch.sol",
+   "notes": "Current launch implementation. Launches are EIP-1167 clones.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json"
+   ]
+  },
+  {
+   "name": "PolydashHook",
+   "group": "polypad-launchpad",
+   "role": "current",
+   "address": "0x4d3066bBfF889023def912D2fDe36c44357fA0cC",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x4d3066bBfF889023def912D2fDe36c44357fA0cC",
+   "verification": "match",
+   "source": "polypad/contracts/src/PolydashHook.sol",
+   "notes": "Current Uniswap V4 hook used after graduation.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json"
+   ]
+  },
+  {
+   "name": "PolydashCommitVault",
+   "group": "polypad-launchpad",
+   "role": "current",
+   "address": "0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xF013bF17D511E2f65D0dA4Bd320948646F567Ae4",
+   "verification": "match",
+   "sourcifyName": "PolydashCommitVault",
+   "notes": "Listed in the root README as the current commit vault. Sourcify contract name is PolydashCommitVault (solc 0.8.26, match). This address is not the commit-vault entry in polypad/deployments.json.",
+   "documentedIn": [
+    "README.md"
+   ]
+  },
+  {
+   "name": "PolydashFactory",
+   "group": "polypad-launchpad",
+   "role": "earlier",
+   "address": "0x2C84cFCD8d283EF750E09Fbed735d67F67845dB2",
+   "sourcify": "https://repo.sourcify.dev/4663/0x2c84cfcd8d283ef750e09fbed735d67f67845db2",
+   "verification": "match",
+   "notes": "Earlier launch factory. Creator fee cap 200 bps. Launches created here stay listed.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json"
+   ]
+  },
+  {
+   "name": "PolydashLaunch",
+   "group": "polypad-launchpad",
+   "role": "earlier-implementation",
+   "address": "0xef7684268f13bc06cb02755642ceabef422b8b70",
+   "sourcify": "https://repo.sourcify.dev/4663/0xef7684268f13bc06cb02755642ceabef422b8b70",
+   "verification": "match",
+   "notes": "Earlier launch implementation.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json"
+   ]
+  },
+  {
+   "name": "PolydashHook",
+   "group": "polypad-launchpad",
+   "role": "earlier",
+   "address": "0x04990E6671C98e1B43034E52366Af11396d960CC",
+   "sourcify": "https://repo.sourcify.dev/4663/0x04990e6671c98e1b43034e52366af11396d960cc",
+   "verification": "match",
+   "notes": "Earlier Uniswap V4 hook.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json"
+   ]
+  },
+  {
+   "name": "PolydashCommitVault",
+   "group": "polypad-launchpad",
+   "role": "earlier",
+   "address": "0x8f125c9ec7acd52b9cd39f2a7441085559d84104",
+   "sourcify": "https://repo.sourcify.dev/4663/0x8f125c9ec7acd52b9cd39f2a7441085559d84104",
+   "verification": "match",
+   "notes": "Commit vault deployed with the earlier factory. This is the PolydashCommitVault entry in polypad/deployments.json. Constructor argument is the earlier factory.",
+   "documentedIn": [
+    "README.md",
+    "polypad/README.md",
+    "polypad/deployments.json"
+   ]
+  },
+  {
+   "name": "PolypadNFTFactory",
+   "group": "nfts",
+   "role": "factory",
+   "address": "0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x297c232F2EBCbB4e3Cd0b97167a971fF795EDdDd",
+   "verification": "match",
+   "sourcifyName": "PolypadNFTFactory",
+   "notes": "Listed in the README as the NFT factory. Source is not in this repository.",
+   "documentedIn": [
+    "README.md",
+    "test/fork/CreatorFork.t.sol"
+   ]
+  },
+  {
+   "name": "PolypadCurveFactory",
+   "group": "nfts",
+   "role": "factory",
+   "address": "0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x8bdb1d8Db9aeC18bB464F719d5Bd97cFf8F1Ee94",
+   "verification": "match",
+   "sourcifyName": "PolypadCurveFactory",
+   "notes": "Listed in the README as the NFT bonding-curve factory. Source is not in this repository.",
+   "documentedIn": [
+    "README.md",
+    "test/fork/CreatorFork.t.sol"
+   ]
+  },
+  {
+   "name": "PolypadNFTMarket",
+   "group": "nfts",
+   "role": "marketplace",
+   "address": "0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x4Ff1d0E3Aa767C05b2D9983e14dDbC243CB0120A",
+   "verification": "match",
+   "sourcifyName": "PolypadNFTMarket",
+   "notes": "Listed in the README as the NFT marketplace. Source is not in this repository.",
+   "documentedIn": [
+    "README.md"
+   ]
+  },
+  {
+   "name": "PolypadTokenLink",
+   "group": "nfts",
+   "role": "token-link",
+   "address": "0xCD96D8e10a82b41A08342c03a176c20336bD0b38",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xCD96D8e10a82b41A08342c03a176c20336bD0b38",
+   "verification": "match",
+   "sourcifyName": "PolypadTokenLink",
+   "notes": "Listed in the README as NFT token rewards. Sourcify contract name is PolypadTokenLink. Source is not in this repository.",
+   "documentedIn": [
+    "README.md"
+   ]
+  },
+  {
+   "name": "PolydashStakingFactoryV2",
+   "group": "staking",
+   "role": "current",
+   "address": "0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0",
+   "sourcify": "https://repo.sourcify.dev/4663/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0",
+   "verification": "exact match",
+   "source": "src/v2/PolydashStakingFactoryV2.sol",
+   "notes": "Recommended factory for new pools. Source is byte-for-byte the verified source. See src/v2/README.md.",
+   "documentedIn": [
+    "README.md",
+    "src/v2/README.md",
+    "docs/ARCHITECTURE.md"
+   ]
+  },
+  {
+   "name": "PolydashStakingPoolV2",
+   "group": "staking",
+   "role": "example-pool",
+   "address": "0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518",
+   "source": "src/v2/PolydashStakingPoolV2.sol",
+   "notes": "Example pool deployed by the V2 factory, not a proxy. Pools are not individually verified on the explorer. Runtime bytecode check is described in src/v2/README.md. The factory can have more pools than this list.",
+   "documentedIn": [
+    "src/v2/README.md"
+   ]
+  },
+  {
+   "name": "PolydashStakingPoolV2",
+   "group": "staking",
+   "role": "example-pool",
+   "address": "0x0F50043E172B8652bb786C4F14f30c415E5760AB",
+   "source": "src/v2/PolydashStakingPoolV2.sol",
+   "notes": "Example pool deployed by the V2 factory. See src/v2/README.md.",
+   "documentedIn": [
+    "src/v2/README.md",
+    "test/fork/BuybackFork.t.sol"
+   ]
+  },
+  {
+   "name": "PolydashStakingFactory",
+   "group": "staking",
+   "role": "legacy",
+   "address": "0x0aAEa47d2e7303EC5a809062eafa59e7F011D857",
+   "source": "src/PolydashStakingFactory.sol",
+   "notes": "Legacy v1 factory. Do not use for new pools, and do not use it with 6-decimal reward tokens. Not yet verified on the explorer. See the warning in the README.",
+   "documentedIn": [
+    "README.md",
+    "docs/AUDIT_SCOPE.md",
+    "SECURITY.md"
+   ]
+  },
+  {
+   "name": "NftStakingFactory",
+   "group": "creator",
+   "role": "factory",
+   "address": "0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1",
+   "sourcify": "https://repo.sourcify.dev/4663/0x827b9BB6a176D13Ea7E05b8e5891c8040cb822B1",
+   "verification": "exact match",
+   "source": "src/nftstaking/",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/nftstaking/README.md"
+   ]
+  },
+  {
+   "name": "CreatorVestingFactory",
+   "group": "creator",
+   "role": "factory",
+   "address": "0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022",
+   "sourcify": "https://repo.sourcify.dev/4663/0xbbF618395E6C7ac0E9AC6dBEC26BA8cd160d7022",
+   "verification": "exact match",
+   "source": "src/vesting/",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/vesting/README.md"
+   ]
+  },
+  {
+   "name": "CreatorBondFactory",
+   "group": "creator",
+   "role": "factory",
+   "address": "0x876170251e30F99E27119AF0e90648A88D508f97",
+   "sourcify": "https://repo.sourcify.dev/4663/0x876170251e30F99E27119AF0e90648A88D508f97",
+   "verification": "exact match",
+   "source": "src/bond/",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/bond/README.md"
+   ]
+  },
+  {
+   "name": "PolypadGatedNFTFactory",
+   "group": "creator",
+   "role": "factory",
+   "address": "0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d",
+   "sourcify": "https://repo.sourcify.dev/4663/0x64727D49FB9F8E669C0759B9b8e8f1bd6c99325d",
+   "verification": "exact match",
+   "source": "src/gatedmint/",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/gatedmint/README.md"
+   ]
+  },
+  {
+   "name": "TreasuryRulesFactory",
+   "group": "creator",
+   "role": "factory",
+   "address": "0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f",
+   "sourcify": "https://repo.sourcify.dev/4663/0x2A06dafEd9A5CaBC7693683E24025f96D7AF656f",
+   "verification": "exact match",
+   "source": "src/treasury/",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/treasury/README.md"
+   ]
+  },
+  {
+   "name": "TreasuryRules",
+   "group": "creator",
+   "role": "implementation",
+   "address": "0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb",
+   "sourcify": "https://repo.sourcify.dev/4663/0x77Ef2141D3d79e2D2b9a094D2C6d2aab826D4ccb",
+   "verification": "exact match",
+   "source": "src/treasury/",
+   "notes": "Implementation created by TreasuryRulesFactory. Treasury vaults are EIP-1167 clones.",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/treasury/README.md"
+   ]
+  },
+  {
+   "name": "PolypadTokenFloorFactory",
+   "group": "floor-vault",
+   "role": "factory",
+   "address": "0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c",
+   "sourcify": "https://repo.sourcify.dev/4663/0xdD149A1a76363BaAaFEF97c3E8d8cfdD2E7A277c",
+   "verification": "match",
+   "source": "src/floorvault/",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/floorvault/README.md"
+   ]
+  },
+  {
+   "name": "PolypadTokenFloorCollection",
+   "group": "floor-vault",
+   "role": "implementation",
+   "address": "0xFa23E496f7244d1674fA8bE5C42556bd054140EA",
+   "sourcify": "https://repo.sourcify.dev/4663/0xFa23E496f7244d1674fA8bE5C42556bd054140EA",
+   "verification": "match",
+   "source": "src/floorvault/",
+   "notes": "Implementation created by PolypadTokenFloorFactory. Collections are EIP-1167 clones.",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/floorvault/README.md"
+   ]
+  },
+  {
+   "name": "PolydashBuybackVault",
+   "group": "buybacks",
+   "role": "vault",
+   "address": "0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193",
+   "sourcify": "https://repo.sourcify.dev/4663/0x35Ad6AC64fb53ED7154b6e6E0Ef84C6E12d7B193",
+   "verification": "match",
+   "source": "src/buyback/PolydashBuybackVault.sol",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/buyback/README.md"
+   ]
+  },
+  {
+   "name": "PolydashRewardsPool",
+   "group": "buybacks",
+   "role": "rewards-pool",
+   "address": "0x608d106Bb58A804fcd45823e0C6087801dee2aCa",
+   "sourcify": "https://repo.sourcify.dev/4663/0x608d106Bb58A804fcd45823e0C6087801dee2aCa",
+   "verification": "match",
+   "source": "src/buyback/PolydashRewardsPool.sol",
+   "documentedIn": [
+    "docs/CREATOR_CONTRACTS.md",
+    "src/buyback/README.md"
+   ]
+  },
+  {
+   "name": "FundFactory",
+   "group": "fund",
+   "role": "factory",
+   "address": "0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878",
+   "verification": "exact match",
+   "source": "src/fund/",
+   "notes": "Phase 1a raise/mint only. FundVault and FundNFT are created per fund by createFund. Deploy tx 0x3b02110bb45f421591c6712ce4498b5533286cbaf4d46581a1ed0c6deea49bf3. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify is the verification of record. This factory is not the Phase 2 factory.",
+   "documentedIn": [
+    "README.md",
+    "docs/DEPLOYMENTS.md",
+    "docs/CREATOR_CONTRACTS.md",
+    "src/fund/README.md"
+   ]
+  },
+  {
+   "name": "FundSwapFacet",
+   "group": "fund-phase2",
+   "role": "swap-facet",
+   "address": "0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0",
+   "verification": "exact match",
+   "source": "src/fund/phase2/FundSwapFacet.sol",
+   "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+   "deployTx": "0x662d664a123b146f13f7e35ee20a3d3c0841f603ec522a969b2ed404464c9012",
+   "notes": "Phase 2 swap body. Vaults delegatecall it. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 at nonce 34. Creation bytecode matches that commit (solc 0.8.24, via-IR, optimizer 200, Paris). Security scan, not a review: docs/security/phase2-live-scan.md.",
+   "documentedIn": [
+    "docs/security/phase2-live-scan.md",
+    "docs/DEPLOYMENTS.md",
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "UniswapV3RouterAdapter",
+   "group": "fund-phase2",
+   "role": "router-adapter",
+   "address": "0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581",
+   "verification": "exact match",
+   "source": "src/fund/phase2/UniswapV3RouterAdapter.sol",
+   "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+   "deployTx": "0x351a70eccbff7dbcc82c214ab769b17d06d99b69d025db7b4e5cdd5ba9b1cb47",
+   "notes": "Adapts SwapRouter02 0xCaf681a66D020601342297493863E78C959E5cb2 to IFundSwapRouter.swap. Nonce 35. WETH 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. This adapter is the allowlisted router. Raw SwapRouter02 is not allowlisted.",
+   "documentedIn": [
+    "docs/security/phase2-live-scan.md",
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "FundAllowlist",
+   "group": "fund-phase2",
+   "role": "allowlist",
+   "address": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+   "verification": "exact match",
+   "source": "src/fund/phase2/FundAllowlist.sol",
+   "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+   "deployTx": "0x63ef73531d00c303869cfe38de6e45316a4f0aa8cf59366a241214d8a263ec03",
+   "notes": "Nonce 36. Owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. Delay 172800 seconds. Quote WETH. One router, the adapter. No non-quote asset and no feed. Later edits wait the delay. The delay cannot be shortened.",
+   "documentedIn": [
+    "docs/security/phase2-live-scan.md",
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "FundFactoryInvest",
+   "group": "fund-phase2",
+   "role": "factory",
+   "address": "0xd3c6ae470c25989cC8d2876c1855fB570B98894E",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xd3c6ae470c25989cC8d2876c1855fB570B98894E",
+   "verification": "exact match",
+   "source": "src/fund/phase2/FundFactoryInvest.sol",
+   "sourceCommit": "e4ceacaab5175bc4e7724fafe3fedc8831085563",
+   "deployTx": "0xaeae5c14d51d7d81ed44bf3f2c6f1e7babfc05246b8307a7b33c283cc71c32fd",
+   "notes": "Nonce 37. Owner and feeRecipient 0x9a21c75aC263cC43125E70200636f6397f8776d0. Protocol fee 20 bps. Fund count 0 at scan. vaultDeployer 0x111aC00A91944477141aDe12ebB6BcB0CEFC3a95. nftDeployer 0x5766A7A937D0De897C2d90df0D045f9067fd72D5. Does not replace the Phase 1a factory.",
+   "documentedIn": [
+    "docs/security/phase2-live-scan.md",
+    "docs/DEPLOYMENTS.md",
+    "polypad/web/lib/fund/address.ts"
+   ]
+  },
+  {
+   "name": "StrategyTemplate",
+   "group": "fund-phase3",
+   "role": "template",
+   "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+   "verification": "exact match",
+   "source": "src/fund/phase3/StrategyTemplate.sol",
+   "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
+   "deployTx": "0x6cf3598a2be973c1f35a6febc015e432b5e5efb6b894a4e578c7a7c40cf01265",
+   "notes": "Nonce 38 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Owner is that wallet. Sourcify exact match on 2026-11-09. Does not change Phase 2.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md",
+    "docs/PHASE3.md",
+    "polypad/web/lib/fund/address.ts"
+   ]
+  },
+  {
+   "name": "FundSwapFacetPhase3",
+   "group": "fund-phase3",
+   "role": "swap-facet",
+   "address": "0x40Ef3ae910A46aDDC14f45F0983060161884f045",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x40Ef3ae910A46aDDC14f45F0983060161884f045",
+   "verification": "exact match",
+   "source": "src/fund/phase3/FundSwapFacetPhase3.sol",
+   "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
+   "deployTx": "0xad686b96634519ad554b7a39a8c4f0259c32e45df7f787acae1486188528f6b5",
+   "notes": "Nonce 39. No constructor arguments. Sourcify exact match. Not the live Phase 2 facet.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md",
+    "docs/PHASE3.md",
+    "polypad/web/lib/fund/address.ts"
+   ]
+  },
+  {
+   "name": "FundFactoryPhase3",
+   "group": "fund-phase3",
+   "role": "factory",
+   "address": "0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B",
+   "verification": "exact match",
+   "source": "src/fund/phase3/FundFactoryPhase3.sol",
+   "sourceCommit": "0848c9c6271537ad5601415ad9f43fed5280169c",
+   "deployTx": "0x51afc05a8d6bca09ecaafb2dc08b8fcb87ed93d30bd872e5349de014b699cdd5",
+   "notes": "Nonce 40. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x40Ef3ae910A46aDDC14f45F0983060161884f045. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. Protocol fee 20 bps. Sourcify exact match. Does not replace the Phase 1a or Phase 2 factories.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md",
+    "docs/PHASE3.md",
+    "polypad/web/lib/fund/address.ts"
+   ]
+  },
+  {
+   "name": "FundPhase4",
+   "group": "fund-phase4",
+   "role": "addon",
+   "address": "0x3cd372e32Da71321D795a32b244eAa16724531dB",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x3cd372e32Da71321D795a32b244eAa16724531dB",
+   "verification": "exact match",
+   "source": "src/fund/phase4/FundPhase4.sol",
+   "sourceCommit": "8786fac1775c66d77deb3138771a740b3e466d0a",
+   "deployTx": "0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653",
+   "notes": "Nonce 44 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Constructor arg is the live Phase 3 factory 0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B. Constructor also creates FundShareAccount. Does not modify Phase 1, Phase 2, or Phase 3 contracts. Sourcify exact match on 2026-11-09 (America/Los_Angeles).",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md",
+    "docs/PHASE4.md",
+    "docs/PHASE4_ABACUS_PROMPT.md"
+   ]
+  },
+  {
+   "name": "FundShareAccount",
+   "group": "fund-phase4",
+   "role": "share-account-implementation",
+   "address": "0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xC189EBc950D3e3EE7AbBd597060C36DD3E06295E",
+   "verification": "exact match",
+   "source": "src/fund/phase4/FundShareAccount.sol",
+   "sourceCommit": "8786fac1775c66d77deb3138771a740b3e466d0a",
+   "deployTx": "0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5284a16653",
+   "notes": "Created inside the FundPhase4 constructor (CREATE nonce 1 of 0x3cd372e32Da71321D795a32b244eAa16724531dB). Canonical ERC-6551 registry is 0x000000006551c19487814612e58FE06813775758. Sourcify exact match on 2026-11-09 (America/Los_Angeles).",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md",
+    "docs/PHASE4.md",
+    "docs/PHASE4_ABACUS_PROMPT.md"
+   ]
+  },
+  {
+   "name": "UniswapV3TwapFeed (PONS)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0xf62E32C96cB4A86EEE7e5cC037bFD37E852965ED",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xf62E32C96cB4A86EEE7e5cC037bFD37E852965ED",
+   "verification": "not checked",
+   "source": "src/fund/growth/UniswapV3TwapFeed.sol",
+   "deployTx": "0x6a37a6139b25d4b3938d1e659392ed44780ac138b10ba45d09158248634811e7",
+   "notes": "V3 TWAP feed for PONS (pool 0x10CC6BD38112cAc182db90B6a71d8Bb5939526bA, 1% fee, WETH-quoted). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 4 queued 2026-11-12 (tx 0x02eaa56e7a2708f99b0a9c9ee768c204f5b03bd98d5926e9cfb8a4be0c809d49), band 36,920,000,000,000-147,680,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 09:02 PST. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployAllowlistBatchV3.s.sol. Batch of 4 V3 tokens Jon approved 2026-11-12; the 4 V4 tokens (TIBBIR, ORBIO, TORCH, FOBO) are blocked (ETH/USD G-quoted pools, existing V4 feed/adapter serve WETH pools only) pending contract work.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "UniswapV3TwapFeed (CASHCAT)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0xF523C9750583419b78346C229d388d5DaCfde962",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xF523C9750583419b78346C229d388d5DaCfde962",
+   "verification": "not checked",
+   "source": "src/fund/growth/UniswapV3TwapFeed.sol",
+   "deployTx": "0x377d5979fae7011cb8e743408b1d2ea0c1a4b872db90b44563c4082d3953e168",
+   "notes": "V3 TWAP feed for CASHCAT (pool 0xA70fc67C9F69da90B63a0e4C05D229954574E313, 1% fee, WETH-quoted). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 5 queued 2026-11-12 (tx 0x3e86e66645576a51171930db781b9da2e6031ddafc9b88100f780f8e5f4e526e), band 12,655,000,000,000-50,620,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 09:02 PST.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "UniswapV3TwapFeed (WALLET)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0xDeA5850B516e5F8Afbd21e26C6d2456E3ad027B6",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xDeA5850B516e5F8Afbd21e26C6d2456E3ad027B6",
+   "verification": "not checked",
+   "source": "src/fund/growth/UniswapV3TwapFeed.sol",
+   "deployTx": "0x73648acdba7c36d965c4c5a2308007638a45f12c03314a8409c1fdacc0aaa365",
+   "notes": "V3 TWAP feed for WALLET (pool 0x9501A20Bedb8beA0798FE5D4c411f5e270965D49, 1% fee, WETH-quoted). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 6 queued 2026-11-12 (tx 0xa619d8c570dcc4dbedd854692585b4ab36d824a5b36136fbed8761c4b49bc2a7), band 3,060,500,000,000-12,242,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 09:02 PST.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "UniswapV3TwapFeed (PIPEDOG)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0xFEb8324DBd32D14C79bca9BAFC510B32C24451F7",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xFEb8324DBd32D14C79bca9BAFC510B32C24451F7",
+   "verification": "not checked",
+   "source": "src/fund/growth/UniswapV3TwapFeed.sol",
+   "deployTx": "0x702c60b4c0175600b82a503e740064a9f19615376bba9d628c0f74f968110027",
+   "notes": "V3 TWAP feed for PIPEDOG (pool 0xB7f10f74B39291b9290b779978e19A7637C742D6, 1% fee, WETH-quoted). 6h TWAP window/age (21600) because the pool is deep but quiet (~48 tx/day); a 30-min feed failed closed with PriceUnavailable. Allowlist proposal 7 queued 2026-11-12 (tx 0x87dec8c0e72e1ebf098c93e04d360cec3857f3f1de7cc8d8457baf28296f14db), band 83,650,000,000-334,600,000,000 priceX18, maxStale 3600, executable 2026-11-14 09:02 PST.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "GenericV4RouterAdapter",
+   "group": "fund-phase6",
+   "role": "router-adapter",
+   "address": "0x5B79f2A4f3dBAFd463065D31EaA95aC6675D2429",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x5B79f2A4f3dBAFd463065D31EaA95aC6675D2429",
+   "verification": "not checked",
+   "source": "src/fund/growth/GenericV4RouterAdapter.sol",
+   "deployTx": "0x18e306798c45f1c3667afcbe9be55f99e09fcae20688b2fbe39ad13ecf36476b",
+   "notes": "Generic V4 router adapter (pool key passed per call; ETH/WETH wrap/unwrap; either token ordering; tax-aware by measurement). One deployment serves every V4 pool. Allowlist proposal 12 queued 2026-11-12 (tx 0xa7be8c6f6942f0419fb33ed12ea63cd3c04606a8efcd3fef97a969b7fc668eab), executable 2026-11-14 14:35 PST. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployGenericV4.s.sol.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "UniswapV3TwapFeed (USDG/WETH reference)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0xBf3e62DBd9Ce598d8Bdb4346701b8A67Bb35212a",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xBf3e62DBd9Ce598d8Bdb4346701b8A67Bb35212a",
+   "verification": "not checked",
+   "source": "src/fund/growth/UniswapV3TwapFeed.sol",
+   "deployTx": "0x585e14aa549585f7602bfeb9b3c97cb6edb8b285ddf731ff4b5091c502962d1d",
+   "notes": "V3 TWAP feed for USDG/WETH (pool 0x52e65B17fB6E5BA00Ed806f37Afcd2DaA50271Ca, fee 100). Reference feed the ORBIO V4 feed converts through so ORBIO prices stay WETH-denominated. Reads the pool's own observations; the keeper does NOT poke it. twapWindow 1800, maxObservationAge 1800. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployGenericV4.s.sol.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "GenericV4TwapFeed (TIBBIR)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0x02a860B295c0266b735AcF566A522AE8929002e0",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x02a860B295c0266b735AcF566A522AE8929002e0",
+   "verification": "not checked",
+   "source": "src/fund/growth/GenericV4TwapFeed.sol",
+   "deployTx": "0xdc768e5cbb9ac12145e892e8cd3c15a829075a3f5bfe2ba10fbbe0e26cbb9b03",
+   "notes": "Generic V4 TWAP feed for TIBBIR (ETH-quoted V4 pool, fee 3000, tickSpacing 60, hook 0x88e5d1cf9907acD48E7C81ff6eBC088aD358a5cc). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 8 queued 2026-11-12 (tx 0x1db61763e5d6448c346e68e3b1a53634643d14a792245134287703851ae044a8), band 37,000,000,000,000-148,100,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 14:35 PST. Poked at deploy (tx 0x2cac799d13fac248052192572055ab901b51334650bf0699c4327238563e737a); keeper pokes every 15 min. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployGenericV4.s.sol.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "GenericV4TwapFeed (TORCH)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0xc1d960dE6697D318fcDa85dEc0A4D35914fdD3f0",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xc1d960dE6697D318fcDa85dEc0A4D35914fdD3f0",
+   "verification": "not checked",
+   "source": "src/fund/growth/GenericV4TwapFeed.sol",
+   "deployTx": "0x44abcb73cde6f2241a93f3cb652062c7c4498f5d5ca4ff2b3325aede0afa7f93",
+   "notes": "Generic V4 TWAP feed for TORCH (ETH-quoted V4 pool, fee 3000, tickSpacing 60, hookless; token has a 2% buy tax, handled by the adapter's measured-output). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 9 queued 2026-11-12 (tx 0x8812aaa055a0828486c61759fec1d6d63f669e9607abbab7181a0ed25d055e35), band 918,000,000,000-3,672,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 14:35 PST. Poked at deploy (tx 0x750175bc6a028ae93d01f15acae7217cf238d90afc2917c6083c0a4ac53f8de1); keeper pokes every 15 min. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployGenericV4.s.sol.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "GenericV4TwapFeed (FOBO)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0x0314809D9e6D73Dc13512E91391dadE06D4e8e2d",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x0314809D9e6D73Dc13512E91391dadE06D4e8e2d",
+   "verification": "not checked",
+   "source": "src/fund/growth/GenericV4TwapFeed.sol",
+   "deployTx": "0x42bae260e47c991eba93b2a4da089a6654e412e41428dc1bdd7ebfb5b6a9d389",
+   "notes": "Generic V4 TWAP feed for FOBO (ETH-quoted V4 pool, fee 0, tickSpacing 60, hook 0x0Af57F62982D03066ef917AcAd87F771c06528Ec with a 2.5% swap tax, handled by the adapter's measured-output). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 10 queued 2026-11-12 (tx 0x9f7b3706fa3bee48393742c9500718a6f367bdc6405565200d6df74fa5e8ec52), band 489,000,000,000-1,957,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 14:35 PST. Poked at deploy (tx 0x9bb30d04d41500df4ee3f1b816e687f0b81953296ca6206a797a930fb9183f65); keeper pokes every 15 min. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployGenericV4.s.sol.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  },
+  {
+   "name": "GenericV4TwapFeed (ORBIO)",
+   "group": "fund-phase6",
+   "role": "twap-feed",
+   "address": "0x463A5d50AAf56dB5FF87361c5bC0D1edfe96a285",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x463A5d50AAf56dB5FF87361c5bC0D1edfe96a285",
+   "verification": "not checked",
+   "source": "src/fund/growth/GenericV4TwapFeed.sol",
+   "deployTx": "0xb8dc93ad9fc1c0d0d45069466e3d019ea9e40e05bf6c0ebcaf7467ca40fba33c",
+   "notes": "Generic V4 TWAP feed for ORBIO (USDG-quoted V4 pool, fee 8000, tickSpacing 80, hookless; converts via the USDG/WETH reference feed 0xBf3e62DBd9Ce598d8Bdb4346701b8A67Bb35212a so prices stay WETH-denominated). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 11 queued 2026-11-12 (tx 0x5cd722cef7dc58a9e67772f61eebce418dde181e5410e4cd4bfd4e7b94f7db2f), band 7,100,000,000,000-28,400,000,000,000 priceX18, maxStale 3600, executable 2026-11-14 14:35 PST. Poked at deploy (tx 0x0ae14836c9477e9b4e7899684a02e14a7108cd2bdb6256f6413c37cf9b981c9b); keeper pokes every 15 min. Feed + allowlist only: the adapter cannot buy ORBIO from a WETH-only vault (needs a USDG holding or a two-hop). Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployGenericV4.s.sol.",
+   "documentedIn": [
+    "docs/DEPLOYMENTS.md"
+   ]
+  }
+ ],
+ "referenced": [
+  {
+   "name": "Uniswap V4 PoolManager",
+   "address": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+   "notes": "Third-party contract on Robinhood Chain, recorded in polypad/contracts/README.md. Not a Polydash deployment.",
+   "documentedIn": [
+    "polypad/contracts/README.md"
+   ]
+  },
+  {
+   "name": "Uniswap V4 PositionManager",
+   "address": "0x58daec3116aae6D93017bAAea7749052E8a04fA7",
+   "notes": "Third-party contract on Robinhood Chain, recorded in polypad/contracts/README.md. Not a Polydash deployment.",
+   "documentedIn": [
+    "polypad/contracts/README.md"
+   ]
+  },
+  {
+   "name": "Platform fee wallet",
+   "address": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+   "notes": "Wallet recorded as a constructor argument of the launch factories in polypad/README.md. Also the owner and feeRecipient of FundFactory. Not a product contract.",
+   "documentedIn": [
+    "polypad/README.md",
+    "src/buyback/README.md",
+    "src/fund/README.md"
+   ]
+  },
+  {
+   "name": "POLYDASH/WETH pool hook",
+   "address": "0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc",
+   "notes": "Hook address recorded for the buyback vault's POLYDASH/WETH pool in src/buyback/README.md.",
+   "documentedIn": [
+    "src/buyback/README.md",
+    "test/fork/BuybackFork.t.sol"
+   ]
+  },
+  {
+   "name": "FundSwapFacetPhase3V2",
+   "group": "fund-phase6",
+   "role": "swap-facet",
+   "address": "0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7",
+   "verification": "exact match",
+   "source": "src/fund/phase3/FundSwapFacetPhase3V2.sol",
+   "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+   "deployTx": "0xc92c6bc47d3f713b42c1b185da279b3fd7e4ffd4456bab56c43b21c1234bebf1",
+   "notes": "Nonce 46 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V2 swap facet for manager-proposed assets (Option 3). Same interface as FundSwapFacetPhase3 plus proposal-gated buys and sell-after-removal. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundFactoryPhase3V2",
+   "group": "fund-phase6",
+   "role": "factory",
+   "address": "0xe50Da719947E83f316977d9c425DF95672E7B27e",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xe50Da719947E83f316977d9c425DF95672E7B27e",
+   "verification": "exact match",
+   "source": "src/fund/phase3/FundFactoryPhase3V2.sol",
+   "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+   "deployTx": "0x27d76e70d63541618f3d6d672be292bab752c7b61cec77cf9c7d0ef00557a314",
+   "notes": "Nonce 47 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. feeRecipient and owner 0x9a21c75aC263cC43125E70200636f6397f8776d0. allowlist 0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19. weth 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73. swapFacet 0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7. templates 0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba. New factory alongside the live Phase 3 factory; does not replace it. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "PolydashTwapFeed",
+   "group": "fund-phase6",
+   "role": "price-feed",
+   "address": "0x5FDE0DB5AAFa8E20E76ca0D763C2c3eD49Af84fC",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x5FDE0DB5AAFa8E20E76ca0D763C2c3eD49Af84fC",
+   "verification": "exact match",
+   "source": "src/fund/growth/PolydashTwapFeed.sol",
+   "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+   "deployTx": "0x4dfa8884248433ca15beb5ea77d8031cefc556d12c406063bf172946c34810d4",
+   "notes": "Nonce 48 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Self-observing 30-min TWAP feed for the POLYDASH/WETH Uniswap V4 pool (poolId 0xc37d18932ac3bf4d8482ae1b210bbc640a367e708fedda95cfa6724f685274b5, hook 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc, dynamic fee 0x800000, tickSpacing 200). latestPrice reverts until poked; a poke keeper is required (poke every ~15 min) or the feed fails closed within 30 min. Allowlist proposal id 1 (POLYDASH asset, band 60,000,000-260,000,000 priceX18, maxStale 3600) queued 2026-11-10, executable 2026-11-12 07:17 PST. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "UniswapV4RouterAdapter",
+   "group": "fund-phase6",
+   "role": "swap-router",
+   "address": "0x25EB10357213f17b2862b54773287fccfeb92B7a",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x25EB10357213f17b2862b54773287fccfeb92B7a",
+   "verification": "exact match",
+   "source": "src/fund/growth/UniswapV4RouterAdapter.sol",
+   "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+   "deployTx": "0xf3ed2caf9328131fbf046f963e99bec4e2824194e83af83129151d09214ee137",
+   "notes": "Nonce 49 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V4 router adapter for the POLYDASH/WETH pool (PoolManager 0x8366a39CC670B4001A1121B8F6A443A643e40951, hook 0x48B8F6AD3A1b4aA477314c9a23035b8F84dDe8cc, dynamic fee 0x800000, tickSpacing 200). Allowlist proposal id 2 (router, allowed) queued 2026-11-10, executable 2026-11-12 07:17 PST. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "UniswapV3TwapFeed",
+   "group": "fund-phase6",
+   "role": "price-feed",
+   "address": "0x2707FdBdf3e108c0040150D712E385B59Fd3dA2C",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x2707FdBdf3e108c0040150D712E385B59Fd3dA2C",
+   "verification": "exact match",
+   "source": "src/fund/growth/UniswapV3TwapFeed.sol",
+   "sourceCommit": "879bac7f020cbf4e783a62c2d12ce42ae31220b0",
+   "deployTx": "0x596565f0c845917cc92623393875e974818ba3c344160884f9dc4b3e85fd367b",
+   "notes": "Nonce 52 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. V3 TWAP feed for the RNJ/WETH Pons V1 pool (pool 0x4d59CFd33331A4d9611274b5997099b57DDd445c, RNJ 0x66e3F409c0bf871b26977a85f7287839748699dD, 30-min window). Deployed 2026-11-10, block 110992490. Allowlist proposal id 3 (RNJ asset, band 2,327,107,335-9,308,429,342 priceX18, maxStale 3600) queued 2026-11-10, executable 2026-11-12 07:40 PST. The V3 adapter 0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581 needed no proposal - already an allowed router since Phase 2. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "Template #2 (Polydash Growth Fund)",
+   "group": "fund-phase6",
+   "role": "strategy-template",
+   "templateId": 2,
+   "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+   "mandateUri": "ipfs://bafybeidy4qmoeg2mo4xz2czni7pxgmycv4ttsxt2spgif7pxzp2tv4zmki",
+   "mandateHash": "0xb91e61541569597375f6a8024d337e3fa1b63499660e914b6714969711326c27",
+   "publishTx": "0x4c731fd6d02ec81575706f1540d24bf00c197ed337f65d1dd2bcd55fb3c325e6",
+   "notes": "Nonce 54 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Published 2026-11-10, block 110994365, on the live StrategyTemplate. Assets [POLYDASH] only (WETH is the quote asset and is always in the mandate implicitly). Params: maxPositionBps 8000, maxTradeBps 1000, maxDeviationBps 500, hwmFeeBps 500, maxDrawdownBps 2000, skinLock 2592000 (30 days). Mandate document (Polydash Growth Fund Season 1) pinned to IPFS; CID computed with ipfs-car and the .car bundle saved in the goal workspace. The fund cannot buy POLYDASH until the allowlist executes (Nov 12, 2026 07:17 PST) and the TWAP feed is returning prices (poke keeper live since 2026-11-10 ~07:31 PST).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "Template #3 (0% performance fee)",
+   "group": "fund-phase6",
+   "role": "strategy-template",
+   "templateId": 3,
+   "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+   "mandateUri": "ipfs://bafybeiec5tvugkpmzhrnzsx4dgbbsnfxh4t4cqqnetca6xeoetm6liquhm",
+   "mandateHash": "0x68df4cdec4822f0035090fd2bf637453236e82bfdbd9ffa74df9bc0082770a10",
+   "publishTx": "0x2715822873534fd39aab66a28775bd064707409a8ed3e0ec3eb534dab2f083ea",
+   "notes": "Published 2026-11-12, block 112911792, on the live StrategyTemplate. 0% performance-fee variant of Template #2 — same strategy (assets [POLYDASH], maxPositionBps 8000, maxTradeBps 1000, maxDeviationBps 500, maxDrawdownBps 2000, skinLock 2592000) with hwmFeeBps 0 (no performance fee). Part of the fee menu (0/5/10/20%) so managers pick their own performance fee at creation. Mandate document is Template #2's mandate with only the fee line changed; CID computed with the standard ipfs add (dag-pb unixfs) encoding.",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "Template #4 (10% performance fee)",
+   "group": "fund-phase6",
+   "role": "strategy-template",
+   "templateId": 4,
+   "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+   "mandateUri": "ipfs://bafybeicug6lgvloamdsg5eju3hk23efvah5yuiqteuyrxstjx2fma2g4hy",
+   "mandateHash": "0xfc734273b2aa3a6edf8ec03a58b6adbb32767d1e8e6bd0a27cc8fd6117552796",
+   "publishTx": "0x4607fb0ba464eafd5f6eafebfdc0762c28a8a9c8e96d3a06396e8495c41a92a7",
+   "notes": "Published 2026-11-12, block 112911802, on the live StrategyTemplate. 10% performance-fee variant of Template #2 — same strategy (assets [POLYDASH], maxPositionBps 8000, maxTradeBps 1000, maxDeviationBps 500, maxDrawdownBps 2000, skinLock 2592000) with hwmFeeBps 1000. Part of the fee menu (0/5/10/20%) so managers pick their own performance fee at creation. Mandate document is Template #2's mandate with only the fee line changed; CID computed with the standard ipfs add (dag-pb unixfs) encoding.",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "Template #5 (20% performance fee)",
+   "group": "fund-phase6",
+   "role": "strategy-template",
+   "templateId": 5,
+   "address": "0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba",
+   "mandateUri": "ipfs://bafybeibvdjvhttfrgsxpuwosgqbvsimvuppzsg562kbv26lfzk5vqan5r4",
+   "mandateHash": "0x11fe08a0fd4528a0ecda7e1f771192e922c441d0199568258f3f93165a1f687b",
+   "publishTx": "0x22d50ae78afdef4a3814886dfe4d3ba8f53d517610833639a7a9d6184d29eee2",
+   "notes": "Published 2026-11-12, block 112911813, on the live StrategyTemplate. 20% performance-fee variant of Template #2 — same strategy (assets [POLYDASH], maxPositionBps 8000, maxTradeBps 1000, maxDeviationBps 500, maxDrawdownBps 2000, skinLock 2592000) with hwmFeeBps 2000. Part of the fee menu (0/5/10/20%) so managers pick their own performance fee at creation. Mandate document is Template #2's mandate with only the fee line changed; CID computed with the standard ipfs add (dag-pb unixfs) encoding.",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundPhase5",
+   "group": "fund-phase6",
+   "role": "phase5-v2",
+   "address": "0x0827e73353beb5c688c96723bb33834cac202d0e",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x0827e73353beb5c688c96723bb33834cac202d0e",
+   "verification": "exact match",
+   "source": "src/fund/phase5/FundPhase5.sol",
+   "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
+   "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
+   "notes": "Nonce 55 from 0x9a21c75aC263cC43125E70200636f6397f8776d0. Second FundPhase5 deployment, bound to the V2 factory 0xe50Da719947E83f316977d9c425DF95672E7B27e (via FUND_PHASE3_FACTORY env on the Phase 5 deploy script). Constructor deploys the five modules below. Source checked out from origin/main @ 1dd92ea (the Phase 5 record commit) into the manager-proposed-assets branch for this deploy; the branch itself does not contain Phase 5 history. Deployed 2026-11-10, block 110994796. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundSecondaryMarket",
+   "group": "fund-phase6",
+   "role": "secondary-market",
+   "address": "0xd4976811617274570a9EdB64caAe2575340502b8",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xd4976811617274570a9EdB64caAe2575340502b8",
+   "verification": "exact match",
+   "source": "src/fund/phase5/FundSecondaryMarket.sol",
+   "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
+   "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
+   "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 1. Fixed-price share listings for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash (the deploy compiled phase5 under paris, not the default cancun profile). Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundShareRenderer",
+   "group": "fund-phase6",
+   "role": "share-renderer",
+   "address": "0x67bBA87395577afdA707Aae648C4d2ef36CdF089",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x67bBA87395577afdA707Aae648C4d2ef36CdF089",
+   "verification": "pending - not yet matched on Sourcify as of 2026-11-10 ~08:05 PST (contract has code and is live; verification display only)",
+   "source": "src/fund/phase5/FundShareRenderer.sol",
+   "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
+   "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
+   "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 2. On-chain B&W SVG share art for V2-factory funds. Two paris-profile verification submissions (with --creation-transaction-hash) had not matched as of 2026-11-10 ~08:05 PST; the other four modules matched with the same invocation. Re-check and re-submit before calling verification complete.",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundConvictionLock",
+   "group": "fund-phase6",
+   "role": "conviction-lock",
+   "address": "0x5D65f992AC4BfD2fA7Ed335E68F2523889987f45",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x5D65f992AC4BfD2fA7Ed335E68F2523889987f45",
+   "verification": "exact match",
+   "source": "src/fund/phase5/FundConvictionLock.sol",
+   "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
+   "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
+   "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 4. Lock a share 30/90/180 days for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundCarryRights",
+   "group": "fund-phase6",
+   "role": "carry-rights",
+   "address": "0xE4808a20F88E14fab12e05e8AB516ceC45786c0f",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xE4808a20F88E14fab12e05e8AB516ceC45786c0f",
+   "verification": "exact match",
+   "source": "src/fund/phase5/FundCarryRights.sol",
+   "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
+   "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
+   "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 3. ERC-721 carry token for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  },
+  {
+   "name": "FundNavFloor",
+   "group": "fund-phase6",
+   "role": "nav-floor",
+   "address": "0x3faD1ccEaE1Ce77A56Ce9296D267Ddc99d006d11",
+   "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x3faD1ccEaE1Ce77A56Ce9296D267Ddc99d006d11",
+   "verification": "exact match",
+   "source": "src/fund/phase5/FundNavFloor.sol",
+   "sourceCommit": "1dd92eacd7fe8567c665566dfc10f2f2e42e9d69",
+   "deployTx": "0x1c29dd3bda92f34c65f6f2ea5651b916bfcccc5425e36086552fe0080e3b7669",
+   "notes": "Created inside the FundPhase5 (V2) constructor, CREATE nonce 5. Queue a share 1 day, then exit/refund in-kind for V2-factory funds. Verified with --compilation-profile paris --creation-transaction-hash. Sourcify exact match on 2026-11-10 (America/Los_Angeles).",
+   "documentedIn": [
+    "deployments/robinhood-chain.json"
+   ]
+  }
+ ]
 }

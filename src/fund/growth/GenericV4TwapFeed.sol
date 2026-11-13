@@ -7,6 +7,7 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IFundPriceFeed} from "../phase2/Interfaces.sol";
 import {TwapPriceMath} from "./TwapPriceMath.sol";
 
@@ -16,33 +17,51 @@ interface IERC20Decimals {
 }
 
 /// @title GenericV4TwapFeed (not reviewed, not deployed)
-/// @notice IFundPriceFeed for any asset with a Uniswap V4 pool against WETH on Robinhood Chain.
-///         Generalizes `PolydashTwapFeed` (same self-observing poke / ring / 30-minute window /
-///         fail-closed design — see its NatSpec for the window choice and the manipulation
-///         analysis, which apply unchanged here) with two generalizations:
+/// @notice IFundPriceFeed for any asset with a Uniswap V4 pool on Robinhood Chain,
+///         whatever the pool's quote currency is. Generalizes `PolydashTwapFeed`
+///         (same self-observing poke / ring / 30-minute window / fail-closed design —
+///         see its NatSpec for the window choice and the manipulation analysis, which
+///         apply unchanged here) with three generalizations:
 ///
 ///         1. Currency ordering. The asset may sort either side of the quote: when the asset
 ///            is currency1 the price is the reciprocal of the pool price, as in
-///            `PolydashTwapFeed`; when the asset is currency0 (it sorts below WETH) the pool
-///            price is used directly. `TwapPriceMath.priceX18FromTick` takes the ordering as
-///            a flag, so the inversion is in exactly one place.
-///         2. Decimals. Both tokens' `decimals()` are read at deploy and stored; the price
-///            conversion scales by 10^(quoteDecimals - assetDecimals), so `priceX18` is
-///            correct for any decimal combination (e.g. a 6-decimal stablecoin quoted in
-///            18-decimal WETH). Tokens reporting more than 24 decimals are rejected at
-///            deploy: the scaling factor is bounded and no real token needs more.
+///            `PolydashTwapFeed`; when the asset is currency0 (it sorts below the quote)
+///            the pool price is used directly. `TwapPriceMath.priceX18FromTick` takes
+///            the ordering as a flag, so the inversion is in exactly one place.
+///         2. Decimals. Both tokens' `decimals()` are read at deploy (except native ETH,
+///            which is 18 by definition); the price conversion is in the quote's raw
+///            units per 1e18 raw asset, so `priceX18` is correct for any decimal
+///            combination. Tokens reporting more than 24 decimals are rejected at
+///            deploy: no real token needs more.
+///         3. Quote currency. The pool may be quoted in native ETH (`address(0)`), in
+///            WETH, or in another token (e.g. USDG). ETH is 1:1 with WETH, so an
+///            ETH-quoted pool prices directly in WETH with no conversion. A non-WETH,
+///            non-ETH quote needs a reference feed: an `IFundPriceFeed` whose asset is
+///            the quote and whose quote is WETH (for USDG, a `UniswapV3TwapFeed` on the
+///            USDG/WETH pool). The returned `priceX18` is then converted to WETH by
+///            multiplying the quote-denominated TWAP by the reference's WETH-per-quote
+///            price, so the fund's WETH-denominated bands and 5% deviation checks keep
+///            working. The reference is read live on every `latestPrice`, and a stale
+///            or missing reference fails closed exactly like a stale pool observation.
 ///
-///         `priceX18` is ETH wei per 1e18 raw units of the asset. `updatedAt` is
-///         `block.timestamp`: the TWAP is always computed as of now, so a read is never
-///         stale by construction. The feed reverts for any asset other than its own.
+///         `priceX18` is always ETH wei per 1e18 raw units of the asset, whatever the
+///         pool's quote is. `updatedAt` is `block.timestamp`: the TWAP is always
+///         computed as of now, so a read is never stale by construction. The feed
+///         reverts for any asset other than its own.
 ///
 ///         Fail closed, everywhere (same rules as `PolydashTwapFeed`):
 ///         - No observations, or observations that do not yet span the window: revert.
 ///         - Newest observation older than `maxObservationAge`: revert. A feed that has
 ///           not been poked recently reports nothing rather than an extrapolated price.
 ///         - Pool uninitialized (`sqrtPriceX96 == 0`) at deploy or at poke: revert.
+///         - A reference feed that is stale, missing, or for the wrong asset: revert.
+///           The constructor calls the reference once to prove it prices the quote;
+///           every `latestPrice` calls it again, so a reference that goes stale after
+///           deploy fails closed rather than returning a converted stale price.
 ///         Liveness depends on pokes: a keeper (or anyone) must call `poke()` at least
 ///         every `maxObservationAge`. Poking is permissionless and only costs gas.
+///         A USDG-quoted feed additionally needs its reference pool (USDG/WETH) to stay
+///         active: the reference is a V3 feed, so it needs pool activity, not pokes.
 contract GenericV4TwapFeed is IFundPriceFeed {
     using PoolIdLibrary for PoolKey;
     using StateLibrary for IPoolManager;
@@ -71,13 +90,19 @@ contract GenericV4TwapFeed is IFundPriceFeed {
     address public immutable asset;
     address public immutable quote;
     address public immutable hook;
+    /// @notice WETH on this chain. The quote is WETH-denominated when it is this address.
+    address public immutable weth;
+    /// @notice Reference feed converting a non-WETH, non-ETH quote to WETH, or
+    ///         `address(0)` when the quote is WETH or native ETH. Its asset is the quote
+    ///         and its quote is WETH (e.g. a `UniswapV3TwapFeed` for USDG/WETH).
+    address public immutable referenceFeed;
     uint24 public immutable poolFee;
     int24 public immutable tickSpacing;
     /// @notice True when the asset sorts below the quote, i.e. the asset is currency0.
     bool public immutable assetIsCurrency0;
     /// @notice `decimals()` of the asset, read at deploy.
     uint8 public immutable assetDecimals;
-    /// @notice `decimals()` of the quote, read at deploy.
+    /// @notice `decimals()` of the quote, read at deploy; 18 when the quote is native ETH.
     uint8 public immutable quoteDecimals;
     /// @notice TWAP window in seconds (30 minutes recommended; see `PolydashTwapFeed`).
     uint32 public immutable twapWindow;
@@ -98,15 +123,22 @@ contract GenericV4TwapFeed is IFundPriceFeed {
 
     /// @param _poolManager Uniswap V4 PoolManager (Robinhood Chain).
     /// @param _asset The feed's asset (either currency of the pool).
-    /// @param _quote The quote token, WETH (the other currency of the pool).
+    /// @param _quote The quote currency: WETH, native ETH (`address(0)`), or another
+    ///        token (e.g. USDG) when `_referenceFeed` is given.
     /// @param _hook Pool hook address (address(0) for a hookless pool).
     /// @param _poolFee PoolKey fee: 0x800000 for a dynamic-fee pool, else <= 1_000_000.
     /// @param _tickSpacing PoolKey tick spacing (> 0).
     /// @param _twapWindow TWAP window in seconds, 5 minutes to 24 hours.
     /// @param _maxObservationAge Newest-observation age bound in seconds, 1 minute to `_twapWindow`.
+    /// @param _weth WETH on this chain (Robinhood Chain).
+    /// @param _referenceFeed Feed converting the quote to WETH, or `address(0)` when the
+    ///        quote is WETH or native ETH. Required for any other quote. Its asset must
+    ///        be the quote and its quote WETH; the constructor proves this by calling
+    ///        `latestPrice(_quote)` once and requiring a non-zero price.
     /// @dev The constructor reads slot0 once: it reverts unless the key identifies an
     ///      initialized pool, so a wrong fee / tickSpacing / hook / currency pair cannot
-    ///      deploy. It also reads both tokens' decimals for the price scaling.
+    ///      deploy. It also reads both tokens' decimals for the price scaling (native
+    ///      ETH counts as 18, without a `decimals()` call, since `address(0)` has no code).
     constructor(
         address _poolManager,
         address _asset,
@@ -115,28 +147,41 @@ contract GenericV4TwapFeed is IFundPriceFeed {
         uint24 _poolFee,
         int24 _tickSpacing,
         uint32 _twapWindow,
-        uint32 _maxObservationAge
+        uint32 _maxObservationAge,
+        address _weth,
+        address _referenceFeed
     ) {
-        if (_poolManager == address(0) || _asset == address(0) || _quote == address(0)) revert InvalidParams();
+        if (_poolManager == address(0) || _asset == address(0) || _weth == address(0)) revert InvalidParams();
         if (_asset == _quote) revert InvalidParams();
+        bool quoteIsWethOrEth = (_quote == address(0) || _quote == _weth);
+        if (quoteIsWethOrEth && _referenceFeed != address(0)) revert InvalidParams();
+        if (!quoteIsWethOrEth && _referenceFeed == address(0)) revert InvalidParams();
         if (_poolFee != DYNAMIC_FEE && _poolFee > 1_000_000) revert InvalidParams();
         if (_tickSpacing <= 0 || _tickSpacing > type(int16).max) revert InvalidParams();
         if (_twapWindow < MIN_WINDOW || _twapWindow > MAX_WINDOW) revert InvalidParams();
         if (_maxObservationAge < MIN_OBSERVATION_AGE || _maxObservationAge > _twapWindow) revert InvalidParams();
+        if (_referenceFeed != address(0) && _referenceFeed.code.length == 0) revert InvalidParams();
         poolManager = IPoolManager(_poolManager);
         asset = _asset;
         quote = _quote;
         hook = _hook;
+        weth = _weth;
+        referenceFeed = _referenceFeed;
         poolFee = _poolFee;
         tickSpacing = _tickSpacing;
         twapWindow = _twapWindow;
         maxObservationAge = _maxObservationAge;
         assetIsCurrency0 = _asset < _quote;
         uint8 ad = IERC20Decimals(_asset).decimals();
-        uint8 qd = IERC20Decimals(_quote).decimals();
+        // Native ETH has no `decimals()` to call; it is 18 by definition and 1:1 with WETH.
+        uint8 qd = _quote == address(0) ? 18 : IERC20Decimals(_quote).decimals();
         if (ad > MAX_DECIMALS || qd > MAX_DECIMALS) revert InvalidParams();
         assetDecimals = ad;
         quoteDecimals = qd;
+        if (_referenceFeed != address(0)) {
+            (uint256 refPrice,) = IFundPriceFeed(_referenceFeed).latestPrice(_quote);
+            if (refPrice == 0) revert PriceUnavailable();
+        }
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(poolKey().toId());
         if (sqrtPriceX96 == 0) revert PriceUnavailable();
     }
@@ -202,13 +247,25 @@ contract GenericV4TwapFeed is IFundPriceFeed {
         updatedAt = uint64(block.timestamp);
     }
 
-    /// @notice ETH wei per 1e18 raw asset at the TWAP tick.
+    /// @notice ETH wei per 1e18 raw asset at the TWAP tick, converted to WETH through
+    ///         the reference feed when the pool's quote is neither WETH nor native ETH.
     /// @dev Currency ordering and decimals are handled by `TwapPriceMath`: when the
     ///      asset is currency1 the pool price is inverted, when it is currency0 it is
-    ///      used directly, and the result is scaled by 10^(quoteDecimals - assetDecimals).
+    ///      used directly, and the result is the quote's raw units per 1e18 raw asset.
+    ///      For a WETH or ETH quote that is already WETH wei (ETH is 1:1 with WETH).
+    ///      For any other quote the reference feed's WETH-per-quote price converts it:
+    ///      `priceX18 = quotePrice * refPriceX18 / 1e18`, where `refPriceX18` is WETH
+    ///      wei per 1e18 raw quote. The reference is read live, so a stale reference
+    ///      reverts here rather than converting a fresh TWAP with a stale rate.
     function _twapPrice() internal view returns (uint256 priceX18) {
         int256 avgTick = _twapTick();
-        priceX18 = TwapPriceMath.priceX18FromTick(avgTick, assetIsCurrency0, assetDecimals, quoteDecimals);
+        uint256 quotePrice =
+            TwapPriceMath.priceX18FromTick(avgTick, assetIsCurrency0);
+        if (quotePrice == 0) revert PriceUnavailable();
+        if (referenceFeed == address(0)) return quotePrice;
+        (uint256 refPriceX18,) = IFundPriceFeed(referenceFeed).latestPrice(quote);
+        if (refPriceX18 == 0) revert PriceUnavailable();
+        priceX18 = Math.mulDiv(quotePrice, refPriceX18, 1e18);
         if (priceX18 == 0) revert PriceUnavailable();
     }
 

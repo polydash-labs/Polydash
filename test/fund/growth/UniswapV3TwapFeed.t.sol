@@ -223,9 +223,15 @@ contract UniswapV3TwapFeedTest is Test {
         return _scale(base, assetDec, quoteDec);
     }
 
-    function _scale(uint256 base, uint8 assetDec, uint8 quoteDec) internal pure returns (uint256) {
-        if (quoteDec >= assetDec) return Math.mulDiv(base, 10 ** (quoteDec - assetDec), 1);
-        return Math.mulDiv(base, 1, 10 ** (assetDec - quoteDec));
+    /// @dev The raw-unit pool price already carries the decimals (see
+    ///      TwapPriceMath.priceX18FromTick): `priceX18` is quote raw units
+    ///      per 1e18 raw asset units, so no extra scaling is applied here.
+    ///      (An earlier version of this helper multiplied by
+    ///      10^(quoteDec - assetDec), double-applying the scaling and
+    ///      returning 0 for an 18-dec asset in a 6-dec quote and 1e12x too
+    ///      much for a 6-dec asset in an 18-dec quote.)
+    function _scale(uint256 base, uint8, uint8) internal pure returns (uint256) {
+        return base;
     }
 
     /// @dev Give the mock pool a full window of history at a constant tick.

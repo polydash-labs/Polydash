@@ -47,6 +47,15 @@ contract MockToken {
     }
 }
 
+/// @notice Stand-in reference feed: returns a fixed WETH-per-quote price of 1e18
+///         for any asset, so a feed whose quote is not WETH can still deploy in
+///         tests and the conversion is price-neutral (`mulDiv(p, 1e18, 1e18) == p`).
+contract MockPriceFeed {
+    function latestPrice(address) external view returns (uint256 priceX18, uint64 updatedAt) {
+        return (1e18, uint64(block.timestamp));
+    }
+}
+
 /// @notice ABI-identical stand-in for FundAllowlist.AssetInit, so the integration
 ///         test can deploy the allowlist via `deployCode` without importing its
 ///         paris-restricted source into this cancun test file's import graph.
@@ -81,6 +90,7 @@ contract GenericV4TwapFeedTest is Test {
     MockPoolManager pm;
     address weth;
     address polydash;
+    MockPriceFeed mockReference;
 
     function setUp() public {
         vm.warp(1_000_000);
@@ -88,11 +98,18 @@ contract GenericV4TwapFeedTest is Test {
         address a = address(new MockToken(18));
         address b = address(new MockToken(18));
         (weth, polydash) = a < b ? (a, b) : (b, a);
+        mockReference = new MockPriceFeed();
         pm.setTick(228_076);
     }
 
     function _feed(address asset, address quote, uint32 window, uint32 maxAge) internal returns (GenericV4TwapFeed) {
-        return new GenericV4TwapFeed(address(pm), asset, quote, address(0), 0x800000, 200, window, maxAge);
+        // The mock `weth` is this test's WETH. Any other quote needs a reference
+        // feed (the constructor requires one); the mock returns 1e18, so the
+        // conversion is price-neutral and only the ordering is under test.
+        address ref = (quote == weth || quote == address(0)) ? address(0) : address(mockReference);
+        return new GenericV4TwapFeed(
+            address(pm), asset, quote, address(0), 0x800000, 200, window, maxAge, weth, ref
+        );
     }
 
     function _feedDefault() internal returns (GenericV4TwapFeed) {
@@ -102,22 +119,18 @@ contract GenericV4TwapFeedTest is Test {
 
     /// @dev Independent conversion: ETH wei per 1e18 raw asset from a tick, for an
     ///      asset that is currency1 (price inverted) with the given decimals.
-    function _priceFromTickCurrency1(int24 tick, uint8 assetDec, uint8 quoteDec) internal pure returns (uint256) {
+    ///      The raw-unit pool price already carries the decimal scaling (see
+    ///      `TwapPriceMath`): `priceX18` is the same for any decimal combination at
+    ///      the same tick and ordering, so the decimals only document the case.
+    function _priceFromTickCurrency1(int24 tick, uint8, uint8) internal pure returns (uint256) {
         uint256 s2 = Math.mulDiv(TickMath.getSqrtPriceAtTick(tick), TickMath.getSqrtPriceAtTick(tick), 1 << 96);
-        uint256 base = Math.mulDiv(1e18, 1 << 96, s2);
-        return _scale(base, assetDec, quoteDec);
+        return Math.mulDiv(1e18, 1 << 96, s2);
     }
 
     /// @dev Independent conversion for an asset that is currency0 (price direct).
-    function _priceFromTickCurrency0(int24 tick, uint8 assetDec, uint8 quoteDec) internal pure returns (uint256) {
+    function _priceFromTickCurrency0(int24 tick, uint8, uint8) internal pure returns (uint256) {
         uint256 s2 = Math.mulDiv(TickMath.getSqrtPriceAtTick(tick), TickMath.getSqrtPriceAtTick(tick), 1 << 96);
-        uint256 base = Math.mulDiv(1e18, s2, 1 << 96);
-        return _scale(base, assetDec, quoteDec);
-    }
-
-    function _scale(uint256 base, uint8 assetDec, uint8 quoteDec) internal pure returns (uint256) {
-        if (quoteDec >= assetDec) return Math.mulDiv(base, 10 ** (quoteDec - assetDec), 1);
-        return Math.mulDiv(base, 1, 10 ** (assetDec - quoteDec));
+        return Math.mulDiv(1e18, s2, 1 << 96);
     }
 
     /// @dev ETH wei per 1e18 raw asset from an actual sqrt price (not a tick
@@ -154,28 +167,28 @@ contract GenericV4TwapFeedTest is Test {
 
     function test_constructor_reverts_zero_addresses_and_same_asset() public {
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(0), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes);
+        new GenericV4TwapFeed(address(0), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0));
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), polydash, polydash, address(0), 0x800000, 200, 30 minutes, 10 minutes);
+        new GenericV4TwapFeed(address(pm), polydash, polydash, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(mockReference));
     }
 
     function test_constructor_reverts_bad_window_and_age() public {
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 4 minutes, 4 minutes);
+        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 4 minutes, 4 minutes, weth, address(0));
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 31 minutes);
+        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 31 minutes, weth, address(0));
     }
 
     function test_constructor_reverts_uninitialized_pool() public {
         pm.clearSlot0();
         vm.expectRevert(GenericV4TwapFeed.PriceUnavailable.selector);
-        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes);
+        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0));
     }
 
     function test_constructor_reverts_decimals_over_24() public {
         address weird = address(new MockToken(25));
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), weird, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes);
+        new GenericV4TwapFeed(address(pm), weird, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0));
     }
 
     // ------------------------------------------------------------------ currency ordering
@@ -218,13 +231,14 @@ contract GenericV4TwapFeedTest is Test {
     // ------------------------------------------------------------------ decimals
 
     function test_decimals_6_asset_18_quote() public {
-        // 6-decimal asset, 18-decimal quote: 1e18 raw asset = 1e12 asset-tokens,
-        // so priceX18 is 1e12x the 18/18 price at the same tick.
+        // 6-decimal asset, 18-decimal quote. `priceX18` is per 1e18 RAW asset, and
+        // the pool's raw-unit price already carries the decimals, so at the same
+        // tick it equals the 18/18 price exactly (no 1e12 factor either way).
         address six = address(new MockToken(6));
         address eighteen = address(new MockToken(18));
         // Feed the 6-decimal token as the asset whichever side it sorts on.
         GenericV4TwapFeed feed =
-            new GenericV4TwapFeed(address(pm), six, eighteen, address(0), 0x800000, 200, 30 minutes, 30 minutes);
+            new GenericV4TwapFeed(address(pm), six, eighteen, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference));
         _prime(feed);
         (uint256 px,) = feed.latestPrice(six);
         uint256 expected =
@@ -232,18 +246,20 @@ contract GenericV4TwapFeedTest is Test {
         assertEq(px, expected);
         assertEq(feed.assetDecimals(), 6);
         assertEq(feed.quoteDecimals(), 18);
-        // Cross-check against the 18/18 price at the same tick, scaled by 1e12.
+        // Cross-check against the 18/18 price at the same tick: identical.
         uint256 base18 =
             six < eighteen ? _priceFromTickCurrency0(228_076, 18, 18) : _priceFromTickCurrency1(228_076, 18, 18);
-        assertEq(px, base18 * 1e12);
+        assertEq(px, base18);
     }
 
     function test_decimals_18_asset_6_quote() public {
-        // 18-decimal asset, 6-decimal quote: priceX18 is 1e-12x the 18/18 price.
+        // 18-decimal asset, 6-decimal quote: same raw-unit price as the 18/18
+        // case at the same tick. The quote's decimals only matter when the price
+        // is converted to WETH (a reference feed), not in the raw TWAP.
         address six = address(new MockToken(6));
         address eighteen = address(new MockToken(18));
         GenericV4TwapFeed feed =
-            new GenericV4TwapFeed(address(pm), eighteen, six, address(0), 0x800000, 200, 30 minutes, 30 minutes);
+            new GenericV4TwapFeed(address(pm), eighteen, six, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference));
         _prime(feed);
         (uint256 px,) = feed.latestPrice(eighteen);
         uint256 expected =
@@ -251,7 +267,7 @@ contract GenericV4TwapFeedTest is Test {
         assertEq(px, expected);
         uint256 base18 =
             eighteen < six ? _priceFromTickCurrency0(228_076, 18, 18) : _priceFromTickCurrency1(228_076, 18, 18);
-        assertEq(px, base18 / 1e12);
+        assertEq(px, base18);
     }
 
     function test_decimals_6_6_same_scale() public {
@@ -259,7 +275,7 @@ contract GenericV4TwapFeedTest is Test {
         address b = address(new MockToken(6));
         (address asset, address quote) = a < b ? (b, a) : (a, b);
         GenericV4TwapFeed feed =
-            new GenericV4TwapFeed(address(pm), asset, quote, address(0), 0x800000, 200, 30 minutes, 30 minutes);
+            new GenericV4TwapFeed(address(pm), asset, quote, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference));
         _prime(feed);
         (uint256 px,) = feed.latestPrice(asset);
         uint256 expected =
@@ -326,7 +342,7 @@ contract GenericV4TwapFeedTest is Test {
     }
 
     function _forkFeed() internal returns (GenericV4TwapFeed) {
-        return new GenericV4TwapFeed(PM, POLYDASH, WETH, HOOK, 0x800000, 200, 30 minutes, 30 minutes);
+        return new GenericV4TwapFeed(PM, POLYDASH, WETH, HOOK, 0x800000, 200, 30 minutes, 30 minutes, WETH, address(0));
     }
 
     function test_fork_twap_matches_spot_and_market() public {
