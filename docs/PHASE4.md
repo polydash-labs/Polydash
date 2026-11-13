@@ -35,4 +35,4 @@ Creation transaction [`0x7e41f0f3a493c498e52ef36d8bdeed012db2e6e3a58e0779e003de5
 
 The unsigned package remains in [deploy/phase4/unsigned](../deploy/phase4/unsigned). `script/DeployFundPhase4.s.sol` reverts unless `CONFIRM_FUND_PHASE4_DEPLOY=yes`.
 
-Compiled ABIs are in [polypad/abi/phase4](../polypad/abi/phase4). The frontend note is [PHASE4_ABACUS_PROMPT.md](PHASE4_ABACUS_PROMPT.md).
+Compiled ABIs are in [polypad/abi/phase4](../polypad/abi/phase4). The frontend note is [PHASE4_WEB_PROMPT.md](PHASE4_WEB_PROMPT.md).

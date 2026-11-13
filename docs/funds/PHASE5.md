@@ -72,4 +72,4 @@ forge script script/DeployPhase5.s.sol --rpc-url robinhood --broadcast
 
 `0xYOUR_DEPLOYER_PRIVATE_KEY_HERE` is a placeholder. Not audited. Not financial advice.
 
-The frontend note is [PHASE5_ABACUS_PROMPT.md](PHASE5_ABACUS_PROMPT.md).
+The frontend note is [PHASE5_WEB_PROMPT.md](PHASE5_WEB_PROMPT.md).
