@@ -115,7 +115,9 @@ contract ForkBuyback is Test {
         console2.logBytes32(v.poolId());
         console2.log("spot sqrtP", v.spotSqrtPriceX96());
         console2.log("poolFeeBps (pairedFee+protocolFee)", v.poolFeeBps());
-        assertEq(v.poolFeeBps(), 120);
+        // The hook's live fee changes over time, so check the bounds, not a fixed value.
+        assertGt(v.poolFeeBps(), 0);
+        assertLe(v.poolFeeBps(), v.maxPoolFeeBps());
 
         _config();
         assertTrue(IFactory(LF_A).buybackEnabled());
