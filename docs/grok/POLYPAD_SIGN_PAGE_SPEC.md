@@ -96,4 +96,4 @@ A transaction whose calldata ends with the ERC-8021 marker `80218021802180218021
 1. The v2 API: `polypad/web/lib/agents-api/v2/**`, `polypad/web/app/api/agents/v2/[[...slug]]/route.ts`.
 2. The remote MCP route: `polypad/web/app/api/mcp/route.ts`.
 3. The `/sign` page, the `AgentAction` table, `/api/agent-stats`, and the "via Grok" label.
-4. `POLYPAD_RPC_URL` set to a dedicated endpoint (a server-side environment variable, never exposed to the browser).
+4. `POLYPAD_RPC_URL` (a server-side environment variable, never exposed to the browser). For now it is the public Robinhood Chain RPC the site already uses. A dedicated endpoint replaces it later by changing this one variable.
