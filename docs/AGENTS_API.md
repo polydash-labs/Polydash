@@ -6,6 +6,8 @@ The API validates parameters, runs `eth_call` against the factory on Robinhood C
 
 Discovery, including the factory address and the rate limit, is `GET /api/agents/v1` on the Polypad site. The in-site writeup is [`/docs#agent-launched`](https://polypad.family/docs#agent-launched).
 
+Trading, NFTs, funds, a portfolio read, and a remote MCP server are in [AGENTS_API_V2.md](AGENTS_API_V2.md).
+
 Direct factory calls, for an operator who builds the transaction themselves, stay documented in [AGENTS_LAUNCH.md](AGENTS_LAUNCH.md).
 
 ## Endpoints
