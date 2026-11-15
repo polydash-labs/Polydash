@@ -107,7 +107,7 @@ function detailFor(id: ProtectionId, met: boolean, phase2: boolean): string {
   }
   if (id === 'source') return 'Source is in this repository. Unaudited.';
   if (!met) return phase2 ? 'The allowlist delay is shorter than one day.' : 'Not in this version.';
-  return 'Changes to routers and assets wait at least one day. Pause takes effect immediately.';
+  return 'Changes to routers and assets wait out the allowlist delay (2 days on the live allowlist, never under one day). Pause takes effect immediately.';
 }
 
 /** Score the protections this fund actually exposes. High-water mark stays off unless the vault sets that bit. */
