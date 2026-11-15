@@ -39,7 +39,7 @@ Transfer of the carry token reverts while vault status is Raising, while the dra
 
 ## Nav-floor exit
 
-`FundNavFloor` queues one share for one day, then calls the share's `exit` or, after a failed raise, `refund`. The day matches the minimum allowlist delay that Phase 3 counts in `protectionBits`. The holder can `cancel` and take the share back. `redeem` has no owner and no pause. It still runs when swaps are paused and when the drawdown brake is on.
+`FundNavFloor` queues one share for one day, then calls the share's `exit` or, after a failed raise, `refund`. The day matches the minimum allowlist delay that Phase 3 counts in `protectionBits`. The live allowlist delay is 2 days. The holder can `cancel` and take the share back. `redeem` has no owner and no pause. It still runs when swaps are paused and when the drawdown brake is on.
 
 The assets are forwarded in kind: ETH, WETH, and mandate tokens, in the amounts the vault already pays. This path does not call the swap facet. That call is limited to the manager or an executor, and a trade would change the book for the shares that remain. `spendableEth` already excludes entry, protocol, and performance fees. The Phase 3 vault has no separate exit-fee field. `quote` is the floored one-share reading; the last outstanding share's `exit` receives the remainder. If a mandate token does not arrive in full, the redemption reverts and the share stays queued. The holder can cancel and call `exit` on the share.
 

@@ -82,3 +82,16 @@ Phase 5 is deployed from commit `63d4f745b83d89a2863ff3a82f010ff1da2c501c`. It d
 | `FundNavFloor` | [`0x8e4f163e6dCe71Ef1290Ed264c6F11f13F309afb`](https://robinhoodchain.blockscout.com/address/0x8e4f163e6dCe71Ef1290Ed264c6F11f13F309afb) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x8e4f163e6dCe71Ef1290Ed264c6F11f13F309afb) |
 
 Deploy transaction: [`0xfa8af1123322d5d171997be0961333b94c1633ee728697df3af2d321a77e004f`](https://robinhoodchain.blockscout.com/tx/0xfa8af1123322d5d171997be0961333b94c1633ee728697df3af2d321a77e004f) (nonce 45). Signer `0x9a21c75aC263cC43125E70200636f6397f8776d0`. The constructor argument is the live Phase 3 factory `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. The five modules are created inside that constructor. `script/DeployPhase5.s.sol` reverts unless `CONFIRM_FUND_PHASE5_DEPLOY=yes`.
+
+Phase 6 is a second Phase 3 factory with its own swap facet. It does not modify the Phase 1a, Phase 2, Phase 3, Phase 4, or Phase 5 contracts, and it does not replace them. It was deployed on 2026-11-10 (block 110978576, 15:16 UTC). Sourcify exact match for both contracts was confirmed by lookup on 2026-11-15. The verified source is on Sourcify. It is not in this repository yet, so the manifest records no source commit. This record is not a review.
+
+| Contract | Address | Verification |
+| --- | --- | --- |
+| `FundSwapFacetPhase3V2` | [`0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7`](https://robinhoodchain.blockscout.com/address/0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0x7dC767E1D0B0AC89282cB72a784174Ce29CdDaC7) |
+| `FundFactoryPhase3V2` | [`0xe50Da719947E83f316977d9c425DF95672E7B27e`](https://robinhoodchain.blockscout.com/address/0xe50Da719947E83f316977d9c425DF95672E7B27e) | [Sourcify exact match](https://sourcify.dev/server/v2/contract/4663/0xe50Da719947E83f316977d9c425DF95672E7B27e) |
+
+Deploy transactions: [`0xc92c6bc4…ebf1`](https://robinhoodchain.blockscout.com/tx/0xc92c6bc47d3f713b42c1b185da279b3fd7e4ffd4456bab56c43b21c1234bebf1) (nonce 46), [`0x27d76e70…a314`](https://robinhoodchain.blockscout.com/tx/0x27d76e70d63541618f3d6d672be292bab752c7b61cec77cf9c7d0ef00557a314) (nonce 47). Signer `0x9a21c75aC263cC43125E70200636f6397f8776d0`. The factory owner and fee recipient are that wallet. Protocol fee is 20 bps. Its WETH is `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73`, its template is the Phase 3 `StrategyTemplate` `0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba`, and its facet is the V2 facet above. No fund had been created on it at the time of this record.
+
+The factory uses the live Phase 2 allowlist `0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`. Its delay is 172800 seconds (2 days). Changes to routers and assets wait those 2 days. The contract floor is 1 day (`MIN_DELAY` is 86400) and `setDelay` cannot go below it. Pause takes effect immediately.
+
+Not audited.
