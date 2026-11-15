@@ -71,9 +71,9 @@ contract Phase2LiveForkTest is Test {
         assertEq(allow.MAX_STALE(), 1 days);
         assertFalse(allow.paused());
         assertEq(allow.quoteAsset(), WETH);
-        assertEq(allow.proposalCount(), 0);
-        assertEq(allow.routerCount(), 1);
-        assertEq(allow.assetCount(), 1);
+        // Routers and assets are added to the live allowlist over time (each after its delay), so the counts are lower bounds.
+        assertGe(allow.routerCount(), 1);
+        assertGe(allow.assetCount(), 1);
         assertEq(allow.routers(0), ADAPTER);
         assertEq(allow.assets(0), WETH);
         assertTrue(allow.routerAllowed(ADAPTER));
