@@ -14,22 +14,29 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any, BinaryIO, Callable
 
 PROTOCOL = "2024-11-05"
 SERVER_NAME = "polypad-launch"
-SERVER_VERSION = "1.2.0"
+SERVER_VERSION = "1.3.0"
 SCHEMA = json.loads((Path(__file__).resolve().parent / "schemas" / "tools.json").read_text())
 LIMITS = SCHEMA["limits"]
 AGENT_MARK = SCHEMA["agentMark"]
 TOOLS = SCHEMA["tools"]
+# v2 tools (browse, quote, prepare buy/sell/NFT/fund/launch, portfolio, status) are generated from the TypeScript
+# registry into schemas/tools_v2.json and forwarded to /api/agents/v2. Nothing here signs or holds a key.
+SCHEMA_V2 = json.loads((Path(__file__).resolve().parent / "schemas" / "tools_v2.json").read_text())
+V2_BY_NAME = {tool["name"]: tool for tool in SCHEMA_V2["tools"]}
+V2_TOOLS = [{k: v for k, v in tool.items() if not k.startswith("x-")} for tool in SCHEMA_V2["tools"]]
 ADDRESS = re.compile(r"^0x[0-9a-fA-F]{40}$")
 GITHUB = re.compile(r"^https://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)$")
 UINT = re.compile(r"^[0-9]+$")
 
 HttpPost = Callable[[str, dict[str, Any], dict[str, str]], tuple[int, dict[str, Any]]]
+HttpGet = Callable[[str, dict[str, str]], tuple[int, dict[str, Any]]]
 
 
 def _key_field(name: str) -> bool:
@@ -216,6 +223,34 @@ def default_post(url: str, body: dict[str, Any], headers: dict[str, str]) -> tup
         return exc.code, parsed
 
 
+def default_get(url: str, headers: dict[str, str]) -> tuple[int, dict[str, Any]]:
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return response.status, json.loads(response.read().decode())
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode()
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            parsed = {"ok": False, "error": {"code": "HTTP_ERROR", "message": raw[:300]}}
+        return exc.code, parsed
+
+
+def call_v2(name: str, arguments: dict[str, Any], *, post: HttpPost, get: HttpGet, api_base: str) -> tuple[dict[str, Any], bool]:
+    tool = V2_BY_NAME[name]
+    if not isinstance(arguments, dict) or contains_key_material(arguments):
+        return {"ok": False, "error": {"code": "key_material_rejected", "message": "Do not send private keys or seed phrases. Polypad never needs them."}}, True
+    headers = {"content-type": "application/json", "x-polypad-client": "polypad-mcp"}
+    url = f"{api_base.rstrip('/')}/api/agents/v2/{tool['x-path']}"
+    if tool["x-method"] == "GET":
+        query = urllib.parse.urlencode({k: ("true" if v is True else "false" if v is False else v) for k, v in arguments.items() if v is not None and not isinstance(v, (dict, list))})
+        status, payload = get(f"{url}?{query}" if query else url, headers)
+    else:
+        status, payload = post(url, arguments, headers)
+    return payload, status >= 400 or payload.get("ok") is not True
+
+
 def _result(msg_id: Any, result: dict[str, Any]) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": msg_id, "result": result}
 
@@ -228,7 +263,7 @@ def _tool_text(payload: dict[str, Any], is_error: bool) -> dict[str, Any]:
     return {"content": [{"type": "text", "text": json.dumps(payload)}], "isError": is_error}
 
 
-def handle_rpc(message: dict[str, Any], *, post: HttpPost, api_base: str) -> dict[str, Any] | None:
+def handle_rpc(message: dict[str, Any], *, post: HttpPost, api_base: str, get: HttpGet | None = None) -> dict[str, Any] | None:
     method = message.get("method")
     msg_id = message.get("id")
     if not method:
@@ -245,7 +280,7 @@ def handle_rpc(message: dict[str, Any], *, post: HttpPost, api_base: str) -> dic
     if method == "ping":
         return _result(msg_id, {})
     if method == "tools/list":
-        return _result(msg_id, {"tools": TOOLS})
+        return _result(msg_id, {"tools": TOOLS + V2_TOOLS})
     if method != "tools/call":
         return _error(msg_id, -32601, f"Unknown method: {method}")
 
@@ -267,6 +302,9 @@ def handle_rpc(message: dict[str, Any], *, post: HttpPost, api_base: str) -> dic
             {"content-type": "application/json", "x-polypad-client": "polypad-mcp"},
         )
         failed = status >= 400 or payload.get("ok") is not True
+        return _result(msg_id, _tool_text(payload, failed))
+    if name in V2_BY_NAME:
+        payload, failed = call_v2(name, arguments, post=post, get=get or default_get, api_base=api_base)
         return _result(msg_id, _tool_text(payload, failed))
     return _result(msg_id, _tool_text({"ok": False, "error": {"code": "UNKNOWN_TOOL", "message": str(name)}}, True))
 
@@ -299,13 +337,13 @@ def write_message(stream: BinaryIO, payload: dict[str, Any]) -> None:
     stream.flush()
 
 
-def serve(stdin: BinaryIO, stdout: BinaryIO, *, post: HttpPost = default_post, api_base: str | None = None) -> None:
+def serve(stdin: BinaryIO, stdout: BinaryIO, *, post: HttpPost = default_post, get: HttpGet = default_get, api_base: str | None = None) -> None:
     base = (api_base or os.environ.get("POLYPAD_API_BASE", "https://polypad.family")).rstrip("/")
     while True:
         message = read_message(stdin)
         if message is None:
             return
-        response = handle_rpc(message, post=post, api_base=base)
+        response = handle_rpc(message, post=post, api_base=base, get=get)
         if response is not None:
             write_message(stdout, response)
 

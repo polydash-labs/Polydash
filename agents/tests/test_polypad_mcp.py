@@ -145,4 +145,62 @@ def test_stdio_framing_lists_tools():
         post=lambda url, body, headers: (200, {}),
         api_base="https://polypad.family",
     )
-    assert len(listed["result"]["tools"]) == 2
+    assert len(listed["result"]["tools"]) == 2 + len(polypad_mcp.V2_TOOLS)
+
+
+def test_v2_tool_names_match_the_typescript_registry():
+    source = (ROOT / "polypad/web/lib/agents-api/v2/tools.ts").read_text()
+    ts_names = re.findall(r"^    name: '(polypad_[a-z_]+)',", source, flags=re.M)
+    assert ts_names, "no tools found in tools.ts"
+    assert [t["name"] for t in polypad_mcp.V2_TOOLS] == ts_names
+    assert all("x-path" not in t for t in polypad_mcp.V2_TOOLS)
+    for tool in polypad_mcp.SCHEMA_V2["tools"]:
+        assert tool["x-method"] in {"GET", "POST"}
+        assert tool["inputSchema"]["type"] == "object"
+
+
+def test_v2_read_tool_forwards_a_get_with_query_and_client_header():
+    seen = {}
+
+    def fake_get(url, headers):
+        seen["url"], seen["headers"] = url, headers
+        return 200, {"ok": True, "tokens": []}
+
+    reply = polypad_mcp.handle_rpc(
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "polypad_list_tokens", "arguments": {"sort": "new", "agentLaunched": True}}},
+        post=lambda *a: (500, {}),
+        get=fake_get,
+        api_base="https://polypad.family",
+    )
+    assert seen["url"] == "https://polypad.family/api/agents/v2/tokens?sort=new&agentLaunched=true"
+    assert seen["headers"]["x-polypad-client"] == "polypad-mcp"
+    assert reply["result"]["isError"] is False
+
+
+def test_v2_prepare_tool_forwards_a_post_and_refuses_key_material():
+    seen = {}
+
+    def fake_post(url, body, headers):
+        seen["url"], seen["body"] = url, body
+        return 200, {"ok": True, "signing": {"url": "https://polypad.family/sign?v=1"}}
+
+    args = {"token": "POLYCAT", "from": SIGNER, "amountEth": "0.01"}
+    ok = polypad_mcp.handle_rpc(
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "polypad_prepare_buy", "arguments": args}},
+        post=fake_post,
+        get=lambda *a: (500, {}),
+        api_base="https://polypad.family/",
+    )
+    assert seen["url"] == "https://polypad.family/api/agents/v2/prepare/buy"
+    assert seen["body"] == args
+    assert ok["result"]["isError"] is False
+    seen.clear()
+    bad = polypad_mcp.handle_rpc(
+        {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "polypad_prepare_buy", "arguments": {**args, "privateKey": "x"}}},
+        post=fake_post,
+        get=lambda *a: (500, {}),
+        api_base="https://polypad.family",
+    )
+    assert seen == {}
+    assert bad["result"]["isError"] is True
+    assert "key_material_rejected" in bad["result"]["content"][0]["text"]

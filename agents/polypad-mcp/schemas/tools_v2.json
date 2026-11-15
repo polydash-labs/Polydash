@@ -1,0 +1,825 @@
+{
+  "version": 2,
+  "note": "Generated from polypad/web/lib/agents-api/v2/tools.ts by npm run gen:agent-tools. Do not edit by hand.",
+  "limits": {
+    "defaultSlippageBps": 100,
+    "maxSlippageBps": 1000,
+    "confirmLargeWei": "1000000000000000000",
+    "maxActionWei": "25000000000000000000",
+    "maxBodyBytes": 16384,
+    "rate": {
+      "read": 120,
+      "prepare": 30,
+      "perWalletPrepare": 12,
+      "intent": 40
+    }
+  },
+  "tools": [
+    {
+      "name": "polypad_what_can_i_do",
+      "title": "What can I do",
+      "description": "Start here. Explains what Polypad on Robinhood Chain can do from chat, example requests, live counts, how signing works, and the guardrails.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "onboard",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_intent",
+      "title": "Understand a request",
+      "description": "Turns a plain-language request (\"buy 0.01 ETH of POLYCAT\", \"launch a fund with POLYDASH\") into the right tool call. Runs read-only requests directly. For actions that move funds it needs the wallet address in `from`; if details are missing it returns the questions to ask.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "What the user said, as written."
+          },
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "intent",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_list_tokens",
+      "title": "Browse tokens",
+      "description": "Trending, new, graduating, or high-volume token launches on Polypad, with search. Counts activity from on-chain trades. No price predictions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sort": {
+            "type": "string",
+            "description": "trending, new, graduating, volume, or graduated.",
+            "enum": [
+              "trending",
+              "new",
+              "graduating",
+              "volume",
+              "graduated"
+            ]
+          },
+          "q": {
+            "type": "string",
+            "description": "Search by name, symbol, or address."
+          },
+          "phase": {
+            "type": "string",
+            "description": "Filter by phase.",
+            "enum": [
+              "commit_window",
+              "trading",
+              "graduated"
+            ]
+          },
+          "agentLaunched": {
+            "type": "boolean",
+            "description": "Only tokens prepared through the agent API."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "How many to return, 1 to 50. Default 12.",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "tokens",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_get_token",
+      "title": "Token details",
+      "description": "One token: price reading, bonding-curve progress, creator, fees, and links. Accepts a symbol, name, token address, or launch address.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Symbol, name, token address, or launch address."
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "token",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_token_protections",
+      "title": "Token protections in plain words",
+      "description": "A plain-language read of a token's on-chain protections: liquidity, fees, creator holdings, staking pool, vesting lock, bond. It says what is met, what is not, and what it cannot tell you. Not a promise about price.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Symbol, name, token address, or launch address."
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "protections",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_quote_trade",
+      "title": "Quote a buy or sell",
+      "description": "Quote a buy (ETH in) or sell (token amount in) for a launch token, on the bonding curve or in the Uniswap V4 pool after graduation. Returns expected output, minimum after slippage, and fees. A reading, not a promise.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Symbol, name, token address, or launch address."
+          },
+          "side": {
+            "type": "string",
+            "description": "buy or sell.",
+            "enum": [
+              "buy",
+              "sell"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "description": "Base units as a decimal string: wei of ETH for a buy, token base units (18 decimals) for a sell."
+          },
+          "amountEth": {
+            "type": "string",
+            "description": "Buy only: ETH as a decimal such as 0.01. Use instead of amount."
+          },
+          "slippageBps": {
+            "type": "integer",
+            "description": "Slippage limit in basis points. Default 100, maximum 1000.",
+            "minimum": 0,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "token",
+          "side"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "quote",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_prepare_buy",
+      "title": "Prepare a buy",
+      "description": "Prepares a buy of a launch token with ETH. Simulates it on-chain before returning. Returns the unsigned transaction (to, data, value, chainId 4663, gas estimate), a plain summary, and a one-tap signing link. Show the summary before the link. Never signs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Symbol, name, token address, or launch address."
+          },
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "amountEth": {
+            "type": "string",
+            "description": "ETH to spend, as a decimal such as 0.01."
+          },
+          "amountWei": {
+            "type": "string",
+            "description": "ETH to spend in wei. Use instead of amountEth."
+          },
+          "slippageBps": {
+            "type": "integer",
+            "description": "Slippage limit in basis points. Default 100, maximum 1000.",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "token",
+          "from"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/buy",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_sell",
+      "title": "Prepare a sell",
+      "description": "Prepares a sale of a launch token for ETH, with the exact-amount approval step if needed. Simulates step 1 on-chain. Returns unsigned transactions, a summary, and a signing link. Accepts an amount or a percent of the wallet balance.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Symbol, name, token address, or launch address."
+          },
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Token base units (18 decimals) as a decimal string."
+          },
+          "percentOfBalance": {
+            "type": "integer",
+            "description": "Percent of the wallet balance, 1 to 100. Use instead of amount.",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "slippageBps": {
+            "type": "integer",
+            "description": "Slippage limit in basis points. Default 100, maximum 1000.",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "token",
+          "from"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/sell",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_list_nfts",
+      "title": "Browse NFT collections",
+      "description": "Polypad NFT collections with status (commitment window, public mint, sold out), price, supply, and royalties.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "description": "Search by name, symbol, or address."
+          },
+          "status": {
+            "type": "string",
+            "description": "Filter by status.",
+            "enum": [
+              "commit_window",
+              "public_mint",
+              "sold_out"
+            ]
+          },
+          "sort": {
+            "type": "string",
+            "description": "newest, minted, or price.",
+            "enum": [
+              "newest",
+              "minted",
+              "price"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1 to 50.",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "nfts",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_list_nft_listings",
+      "title": "Browse marketplace listings",
+      "description": "Active fixed-price NFT listings on the Polypad marketplace, lowest price at the top, optionally for one collection or under a price.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "collection": {
+            "type": "string",
+            "description": "Collection address."
+          },
+          "maxPriceEth": {
+            "type": "string",
+            "description": "Only listings at or below this many ETH."
+          },
+          "maxPriceWei": {
+            "type": "string",
+            "description": "Same in wei."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1 to 50.",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "nfts/listings",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_prepare_nft_buy",
+      "title": "Prepare an NFT buy or mint",
+      "description": "Prepares either a marketplace purchase (listingId) or a public mint from a fixed-price collection (collection + quantity). Checks supply, wallet limits, and price, then simulates. Returns unsigned transactions, a summary, and a signing link. Collections still in their commitment window are sent to the collection page instead.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "listingId": {
+            "type": "integer",
+            "description": "Marketplace listing id.",
+            "minimum": 1
+          },
+          "collection": {
+            "type": "string",
+            "description": "Collection address for a public mint."
+          },
+          "collectionName": {
+            "type": "string",
+            "description": "Collection name, if no address is known."
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "How many to mint, 1 to 50. Default 1.",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/nft-buy",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_list_fund_templates",
+      "title": "Fund templates",
+      "description": "The published strategy templates a fund can be created from: allowed assets, position and trade caps, performance fee, drawdown brake, and manager lock.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "fund-templates",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_list_funds",
+      "title": "Discover funds",
+      "description": "Polypad Funds with filters: open for minting, status, template, asset held, manager, factory, search, and sort by newest, raise progress, deadline, or shares.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "open": {
+            "type": "boolean",
+            "description": "Only funds currently raising and not sold out."
+          },
+          "status": {
+            "type": "string",
+            "description": "raising, raise_closed, investing, or failed.",
+            "enum": [
+              "raising",
+              "raise_closed",
+              "investing",
+              "failed"
+            ]
+          },
+          "templateId": {
+            "type": "integer",
+            "description": "Template id.",
+            "minimum": 1
+          },
+          "asset": {
+            "type": "string",
+            "description": "Asset symbol or address the fund may hold, such as POLYDASH."
+          },
+          "manager": {
+            "type": "string",
+            "description": "Manager address."
+          },
+          "factory": {
+            "type": "string",
+            "description": "phase6, phase3, phase2, or phase1a.",
+            "enum": [
+              "phase6",
+              "phase3",
+              "phase2",
+              "phase1a"
+            ]
+          },
+          "q": {
+            "type": "string",
+            "description": "Search by name, symbol, or address."
+          },
+          "sort": {
+            "type": "string",
+            "description": "newest, raise_progress, deadline, or shares.",
+            "enum": [
+              "newest",
+              "raise_progress",
+              "deadline",
+              "shares"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1 to 50.",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "funds",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_get_fund",
+      "title": "Fund details",
+      "description": "One fund: status, raise progress, price per share, fees, assets, template rules, and whether public minting is open.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fund": {
+            "type": "string",
+            "description": "Fund name, symbol, or address."
+          }
+        },
+        "required": [
+          "fund"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "fund",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_prepare_fund_create",
+      "title": "Prepare a fund launch",
+      "description": "Prepares creating a fund from a published template (Phase 6 factory by default). Give templateId, or list the assets wanted and it matches a template, or tells you honestly that none can hold them. Returns the unsigned createFund transaction, what the manager must mint next, and a signing link.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "templateId": {
+            "type": "integer",
+            "description": "Template id from polypad_list_fund_templates.",
+            "minimum": 1
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Asset symbols the fund should hold, used to match a template."
+          },
+          "name": {
+            "type": "string",
+            "description": "Fund name, up to 64 bytes."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Fund ticker, up to 16 bytes."
+          },
+          "mintPriceEth": {
+            "type": "string",
+            "description": "Price per share in ETH, a decimal such as 0.01."
+          },
+          "mintPriceWei": {
+            "type": "string",
+            "description": "Same in wei."
+          },
+          "raiseCapEth": {
+            "type": "string",
+            "description": "Raise cap in ETH."
+          },
+          "raiseCapWei": {
+            "type": "string",
+            "description": "Same in wei."
+          },
+          "entryFeeBps": {
+            "type": "integer",
+            "description": "Manager entry fee in basis points, 0 to 500. Default 0.",
+            "minimum": 0,
+            "maximum": 500
+          },
+          "raiseDurationDays": {
+            "type": "integer",
+            "description": "Raise length in days, 1 to 30. Default 7.",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "minSkinBps": {
+            "type": "integer",
+            "description": "Manager skin requirement in basis points. 0 means the 5% default.",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "imageUri": {
+            "type": "string",
+            "description": "https:// or ipfs:// image for the fund."
+          },
+          "factory": {
+            "type": "string",
+            "description": "phase6 (default) or phase3.",
+            "enum": [
+              "phase6",
+              "phase3"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "from",
+          "name",
+          "symbol"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/fund-create",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_fund_mint",
+      "title": "Prepare a fund investment",
+      "description": "Prepares minting shares of an open fund. Checks the raise is open, that public minting is open (the manager has to mint the required shares before anyone else), supply, and balance. Simulates, then returns unsigned transactions, a summary, and a signing link.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "fund": {
+            "type": "string",
+            "description": "Fund address."
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Number of shares. Default 1.",
+            "minimum": 1
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "from",
+          "fund"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/fund-mint",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_fund_redeem",
+      "title": "Prepare a fund exit or refund",
+      "description": "Prepares exiting a fund after its raise closes (pro-rata share of the vault) or a refund if the raise failed. Finds the wallet's shares on-chain, or takes a quantity or specific ids.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "fund": {
+            "type": "string",
+            "description": "Fund address."
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "How many shares, starting from the lowest ids. Default all.",
+            "minimum": 1
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Specific share ids."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "from",
+          "fund"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/fund-redeem",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_token_launch",
+      "title": "Prepare a token launch",
+      "description": "Prepares launching a new token on the Polypad factory, with the Agent-launched label by default. Validates every field, simulates createLaunch, and returns the unsigned transaction, a summary, and a signing link.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key."
+          },
+          "name": {
+            "type": "string",
+            "description": "Token name, up to 64 bytes."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Ticker, up to 32 bytes."
+          },
+          "imageUri": {
+            "type": "string",
+            "description": "https:// or ipfs:// logo."
+          },
+          "description": {
+            "type": "string",
+            "description": "Up to 2000 characters."
+          },
+          "socialLinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "https:// links, up to 8."
+          },
+          "creatorFeeBps": {
+            "type": "integer",
+            "description": "Creator fee in basis points, 0 to 500. Required. 0 means 0%.",
+            "minimum": 0,
+            "maximum": 500
+          },
+          "devBuyEth": {
+            "type": "string",
+            "description": "Optional buy at launch, in wei."
+          },
+          "launchDelay": {
+            "type": "string",
+            "description": "Seconds before trading opens, 0 to 2592000."
+          },
+          "agentMark": {
+            "type": "boolean",
+            "description": "Agent-launched label. Default true."
+          },
+          "repository": {
+            "type": "string",
+            "description": "https://github.com/owner/repo, optional."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          }
+        },
+        "required": [
+          "from",
+          "name",
+          "symbol",
+          "creatorFeeBps"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/token-launch",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_portfolio",
+      "title": "Wallet portfolio (read-only)",
+      "description": "Read-only view of a wallet: ETH, launch tokens with current exit value, fund shares with net value, and NFTs. Results are in ETH units from on-chain data. No USD value, no forecasts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Wallet address (0x...)."
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "portfolio",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_get_tx_status",
+      "title": "Transaction status",
+      "description": "Follow up on a transaction: pending, confirmed, or failed, with a plain result (tokens bought, fund created, and so on) and an explorer link.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "description": "Transaction hash (0x, 32 bytes)."
+          }
+        },
+        "required": [
+          "hash"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "tx/status",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_stats",
+      "title": "Agent traffic stats",
+      "description": "Counts of actions prepared through the agent API by action and ref tag. Per server process; the on-chain attribution suffix is the durable record.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "stats",
+      "x-kind": "read"
+    }
+  ]
+}

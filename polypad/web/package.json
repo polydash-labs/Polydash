@@ -6,7 +6,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts"
+    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts lib/agents-api/v2/v2.unit.test.ts",
+    "test:fork": "node --import tsx --test lib/agents-api/v2/v2.fork.test.ts",
+    "gen:agent-tools": "node --import tsx lib/agents-api/v2/export-schemas.ts"
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "16.4.1",
