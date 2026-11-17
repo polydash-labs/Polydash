@@ -113,6 +113,12 @@ jobs:
           corepack prepare yarn@4.9.2 --activate
           yarn install --immutable
           yarn test
+      - name: Audit production dependencies
+        working-directory: polypad/web
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
+          yarn npm audit --environment production --recursive --severity high --no-deprecations
 
   secrets:
     name: Secret scan
