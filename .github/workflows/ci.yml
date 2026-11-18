@@ -26,16 +26,16 @@ jobs:
         with:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
-      # Fork tests read historical state from dRPC, the only keyless archive
-      # RPC for Robinhood Chain. Cold fork fetches from it are flaky (the
-      # ManagerProposedAssets fork test failed twice on fresh runners while
-      # passing locally with a warm cache), so cache the RPC responses across
-      # runs and retry the test step once on failure.
+      # Fork tests read historical state from a keyed Alchemy endpoint
+      # (FORK_RPC, from the FORK_RPC_URL secret). Cache the RPC responses
+      # across runs so cold fork fetches stay fast; the key includes the
+      # commit SHA so each run SAVES a fresh, more complete cache (a static
+      # key would freeze the cache at the first run that wrote it).
       - name: Cache Foundry RPC data
         uses: actions/cache@v4
         with:
           path: ~/.foundry/cache
-          key: foundry-rpc-${{ runner.os }}-v1
+          key: foundry-rpc-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             foundry-rpc-${{ runner.os }}-
       - name: Format
@@ -53,7 +53,7 @@ jobs:
         # RPC cache for the next one.
         run: |
           for i in 1 2 3 4 5; do
-            if forge test -vvv --match-contract ManagerProposedAssetsForkTest; then
+            if timeout 300 forge test -vvv --match-contract ManagerProposedAssetsForkTest; then
               exit 0
             fi
             echo "Fork test attempt $i failed, retrying..."
