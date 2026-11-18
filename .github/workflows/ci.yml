@@ -37,7 +37,15 @@ jobs:
       - name: Build
         run: forge build --sizes
       - name: Test
-        run: forge test -vvv || forge test --rerun -vvv
+        run: forge test -vvv --no-match-contract ManagerProposedAssetsForkTest || forge test --rerun -vvv
+      - name: Fork test
+        # The ManagerProposedAssets fork test reads deep archive storage for
+        # the RNJ pool from dRPC (the only keyless archive RPC for Robinhood
+        # Chain). Run alongside the other 61 suites, the concurrent RPC load
+        # trips dRPC/Cloudflare rate limits and the pool's storage fetch
+        # fails ("Failed to send/recv `storage`"), so the test runs alone
+        # here with its own retry. Later steps reuse the warmed cache.
+        run: forge test -vvv --match-contract ManagerProposedAssetsForkTest || forge test --rerun -vvv
       - name: Gas report
         run: forge test --gas-report | tee gas-report.txt
       - name: Gas snapshot
