@@ -169,6 +169,12 @@ error PositionCap();
 contract ManagerProposedAssetsForkTest is Test {
     // Pinned just after the Phase 5 deployment (block 110620386) so the deployed
     // Phase 5 modules exist in the fork for step 18's factory-binding check.
+    // Do NOT bump this block: the RNJ/WETH V3 pool the test swaps through had
+    // liquidity at this block (liquidity 6.3e22) and is EMPTY at later blocks
+    // (liquidity 0 at block 117100000), so a newer pin breaks the swap leg.
+    // dRPC is the only keyless archive RPC for Robinhood Chain; cold fork
+    // fetches from it are flaky, so CI caches ~/.foundry/cache and retries
+    // the test step once (see .github/workflows/ci.yml).
     uint256 constant FORK_BLOCK = 110_620_400;
     address constant POOL_MANAGER = 0x8366a39CC670B4001A1121B8F6A443A643e40951;
     address constant WETH = 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73;

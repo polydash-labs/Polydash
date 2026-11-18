@@ -20,12 +20,24 @@ jobs:
         with:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
+      # Fork tests read historical state from dRPC, the only keyless archive
+      # RPC for Robinhood Chain. Cold fork fetches from it are flaky (the
+      # ManagerProposedAssets fork test failed twice on fresh runners while
+      # passing locally with a warm cache), so cache the RPC responses across
+      # runs and retry the test step once on failure.
+      - name: Cache Foundry RPC data
+        uses: actions/cache@v4
+        with:
+          path: ~/.foundry/cache
+          key: foundry-rpc-${{ runner.os }}-v1
+          restore-keys: |
+            foundry-rpc-${{ runner.os }}-
       - name: Format
         run: forge fmt --check
       - name: Build
         run: forge build --sizes
       - name: Test
-        run: forge test -vvv
+        run: forge test -vvv || forge test --rerun -vvv
       - name: Gas report
         run: forge test --gas-report | tee gas-report.txt
       - name: Gas snapshot
