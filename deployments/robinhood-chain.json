@@ -896,6 +896,20 @@
       "documentedIn": [
         "broadcast/DeployLPDividend.s.sol/4663/run-latest.json"
       ]
+    },
+    {
+      "name": "PolypadSpendVault",
+      "group": "x402",
+      "role": "spend-vault",
+      "address": "0xDb5544a977b0dF881268746F2C47F049da579486",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xDb5544a977b0dF881268746F2C47F049da579486",
+      "verification": "exact match",
+      "source": "src/x402/PolypadSpendVault.sol",
+      "deployTx": "0x7cbdb09afa05527b38cf948d674c5bb68f41dcc801cbea886146ada370982355",
+      "notes": "Agent spend vault for the x402 layer (scoped, revocable keys; caps; USDG 6dp + POLYDASH 18dp deposits; facilitator 0xAAD9cB0125FDAfc15B7A9243D34BE731f646efDd). Deployed Nov 17, 2026 by 0x9a21c75aC263cC43125E70200636f6397f8776d0 (block 117097726, gas 1,852,373). Sourcify exact_match. Live paid x402 calls proven on mainnet Nov 17. Contracts unaudited (Slither only).",
+      "documentedIn": [
+        "broadcast/DeploySpendVault.s.sol/4663/run-latest.json"
+      ]
     }
   ],
   "referenced": [
