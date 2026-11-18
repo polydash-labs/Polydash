@@ -57,7 +57,7 @@ test('phase5 default share number', () => {
 });
 
 test('phase5 error mapping', () => {
-  assert.equal(phase5TxError('NotFund'), 'This is not a Phase 3 fund.');
+  assert.equal(phase5TxError('NotFund'), 'This is not a Phase 3 tokenized fund.');
   assert.equal(phase5TxError('ShareLocked()'), 'This share is in a conviction lock.');
   assert.equal(phase5TxError('Listed'), 'This share is listed. Cancel the listing first.');
   assert.equal(phase5TxError('AlreadyListed'), 'This share is already listed.');

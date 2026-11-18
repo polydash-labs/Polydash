@@ -145,11 +145,13 @@ jobs:
           node-version: "22"
       - name: Test
         working-directory: polypad/web
+        # npm, not yarn: the live Vercel deployment installs with npm
+        # (vercel.json installCommand), and the yarn.lock in this tree is a
+        # stale v1 artifact. --ignore-scripts skips the postinstall
+        # (prisma generate), which the unit tests do not need.
         run: |
-          corepack enable
-          corepack prepare yarn@4.9.2 --activate
-          yarn install --immutable
-          yarn test
+          npm ci --ignore-scripts
+          npm test
 
   secrets:
     name: Secret scan
