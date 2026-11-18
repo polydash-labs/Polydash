@@ -52,8 +52,12 @@ jobs:
         # retry loop stays as a safety net; each attempt also warms the
         # RPC cache for the next one.
         run: |
-          for i in 1 2 3 4 5; do
-            if timeout 300 forge test -vvv --match-contract ManagerProposedAssetsForkTest; then
+          # Alchemy's free tier serves the ~2,000-slot archive fetch slowly:
+          # the previous run passed this step in ~25 min on a single attempt.
+          # A 5-minute cap killed attempts that would have finished, so give
+          # each attempt 30 minutes; 3 attempts still bounds a true hang.
+          for i in 1 2 3; do
+            if timeout 1800 forge test -vvv --match-contract ManagerProposedAssetsForkTest; then
               exit 0
             fi
             echo "Fork test attempt $i failed, retrying..."
