@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { FundDetail } from './_components/fund-detail';
+import { FundPageSwitch } from './_components/fund-page-switch';
 
 export const metadata: Metadata = {
-  title: 'Fund | Polypad',
-  description: 'Fund raise on Robinhood Chain. Mint price, supply, and ETH raised are read from the contracts. Unaudited. Not financial advice.',
+  title: 'Tokenized Fund | Polypad',
+  description: 'A tokenized fund on Robinhood Chain. Share price, shares sold and ETH raised are read live from the tokenized fund. Unaudited. Not financial advice.',
 };
 
 export default async function FundPage({
@@ -16,5 +16,5 @@ export default async function FundPage({
   const { address } = await params;
   const query = await searchParams;
   const mint = Array.isArray(query.mint) ? query.mint[0] : query.mint;
-  return <FundDetail address={address} focusMint={mint === 'skin'} />;
+  return <FundPageSwitch address={address} focusMint={mint === 'skin'} />;
 }

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { FundsList } from './_components/funds-list';
 
 export const metadata: Metadata = {
-  title: 'Funds | Polypad',
-  description: 'Tokenized fund raises on Robinhood Chain. Each NFT is one equal unit. Unaudited. Not financial advice.',
+  title: 'Tokenized Funds | Polypad',
+  description: 'Start your own on-chain fund on Polypad: raise from anyone, invest in public under a locked mandate, and prove it live on the terminal.',
 };
 
 export default function FundsPage() {

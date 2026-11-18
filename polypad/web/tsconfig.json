@@ -38,7 +38,15 @@
     ".next/dev/types/**/*.ts",
     ".build/dev/types/**/*.ts",
     ".next/b132ffb6f/types/**/*.ts",
-    ".next/b132ffb6f/dev/types/**/*.ts"
+    ".next/b132ffb6f/dev/types/**/*.ts",
+    ".next/4a98d4d73/types/**/*.ts",
+    ".next/4a98d4d73/dev/types/**/*.ts",
+    ".next/13963dfb0a/types/**/*.ts",
+    ".next/13963dfb0a/dev/types/**/*.ts",
+    ".next/637352785/types/**/*.ts",
+    ".next/637352785/dev/types/**/*.ts",
+    ".next/164277f202/types/**/*.ts",
+    ".next/164277f202/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

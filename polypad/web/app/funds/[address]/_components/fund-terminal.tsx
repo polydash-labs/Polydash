@@ -39,34 +39,34 @@ export function FundTerminal({
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 className="text-[15px] font-semibold">Fund terminal</h2>
-        <p className="text-[12px] text-white/45">{scored.met} of {scored.total} protections</p>
+        <h2 className="text-[15px] font-semibold">Fund value</h2>
+        <p className="text-[12px] text-white/45">{scored.met} of {scored.total} protections in place</p>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-          <p className="text-[12px] text-white/45">NAV per NFT</p>
+          <p className="text-[12px] text-white/45">Fund value per share (NAV, net asset value)</p>
+          {invest && !invest.navKnown && (
+            <p className="mt-2 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-2 text-[12px] leading-relaxed text-yellow-100">
+              Fund value is unknown right now: a price source could not be read. Figures shown are not a price.
+            </p>
+          )}
           <p className="mt-1 font-mono text-[22px] text-white">
             {invest && !invest.navKnown ? 'Unavailable' : totalMinted === 0n ? '—' : `${formatFundEth(perNft)} ETH`}
           </p>
-          {invest && !invest.navKnown && (
-            <p className="mt-2 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-2 text-[12px] leading-relaxed text-yellow-200">
-              NAV is unavailable right now — a price feed cannot be used, so this figure is blank rather than wrong. Holdings below are shown at cost, not at market value. Exits and refunds still pay your share of the vault.
-            </p>
-          )}
           <p className="mt-2 text-[12px] leading-relaxed text-white/50">
             {invest
-              ? 'ETH and WETH at face value, plus other holdings at the feed, minus unclaimed fees. A missing or unusable feed leaves this blank. Cost basis is not this figure.'
-              : 'Vault ETH divided by NFTs minted. Phase 1 does not price other assets.'}
+              ? 'What one share is worth today: ETH counted as is, plus other tokens at their live price source, minus unclaimed fees. If a price cannot be read, this stays blank. Exits and refunds still pay your part of the vault.'
+              : 'ETH in the vault divided by the shares sold.'}
           </p>
           {invest && invest.lastNavCheckpoint > 0 && (
             <p className="mt-2 text-[12px] text-white/45">
-              Last NAV checkpoint {new Date(invest.lastNavCheckpoint * 1000).toLocaleString()} — {formatFundEth(invest.lastCheckpointNavPerNft)} ETH per NFT. Checkpoints run at most once an hour.
+              Last recorded fund value per share (NAV checkpoint): {formatFundEth(invest.lastCheckpointNavPerNft)} ETH on {new Date(invest.lastNavCheckpoint * 1000).toLocaleString('en-US', { timeZone: 'UTC' })} UTC. It is recorded at most once an hour.
             </p>
           )}
           <NavTape points={points} />
           {status === 'investing' && invest && invest.trades.length > 0 && (
-            <p className="mt-2 text-[11px] text-white/35">The line uses the latest swaps kept on the vault, then the current figure.</p>
+            <p className="mt-2 text-[11px] text-white/35">The line shows fund value per share after each recent trade, then today&apos;s value.</p>
           )}
         </div>
 
@@ -87,12 +87,12 @@ export function FundTerminal({
           </ul>
           {invest && (
             <p className="mt-3 break-all font-mono text-[11px] text-white/40" title={invest.mandateHash}>
-              Mandate {shortenAddress(invest.mandateHash)}
+              Fingerprint of the fund&apos;s rules (mandate hash): {shortenAddress(invest.mandateHash)}
             </p>
           )}
           {invest && invest.mandateUri && (
             <p className="mt-1 break-all text-[11px] text-white/40">
-              Mandate text:{' '}
+              Full text of the fund&apos;s rules (mandate):{' '}
               <a className="text-polydash-green" href={invest.mandateUri} target="_blank" rel="noopener noreferrer">
                 {invest.mandateUri}
               </a>
@@ -111,12 +111,12 @@ export function FundTerminal({
                 <div>
                   <p className="text-white">{row.symbol}</p>
                   <p className="text-[11px] text-white/40">
-                    {row.kind === 'asset' ? `Cost basis ${formatFundEth(row.cost)} ETH. Not a NAV weight.` : row.kind === 'eth' && invest && invest.claimableFees > 0n ? `Includes ${formatFundEth(invest.claimableFees)} ETH of unclaimed fees` : 'Quote balance'}
+                    {row.kind === 'asset' ? `Bought for ${formatFundEth(row.cost)} ETH in total (what was paid, not today's value)` : row.kind === 'eth' && invest && invest.claimableFees > 0n ? `Includes ${formatFundEth(invest.claimableFees)} ETH of unclaimed fees` : 'Held as is'}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-mono text-white/80">{formatToken(row.balance, row.decimals)}</p>
-                  <p className="text-[11px] text-white/35">{weight === null || nav === 0n ? '—' : `${weight.toFixed(weight >= 10 ? 1 : 2)}% of NAV`}</p>
+                  <p className="text-[11px] text-white/35">{weight === null || nav === 0n ? '—' : `${weight.toFixed(weight >= 10 ? 1 : 2)}% of fund value`}</p>
                 </div>
               </li>
             );
@@ -124,26 +124,26 @@ export function FundTerminal({
         </ul>
         {invest && (
           <p className="mt-2 text-[12px] text-white/45">
-            Swaps can use {formatFundEth(invest.spendableEth)} ETH. Unclaimed fees stay in the vault.
+            The manager can trade with {formatFundEth(invest.spendableEth)} ETH. Unclaimed fees stay in the vault.
           </p>
         )}
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-        <h3 className="text-[13px] font-semibold">Blotter</h3>
+        <h3 className="text-[13px] font-semibold">Trade history</h3>
         {!invest || invest.trades.length === 0 ? (
-          <p className="mt-2 text-[13px] text-white/50">No swaps yet.</p>
+          <p className="mt-2 text-[13px] text-white/50">No trades yet.</p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-[12px]">
               <thead className="text-white/40">
                 <tr>
                   <th className="pb-2 font-medium">Time</th>
-                  <th className="pb-2 font-medium">Side</th>
-                  <th className="pb-2 font-medium">Asset</th>
-                  <th className="pb-2 font-medium">Size</th>
-                  <th className="pb-2 font-medium">Price</th>
-                  <th className="pb-2 font-medium">NAV / NFT</th>
+                  <th className="pb-2 font-medium">Type</th>
+                  <th className="pb-2 font-medium">Token</th>
+                  <th className="pb-2 font-medium">Amount</th>
+                  <th className="pb-2 font-medium">Price per token</th>
+                  <th className="pb-2 font-medium">Fund value per share after</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,7 +156,7 @@ export function FundTerminal({
                     : (trade.side === 0 ? 'Buy' : 'Sell');
                   return (
                     <tr key={`${trade.timestamp}-${index}`} className="border-t border-white/5 text-white/75">
-                      <td className="py-2 pr-3 font-mono">{trade.timestamp ? new Date(trade.timestamp * 1000).toLocaleString() : '—'}</td>
+                      <td className="py-2 pr-3 font-mono">{trade.timestamp ? new Date(trade.timestamp * 1000).toLocaleString('en-US', { timeZone: 'UTC' }) + ' UTC' : '—'}</td>
                       <td className="py-2 pr-3">{side}</td>
                       <td className="py-2 pr-3">
                         {trade.asset === '0x0000000000000000000000000000000000000000' ? symbol : (
@@ -200,7 +200,7 @@ function NavTape({ points }: { points: { t: number; nav: bigint }[] }) {
   });
   const line = values.length === 1 ? `0,${coords[0]?.split(',')[1] ?? height / 2} ${width},${coords[0]?.split(',')[1] ?? height / 2}` : coords.join(' ');
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 h-16 w-full" role="img" aria-label="NAV per NFT">
+    <svg viewBox={`0 0 ${width} ${height}`} className="mt-3 h-16 w-full" role="img" aria-label="Fund value per share over time">
       <polyline fill="none" stroke="#00E676" strokeWidth="2" points={line} />
     </svg>
   );

@@ -3,8 +3,10 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { ChunkLoadErrorHandler } from '@/components/chunk-load-error-handler'
+import { TelegramWebApp } from '@/components/telegram-webapp'
 import { Web3Providers } from '@/components/providers'
 import type { Metadata, Viewport } from 'next'
+import { SITE_SHARE, SITE_URL } from '@/lib/seo'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -23,15 +25,17 @@ export const metadata: Metadata = {
   title: 'Polypad',
   description: 'Launch your token on Robinhood Chain',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
+    icon: [
+      { url: '/favicon.ico?v=2', sizes: '16x16 32x32 48x48' },
+      { url: '/favicon-32.png?v=2', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png?v=2', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png?v=2', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico?v=2',
+    apple: { url: '/apple-touch-icon.png?v=2', sizes: '180x180' },
   },
-  openGraph: {
-    title: 'Polypad',
-    description: 'Launch your token on Robinhood Chain',
-    images: [{ url: '/og-image.png' }],
-  },
-  metadataBase: new URL(process.env.NEXTAUTH_URL ?? 'http://localhost:3000'),
+  ...SITE_SHARE,
+  metadataBase: new URL(SITE_URL),
 }
 
 export default function RootLayout({
@@ -42,8 +46,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <script src="https://apps.abacus.ai/chatllm/appllm-lib.js" />
+        <script src="https://telegram.org/js/telegram-web-app.js" />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <TelegramWebApp />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
