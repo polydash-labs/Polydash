@@ -108,5 +108,6 @@ Price feeds the Phase 6 factory reads: V3 TWAP feeds (6-hour window) for the V3 
 | `GenericV4TwapFeed (TORCH)` | [`0xc1d960dE6697D318fcDa85dEc0A4D35914fdD3f0`](https://robinhoodchain.blockscout.com/address/0xc1d960dE6697D318fcDa85dEc0A4D35914fdD3f0) | Not checked |
 | `GenericV4TwapFeed (FOBO)` | [`0x0314809D9e6D73Dc13512E91391dadE06D4e8e2d`](https://robinhoodchain.blockscout.com/address/0x0314809D9e6D73Dc13512E91391dadE06D4e8e2d) | Not checked |
 | `GenericV4TwapFeed (ORBIO)` | [`0x463A5d50AAf56dB5FF87361c5bC0D1edfe96a285`](https://robinhoodchain.blockscout.com/address/0x463A5d50AAf56dB5FF87361c5bC0D1edfe96a285) | Not checked |
+| `GenericV4TwapFeed (HOOKR)` | [`0x0D502c9D4a097Bcb3A43bBB12617F1948933a7bF`](https://robinhoodchain.blockscout.com/address/0x0D502c9D4a097Bcb3A43bBB12617F1948933a7bF) | Not checked |
 
 Not audited.

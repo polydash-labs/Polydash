@@ -896,6 +896,20 @@
       "documentedIn": [
         "broadcast/DeployLPDividend.s.sol/4663/run-latest.json"
       ]
+    },
+    {
+      "name": "GenericV4TwapFeed (HOOKR)",
+      "group": "fund-phase6",
+      "role": "twap-feed",
+      "address": "0x0D502c9D4a097Bcb3A43bBB12617F1948933a7bF",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x0D502c9D4a097Bcb3A43bBB12617F1948933a7bF",
+      "verification": "not checked",
+      "source": "src/fund/growth/GenericV4TwapFeed.sol",
+      "deployTx": "0x4dafdd39eb7e938465a88e56fc74515389395c6553cafd880cec0323656991de",
+      "notes": "Generic V4 TWAP feed for HOOKR (ETH-quoted V4 pool, fee 2500, tickSpacing 25, hookless). twapWindow 1800, maxObservationAge 1800. Allowlist proposal 16 queued 2026-11-17 (tx 0xc70de3e8b807f3178e9bb690e50710fd7a0bb7e2ea5fe1b4bebf8349da314e60), band 3,394,000,000,000-13,578,000,000,000 priceX18, maxStale 3600, executable 2026-11-19 15:39 PST. Poked at deploy (tx 0x20f237e43639a7afeae05d32000283def615c358ecc13da0f0eacff3c4c0b47c); keeper pokes every 15 min. Deployed by 0x9a21c75aC263cC43125E70200636f6397f8776d0 via script/DeployAllowlistBatch2.s.sol.",
+      "documentedIn": [
+        "docs/DEPLOYMENTS.md"
+      ]
     }
   ],
   "referenced": [

@@ -122,6 +122,7 @@ contract GenericV4ForkTest is Test {
     address constant FOBO = 0x000DE658153f47f23e92973C8EB1e89762703676;
     address constant ORBIO = 0xAa07A0e9209e16aC99708C3EC70159c6eF3128A3;
     address constant HOOKR = 0x18E674231A58c239Dc7DaeDcffE15Ec3A24cff5c;
+    address constant FRONG = 0x6245e67affA44a23077f0Ea7f981a8DC743a0c47;
 
     address constant TIBBIR_HOOK = 0x88e5d1cf9907acD48E7C81ff6eBC088aD358a5cc;
     address constant FOBO_HOOK = 0x0Af57F62982D03066ef917AcAd87F771c06528Ec;
@@ -293,6 +294,30 @@ contract GenericV4ForkTest is Test {
         _pokeThrice(feed);
         (px,) = feed.latestPrice(HOOKR);
         _buyAndSell(HOOKR, _ethData(2500, 25, address(0)), px, 0);
+    }
+
+    // ------------------------------------------------------------------ FRONG (new-token generality proof)
+
+    function test_frong_generality_proof() public {
+        // FRONG is a brand-new allowlist candidate: a V4-pool token (FRONG/ETH,
+        // fee 2500, tickSpacing 60, no hook — poolId
+        // 0xacea8920877840033f0275c37f9b61550b5326917e948bcf8339714d96f9521a,
+        // verified on-chain via the PoolManager's storage slot), launched via
+        // Uniswap Pools.trade, so it sits in a V4 pool and passes the
+        // graduated gate. It is NOT allowlisted on mainnet. Onboarding it
+        // needs only a feed deploy + a proposeAsset call — no new contracts.
+        // No transfer tax (GoPlus: no honeypot, tax or owner flags, Nov 16).
+        GenericV4TwapFeed feed = _ethFeed(FRONG, address(0), 2500, 60);
+        _pokeThrice(feed);
+        (uint256 px,) = feed.latestPrice(FRONG);
+        emit log_named_uint("FRONG TWAP priceX18", px);
+        // Spot ~1.34e12 wei per 1e18 FRONG (tick 135205, ~744k FRONG per ETH).
+        assertGt(px, 1e11);
+        assertLt(px, 1e13);
+        _allowlist(FRONG, address(feed), px);
+        _pokeThrice(feed);
+        (px,) = feed.latestPrice(FRONG);
+        _buyAndSell(FRONG, _ethData(2500, 60, address(0)), px, 0);
     }
 
     /// @notice The same HOOKR onboarding, run through a full fund: template + fund +
