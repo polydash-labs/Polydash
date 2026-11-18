@@ -42,7 +42,7 @@ contract NewFactoryDoesNotAffectLivePools is Test {
         // reliably serve state proofs for the freshest blocks, and the fork
         // fails with "Unknown state" (same reason the buyback fork test pins
         // its block). Override with FORK_BLOCK=<n> to run against any block.
-        uint256 forkBlock = vm.envOr("FORK_BLOCK", uint256(112280000));
+        uint256 forkBlock = vm.envOr("FORK_BLOCK", uint256(112_280_000));
         vm.createSelectFork(rpc, forkBlock);
     }
 
@@ -76,9 +76,8 @@ contract NewFactoryDoesNotAffectLivePools is Test {
         MockERC20Decimals rewardTok = new MockERC20Decimals("Reward", "RWD", 18);
         rewardTok.mint(address(this), 1000 * E);
         rewardTok.approve(address(newFactory), type(uint256).max);
-        address newPoolAddr = newFactory.createPool(
-            address(stakeTok), address(rewardTok), 1000 * E, 0, 10 days, 0, 100, "New", "desc"
-        );
+        address newPoolAddr =
+            newFactory.createPool(address(stakeTok), address(rewardTok), 1000 * E, 0, 10 days, 0, 100, "New", "desc");
         PolydashStakingPoolV2 newPool = PolydashStakingPoolV2(newPoolAddr);
         assertEq(newPool.factory(), address(newFactory), "new pool bound to new factory");
         assertEq(newPool.rewardOutFeeBps(), 0, "new pool exposes learned reward fee");
