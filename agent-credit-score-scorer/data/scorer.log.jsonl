@@ -1,0 +1,3 @@
+{"ts":"2026-11-17T23:32:09.747Z","event":"start","mode":"once","dryRun":true,"registry":"0x514e352A12F3DB3d4cA649dD328776390e1725eF"}
+{"ts":"2026-11-17T23:32:10.865Z","event":"scorer_start","agents":0,"fromBlock":"116765955","toBlock":"116965955"}
+{"ts":"2026-11-17T23:32:10.866Z","event":"output_written","file":"./data/scores.json","agents":0}
