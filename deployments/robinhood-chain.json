@@ -854,6 +854,48 @@
       "documentedIn": [
         "broadcast/DeployAgentCreditScore.s.sol/4663/run-latest.json"
       ]
+    },
+    {
+      "name": "FundLiquidityFacetPhase3 (Strategy #6 LP-Dividend)",
+      "group": "fund-phase6",
+      "role": "liquidity-facet",
+      "address": "0x3E9f80aAFbd59BD60368349D873615156108720f",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x3E9f80aAFbd59BD60368349D873615156108720f",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundLiquidityFacetPhase3.sol",
+      "deployTx": "0x16c659833bd018e5bd4b088b52ffd9cee11b883dba82853f1fa256abcee5bd32",
+      "notes": "Strategy #6 LP-Dividend liquidity facet (proposeLiquidity/executeLiquidity, 2-day wait, LP capped at 50% of the fund). Deployed Nov 15, 2026 by 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify exact_match. Contracts unaudited (Slither only).",
+      "documentedIn": [
+        "broadcast/DeployLPDividend.s.sol/4663/run-latest.json"
+      ]
+    },
+    {
+      "name": "FundStakeFacetPhase3 (Strategy #6 LP-Dividend)",
+      "group": "fund-phase6",
+      "role": "stake-facet",
+      "address": "0x023a50cD42532B518D5937C08C68aE25f2f6Bb81",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0x023a50cD42532B518D5937C08C68aE25f2f6Bb81",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundStakeFacetPhase3.sol",
+      "deployTx": "0xabae61a139729072183f4139218683416e43a2cfcd8cd3ffd000b7842b8a8146",
+      "notes": "Strategy #6 LP-Dividend stake facet (fund-held POLYDASH earns staking rewards for NFT holders). Deployed Nov 15, 2026 by 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify exact_match. Contracts unaudited (Slither only).",
+      "documentedIn": [
+        "broadcast/DeployLPDividend.s.sol/4663/run-latest.json"
+      ]
+    },
+    {
+      "name": "FundFactoryPhase3V3 (Strategy #6 LP-Dividend)",
+      "group": "fund-phase6",
+      "role": "factory-v3",
+      "address": "0xB5251BaC3CFE2A057B7703D4477Bf80f10B8154B",
+      "sourcify": "https://sourcify.dev/server/v2/contract/4663/0xB5251BaC3CFE2A057B7703D4477Bf80f10B8154B",
+      "verification": "exact match",
+      "source": "src/fund/phase3/FundFactoryPhase3V3.sol",
+      "deployTx": "0x203087eb6842ba6654d98d2d075a980ea1006cf2a2aa4c2c151fa02d8c7fe3e9",
+      "notes": "Strategy #6 LP-Dividend V3 factory (Strategies #6-#9 published, fees 500/0/1000/2000). The Polyfund (PDGFUND) was created from this factory Nov 16, 2026. Deployed Nov 15, 2026 by 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify exact_match. Contracts unaudited (Slither only).",
+      "documentedIn": [
+        "broadcast/DeployLPDividend.s.sol/4663/run-latest.json"
+      ]
     }
   ],
   "referenced": [
