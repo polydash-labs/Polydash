@@ -15,14 +15,10 @@ contract AgentRegistryTest is Test {
     address public accountA = makeAddr("accountA");
     address public accountB = makeAddr("accountB");
 
-    uint256 public constant STAKE = 1_000 ether;
+    uint256 public constant STAKE = 1000 ether;
 
-    event AgentRegistered(
-        uint256 indexed agentId, address indexed wallet, address indexed agentAccount, string name
-    );
-    event AgentUpdated(
-        uint256 indexed agentId, address indexed wallet, address indexed agentAccount, string name
-    );
+    event AgentRegistered(uint256 indexed agentId, address indexed wallet, address indexed agentAccount, string name);
+    event AgentUpdated(uint256 indexed agentId, address indexed wallet, address indexed agentAccount, string name);
     event AgentUnregistered(uint256 indexed agentId, address indexed wallet, uint256 stakeReturned);
     event AgentSlashed(uint256 indexed agentId, uint256 amount, uint256 remainingStake);
 

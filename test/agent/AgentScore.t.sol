@@ -16,7 +16,7 @@ contract AgentScoreTest is Test {
     address public updater = makeAddr("updater");
     address public accountA = makeAddr("accountA");
 
-    uint256 public constant STAKE = 1_000 ether;
+    uint256 public constant STAKE = 1000 ether;
 
     event ScoreUpdated(
         uint256 indexed agentId,
