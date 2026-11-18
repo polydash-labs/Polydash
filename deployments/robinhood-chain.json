@@ -811,6 +811,25 @@
       "documentedIn": [
         "docs/DEPLOYMENTS.md"
       ]
+    },
+    {
+      "name": "PolydashStakingFactoryV2",
+      "group": "staking",
+      "role": "current",
+      "address": "0x4C87aff7009DE1c58E052FEe202349a10b28Be9c",
+      "sourcify": "https://repo.sourcify.dev/4663/0x4C87aff7009DE1c58E052FEe202349a10b28Be9c",
+      "verification": "exact match",
+      "source": "src/v2/PolydashStakingFactoryV2.sol",
+      "deploymentTx": "0x8c3e26d09625dc1f5852ed4061ed315a9867af796e4fb63fe151c9cac1c51e8c",
+      "deployed": "2026-11-11",
+      "owner": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+      "feeRecipient": "0x351BDe628892Aeb055F717300DBd2848af178479",
+      "notes": "Current factory for new pools \u2014 carries the FoT claim fix (rewardOutFeeBps learned in _sendReward, outflow-aware _claim sizing, claimAmount partial claims). Deployed 2026-11-11 by 0x9a21...776d0; fee recipient unchanged (0x351B...8479). Old factory stays live for its 4 pools. Front end must list pools from BOTH factories.",
+      "documentedIn": [
+        "README.md",
+        "src/v2/README.md",
+        "docs/ARCHITECTURE.md"
+      ]
     }
   ],
   "referenced": [
