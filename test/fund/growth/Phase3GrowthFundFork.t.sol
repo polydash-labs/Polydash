@@ -117,7 +117,7 @@ contract Phase3GrowthFundForkTest is Test {
     address investor = makeAddr("investor");
 
     function setUp() public {
-        vm.createSelectFork("https://robinhood.drpc.org", FORK_BLOCK);
+        vm.createSelectFork(vm.envOr("FORK_RPC", string("https://robinhood.drpc.org")), FORK_BLOCK);
         feed = new PolydashTwapFeed(POOL_MANAGER, POLYDASH, WETH, HOOK, 0x800000, 200, 1800, 1800);
         adapter = new UniswapV4RouterAdapter(POOL_MANAGER, WETH, POLYDASH, HOOK, 0x800000, 200);
         vm.deal(manager, 10 ether);
