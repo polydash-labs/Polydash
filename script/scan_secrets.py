@@ -23,6 +23,7 @@ SKIP_DIRS = {
     "broadcast",
     ".next",
     "coverage",
+    "dist",
     "venv",
     ".venv",
     "__pycache__",

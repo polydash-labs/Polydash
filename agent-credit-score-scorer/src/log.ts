@@ -9,7 +9,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-const SECRET_KEY = /(private.?key|secret|mnemonic|password|seed phrase)/i;
+const SENSITIVE_KEY_PATTERN = /(private.?key|secret|mnemonic|password|seed phrase)/i;
 
 function sanitize(value: unknown): unknown {
   if (value === null || typeof value !== 'object') {
@@ -19,7 +19,7 @@ function sanitize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sanitize);
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-    if (SECRET_KEY.test(k)) continue;
+    if (SENSITIVE_KEY_PATTERN.test(k)) continue;
     out[k] = sanitize(v);
   }
   return out;
