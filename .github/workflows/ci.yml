@@ -21,6 +21,11 @@ jobs:
       # public endpoint rate-limits the bulk archive fetch with HTTP 429,
       # so CI uses Alchemy; local runs without FORK_RPC keep using dRPC.
       FORK_RPC: ${{ secrets.FORK_RPC_URL }}
+      # Same endpoint for the `robinhood` named RPC (foundry.toml), used by
+      # StakeFacetForkTest via vm.createSelectFork("robinhood"). That test
+      # forks at the latest block (no archive reads), but without this the
+      # variable is unset in CI and the test fails before it starts.
+      ROBINHOOD_RPC_URL: ${{ secrets.FORK_RPC_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
