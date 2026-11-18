@@ -33,15 +33,16 @@ import {
 import { cn } from '@/lib/utils';
 import { FundNotice } from '../../_components/fund-notice';
 
-const STEPS = [
-  { label: 'Basics' },
-  { label: 'Raise' },
-  { label: 'Rules' },
-  { label: 'Fees' },
-  { label: 'Review' },
+// Only the Phase 2 invest factory is used. The Phase 1 "raise only" factory is never called.
+const INVEST_STEPS = [
+  { label: 'Basics', next: 'Next: set the share price and the raise goal.' },
+  { label: 'Raise', next: 'Next: write the fund\'s rules and limits.' },
+  { label: 'Rules', next: 'Next: choose fees and how many shares you buy before others can join.' },
+  { label: 'Fees', next: 'Next: check everything before you sign.' },
+  { label: 'Review', next: '' },
 ];
 
-const STEP_FIELDS: FundField[][] = [
+const INVEST_STEP_FIELDS: FundField[][] = [
   ['name', 'symbol', 'imageUri'],
   ['mintPriceEth', 'raiseCapEth'],
   ['mandateText', 'mandateUri', 'raiseDurationDays', 'assetsText', 'maxPositionBps', 'maxTradeBps', 'maxDeviationBps'],
@@ -67,8 +68,8 @@ export function CreateFundWizard() {
 
   const result = previewDraft(draft);
   const investFactory = getFundInvestFactoryAddress();
-  const steps = STEPS;
-  const stepFields = STEP_FIELDS;
+  const steps = INVEST_STEPS;
+  const stepFields = INVEST_STEP_FIELDS;
   const stepIssues = result.issues.filter((issue) => stepFields[step]?.includes(issue.field));
   const preview = result.preview;
 
@@ -145,32 +146,32 @@ export function CreateFundWizard() {
       const params = checked.params;
       if (!investFactory) {
         toast.dismiss(tid);
-        toast.error('The investing factory is not configured yet.');
+        toast.error('Fund creation is not live yet.');
         return;
       }
       const hash = await writeContractAsync({
-        address: investFactory as `0x${string}`,
-        abi: FundFactoryInvestABI,
-        functionName: 'createFund',
-        chainId: robinhoodChain.id,
-        args: [{
-          name: params.name,
-          symbol: params.symbol,
-          imageUri: params.imageUri,
-          baseURI: params.baseURI,
-          mintPrice: params.mintPrice,
-          raiseCap: params.raiseCap,
-          entryFeeBps: params.entryFeeBps,
-          minSkinBps: params.minSkinBps,
-          raiseDuration: params.raiseDuration,
-          mandateHash: params.mandateHash,
-          assets: params.assets,
-          mandateUri: params.mandateUri,
-          maxPositionBps: params.maxPositionBps,
-          maxTradeBps: params.maxTradeBps,
-          maxDeviationBps: params.maxDeviationBps,
-        }],
-      });
+          address: investFactory,
+          abi: FundFactoryInvestABI,
+          functionName: 'createFund',
+          chainId: robinhoodChain.id,
+          args: [{
+            name: params.name,
+            symbol: params.symbol,
+            imageUri: params.imageUri,
+            baseURI: params.baseURI,
+            mintPrice: params.mintPrice,
+            raiseCap: params.raiseCap,
+            entryFeeBps: params.entryFeeBps,
+            minSkinBps: params.minSkinBps,
+            raiseDuration: params.raiseDuration,
+            mandateHash: params.mandateHash,
+            assets: params.assets,
+            mandateUri: params.mandateUri,
+            maxPositionBps: params.maxPositionBps,
+            maxTradeBps: params.maxTradeBps,
+            maxDeviationBps: params.maxDeviationBps,
+          }],
+        });
       toast.loading('Creating the fund on Robinhood Chain…', { id: tid });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
@@ -208,12 +209,17 @@ export function CreateFundWizard() {
         <div className="glass-card space-y-4 rounded-xl p-4 sm:p-6">
           <h1 className="text-[18px] font-semibold">Fund created</h1>
           <p className="text-[13px] leading-relaxed text-white/60">
-            The NFT contract is the fund. The vault holds the ETH. Other wallets cannot mint until you mint the manager share.
+            Your fund exists on Robinhood Chain. What happens next:
           </p>
+          <ol className="list-decimal space-y-1 pl-5 text-[13px] leading-relaxed text-white/70">
+            <li>Buy your manager shares. Nobody else can join until you do.</li>
+            <li>Share the fund page. Investors pay ETH and receive shares.</li>
+            <li>When the raise ends, you can start investing in the approved tokens. If the goal is not reached in time, investors can get a refund.</li>
+          </ol>
           {created.fund && created.vault ? (
             <dl className="space-y-2 text-[13px]">
-              <AddressRow label="Fund NFT" address={created.fund} />
-              <AddressRow label="Vault" address={created.vault} />
+              <AddressRow label="Fund (shares contract)" address={created.fund} />
+              <AddressRow label="Vault (holds the money)" address={created.vault} />
             </dl>
           ) : (
             <p className="text-[13px] text-white/60">
@@ -223,7 +229,7 @@ export function CreateFundWizard() {
           <div className="flex flex-col gap-2 sm:flex-row">
             {created.fund && (
               <Button onClick={() => router.push(`/funds/${created.fund}?mint=skin`)}>
-                Mint your manager share
+                Step 1: Buy your manager shares (opens the fund page)
               </Button>
             )}
             <Button variant="secondary" onClick={() => router.push(created.fund ? `/funds/${created.fund}` : '/funds')}>
@@ -233,7 +239,7 @@ export function CreateFundWizard() {
           <a className="inline-block text-[12px] text-polydash-green" href={getExplorerTxUrl(created.hash)} target="_blank" rel="noopener noreferrer">
             View transaction
           </a>
-          <FundNotice />
+          <FundNotice mode="invest" />
         </div>
       </div>
     );
@@ -251,11 +257,13 @@ export function CreateFundWizard() {
         <Link href="/funds" className="text-[12px] text-white/50 hover:text-white">Funds</Link>
         <h1 className="text-[22px] font-semibold tracking-tight sm:text-[28px]">Create a fund</h1>
         <p className="text-[13px] leading-relaxed text-white/60">
-          Five short steps: name your fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund’s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.
+          Five short steps: name your fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund&apos;s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.
         </p>
-        <p className="text-[12px] leading-relaxed text-white/50">
-          Type of fund: Invest fund. A manager buys tokens within the rules you set.
-        </p>
+        {!investFactory && (
+          <p className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-[12px] text-yellow-200">
+            Fund creation is not live yet. You can look through the steps, but you cannot create a fund.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
@@ -276,7 +284,7 @@ export function CreateFundWizard() {
       <div className="glass-card space-y-4 rounded-xl p-4 sm:p-6">
         {step === 0 && (
           <>
-            <h2 className="text-[15px] font-semibold">Basics</h2>
+            <h2 className="text-[15px] font-semibold">Step 1: Name your fund</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Name" error={shown('name')}>
                 <Input value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="Example Fund" className="bg-secondary/50" />
@@ -324,15 +332,15 @@ export function CreateFundWizard() {
 
         {step === 1 && (
           <>
-            <h2 className="text-[15px] font-semibold">Raise</h2>
+            <h2 className="text-[15px] font-semibold">Step 2: Price and goal</h2>
             <p className="text-[12px] leading-relaxed text-white/55">
-              NFT count is the raise goal divided by the mint price, rounded down. Leftover ETH cannot mint part of an NFT.
+              The number of shares is the goal divided by the share price, rounded down. The goal is the most the fund can raise (the cap).
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Mint price (ETH)" error={shown('mintPriceEth') ?? issueFor(result.issues, 'mintPriceEth')}>
+              <Field label="Price per share (ETH)" error={shown('mintPriceEth') ?? issueFor(result.issues, 'mintPriceEth')}>
                 <Input value={draft.mintPriceEth} onChange={(event) => update('mintPriceEth', event.target.value)} inputMode="decimal" className="bg-secondary/50 font-mono" />
               </Field>
-              <Field label="Raise goal (ETH)" error={shown('raiseCapEth') ?? issueFor(result.issues, 'raiseCapEth')}>
+              <Field label="Raise goal, the most it can raise (ETH)" error={shown('raiseCapEth') ?? issueFor(result.issues, 'raiseCapEth')}>
                 <Input value={draft.raiseCapEth} onChange={(event) => update('raiseCapEth', event.target.value)} inputMode="decimal" className="bg-secondary/50 font-mono" />
               </Field>
             </div>
@@ -342,11 +350,11 @@ export function CreateFundWizard() {
 
         {step === 2 && (
           <>
-            <h2 className="text-[15px] font-semibold">Rules</h2>
+            <h2 className="text-[15px] font-semibold">Step 3: The fund&apos;s rules</h2>
             <p className="text-[12px] leading-relaxed text-white/55">
-              The mandate is the lock on what this fund may do. Investors read the text at the link below; the fingerprint of that text is stored on the vault and cannot be changed after creation.
+              Write in plain words what this fund is for and how the money will be used. Investors read this before they join. The rules, the token list and the limits below cannot be changed after the fund is created.
             </p>
-            <Field label="Mandate text" error={shown('mandateText')}>
+            <Field label="Fund rules (the mandate)" error={shown('mandateText')}>
               <textarea
                 value={draft.mandateText}
                 onChange={(event) => update('mandateText', event.target.value)}
@@ -354,42 +362,48 @@ export function CreateFundWizard() {
                 rows={4}
                 className="w-full rounded-lg border border-white/10 bg-secondary/50 p-3 text-[13px] leading-relaxed text-white placeholder:text-white/30"
               />
-              {mandateHash && (
-                <p className="mt-1 break-all font-mono text-[11px] text-white/40">Fingerprint of the fund&apos;s rules (mandate hash) {mandateHash}</p>
-              )}
-              <p className="mt-1 text-[11px] text-muted-foreground">A short code made from the exact text above. It is saved on-chain so anyone can check the rules were not changed later.</p>
             </Field>
-            <Field label="Mandate link (ipfs:// or https://)" error={shown('mandateUri')}>
+            <div className="rounded-lg bg-secondary/30 p-3 text-[12px] leading-relaxed text-white/70">
+              <p className="text-white/85">Fingerprint of the fund&apos;s rules (mandate hash)</p>
+              <p className="mt-0.5 text-white/50">
+                A short code made from the exact text above. It is saved on-chain so anyone can check the rules were not changed later. It updates as you type.
+              </p>
+              <p className="mt-2 break-all font-mono text-[11px] text-polydash-green">{mandateHash ?? 'Write the rules to see the fingerprint.'}</p>
+            </div>
+            <Field label="Where investors can read the rules (mandate link: ipfs:// or https://)" error={shown('mandateUri')}>
               <Input value={draft.mandateUri} onChange={(event) => update('mandateUri', event.target.value)} placeholder="ipfs://…" className="bg-secondary/50 font-mono text-[12px]" />
               <p className="mt-1 text-[11px] text-muted-foreground">Put the same text you wrote above at this link. The vault saves the link next to the fingerprint.</p>
             </Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label={`Raise length (days, ${MIN_RAISE_DURATION_DAYS}–${MAX_RAISE_DURATION_DAYS})`} error={shown('raiseDurationDays')}>
+              <Field label={`How long the raise stays open (days, ${MIN_RAISE_DURATION_DAYS}–${MAX_RAISE_DURATION_DAYS})`} error={shown('raiseDurationDays')}>
                 <Input value={draft.raiseDurationDays} onChange={(event) => update('raiseDurationDays', event.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" className="bg-secondary/50 font-mono" />
+                <span className="mt-1 block text-[11px] text-muted-foreground">If the goal is not reached by then, investors can get a refund. Default {DEFAULT_RAISE_DURATION_DAYS} days.</span>
               </Field>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Swap caps (BPS of NAV)</label>
+                <label className="mb-1 block text-xs text-muted-foreground">Trading limits, as basis points of fund value (100 = 1%)</label>
                 <div className="grid grid-cols-3 gap-2">
                   <label className="block text-[11px] text-muted-foreground">
-                    Position
+                    Max in one token
                     <Input value={String(draft.maxPositionBps)} onChange={(event) => update('maxPositionBps', Number(event.target.value.replace(/[^\d]/g, '')) || 0)} inputMode="numeric" className="mt-1 bg-secondary/50 font-mono text-[12px]" />
                   </label>
                   <label className="block text-[11px] text-muted-foreground">
-                    Trade
+                    Max per trade
                     <Input value={String(draft.maxTradeBps)} onChange={(event) => update('maxTradeBps', Number(event.target.value.replace(/[^\d]/g, '')) || 0)} inputMode="numeric" className="mt-1 bg-secondary/50 font-mono text-[12px]" />
                   </label>
                   <label className="block text-[11px] text-muted-foreground">
-                    Deviation
+                    Max price gap
                     <Input value={String(draft.maxDeviationBps)} onChange={(event) => update('maxDeviationBps', Number(event.target.value.replace(/[^\d]/g, '')) || 0)} inputMode="numeric" className="mt-1 bg-secondary/50 font-mono text-[12px]" />
                   </label>
                 </div>
                 {(shown('maxPositionBps') ?? shown('maxTradeBps') ?? shown('maxDeviationBps')) && (
                   <p className="mt-1 text-[12px] text-red-300">{shown('maxPositionBps') ?? shown('maxTradeBps') ?? shown('maxDeviationBps')}</p>
                 )}
-                <p className="mt-1 text-[11px] text-muted-foreground">Defaults 7500 / 7500 / 5000. Caps are set at creation and cannot be loosened later.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Now: {bpsLabel(draft.maxPositionBps)} in one token, {bpsLabel(draft.maxTradeBps)} per trade, {bpsLabel(draft.maxDeviationBps)} price gap from the price source. Defaults 75% / 75% / 50%. These limits cannot be loosened later.
+                </p>
               </div>
             </div>
-            <Field label="Extra assets, one address per line (optional — empty means WETH only)" error={shown('assetsText')}>
+            <Field label="Tokens this fund may buy, one address per line (optional; empty means WETH only)" error={shown('assetsText')}>
               <textarea
                 value={draft.assetsText}
                 onChange={(event) => update('assetsText', event.target.value)}
@@ -397,17 +411,17 @@ export function CreateFundWizard() {
                 rows={3}
                 className="w-full rounded-lg border border-white/10 bg-secondary/50 p-3 font-mono text-[12px] text-white placeholder:text-white/30"
               />
-              <p className="mt-1 text-[11px] text-muted-foreground">Each asset must already be on the allowlist with a price feed. WETH is the quote and is not listed here.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Each token must already be on the approved list of tokens funds may buy (the allowlist) with a working price source. WETH is always allowed and is not listed here.</p>
             </Field>
             <p className="text-[12px] leading-relaxed text-white/55">
-              If the raise does not fill before the deadline, anyone can mark it failed and holders can claim a refund of the spendable ETH. Fees are not refunded.
+              If the raise does not reach its goal before the deadline, anyone can mark it failed and holders can get their ETH back. Fees are not refunded.
             </p>
           </>
         )}
 
         {step === feesStep && preview && (
           <>
-            <h2 className="text-[15px] font-semibold">Fees and your share</h2>
+            <h2 className="text-[15px] font-semibold">Step 4: Fees and your share</h2>
             <div>
               <label className="mb-2 block text-xs text-muted-foreground">Entry fee: {bpsLabel(draft.entryFeeBps)}</label>
               <Slider value={[draft.entryFeeBps]} min={0} max={500} step={50} onValueChange={(value) => update('entryFeeBps', value[0] ?? 0)} />
@@ -416,33 +430,33 @@ export function CreateFundWizard() {
                 <span>5% maximum</span>
               </div>
               <p className="mt-2 text-[12px] leading-relaxed text-white/55">
-                Optional. Taken from the ETH paid on each mint, up to 5%. The default is 0%. It is not taken from NFTs that were already minted.
+                Optional. Taken from the ETH paid each time someone buys shares, up to 5%. The default is 0%. It is never taken from shares people already own.
               </p>
             </div>
             <div className="rounded-lg bg-secondary/30 p-3 text-[12px] leading-relaxed text-white/70">
               <p>
-                You mint {preview.skinRequired.toString()} of {preview.maxSupply.toString()} NFTs yourself before anyone else can. That is {bpsLabel(Number(preview.skinBps))} of the supply, at the same price.
+                You buy {preview.skinRequired.toString()} of {preview.maxSupply.toString()} shares yourself before anyone else can. That is {bpsLabel(Number(preview.skinBps))} of the supply, at the same price.
               </p>
               <p className="mt-2">
                 You pay {formatFundEth(preview.managerEth)} ETH. The 0.2% protocol fee on that payment is {formatFundEth(preview.protocolFeeOnManagerMint)} ETH. That fee is not returned.
                 {preview.entryFeeOnManagerMint > 0n ? ` Your entry fee on it is ${formatFundEth(preview.entryFeeOnManagerMint)} ETH.` : ' You are not taking an entry fee.'}
-                {' '}The rest stays in the vault. You do not have to keep the NFTs afterward. Minting them is what opens the raise.
+                {' '}The rest stays in the vault. You do not have to keep the shares afterward. Buying them is what opens the raise to everyone.
               </p>
             </div>
             <button type="button" className="text-[12px] text-white/60 underline-offset-2 hover:text-white hover:underline" onClick={() => setAdvanced((open) => !open)} aria-expanded={advanced}>
-              {advanced ? 'Hide extra options' : 'Change the manager share or metadata link'}
+              {advanced ? 'Hide extra options' : 'Change your required shares or the details link'}
             </button>
             {advanced && (
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-xs text-muted-foreground">Manager share: {bpsLabel(draft.skinBps)}</label>
+                  <label className="mb-2 block text-xs text-muted-foreground">Your required shares: {bpsLabel(draft.skinBps)} of all shares</label>
                   <Slider value={[draft.skinBps]} min={500} max={10000} step={100} onValueChange={(value) => update('skinBps', value[0] ?? 500)} />
-                  <p className="mt-2 text-[12px] text-white/55">5% is the minimum. A higher share means you mint more NFTs before other wallets can.</p>
+                  <p className="mt-2 text-[12px] text-white/55">5% is the minimum. A higher number means you buy more shares before other wallets can.</p>
                   {shown('skinBps') && <p className="mt-1 text-[12px] text-red-300">{shown('skinBps')}</p>}
                 </div>
-                <Field label="Metadata link, optional" error={shown('baseUri')}>
+                <Field label="Details link for each share (metadata link), optional" error={shown('baseUri')}>
                   <Input value={draft.baseUri} onChange={(event) => update('baseUri', event.target.value)} placeholder="https://" className="bg-secondary/50 font-mono text-[12px]" />
-                  <p className="mt-1 text-[11px] text-muted-foreground">Leave this blank to use the image for every NFT. It can be changed until an NFT is minted.</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Leave this blank to use the image for every share. It can be changed until any share is bought.</p>
                 </Field>
               </div>
             )}
@@ -451,7 +465,7 @@ export function CreateFundWizard() {
 
         {step === reviewStep && result.params && (
           <>
-            <h2 className="text-[15px] font-semibold">Review and create</h2>
+            <h2 className="text-[15px] font-semibold">Step 5: Review and create</h2>
             <dl className="space-y-1 text-sm">
               <ReviewRow label="Type of fund" value="Invest fund" />
               <ReviewRow label="Name" value={result.params.name} />
@@ -459,7 +473,7 @@ export function CreateFundWizard() {
               <ReviewRow label="Price per share" value={`${formatFundEth(result.params.mintPrice)} ETH`} />
               <ReviewRow label="Raise goal" value={`${formatFundEth(result.params.raiseCap)} ETH`} />
               <ReviewRow label="Shares" value={result.params.maxSupply.toString()} />
-              <ReviewRow label="Leftover" value={result.params.dust === 0n ? 'None' : `${formatFundEth(result.params.dust)} ETH`} />
+              <ReviewRow label="Leftover (goal not divisible by price)" value={result.params.dust === 0n ? 'None' : `${formatFundEth(result.params.dust)} ETH`} />
               <ReviewRow label="Entry fee" value={bpsLabel(Number(result.params.entryFeeBps))} />
               <ReviewRow label="Your shares before others" value={`${result.params.skinRequired.toString()} · ${formatFundEth(result.params.managerEth)} ETH`} />
               <ReviewRow label="Protocol fee on your shares (0.2%)" value={`${formatFundEth(result.params.protocolFeeOnManagerMint)} ETH`} />
@@ -469,7 +483,7 @@ export function CreateFundWizard() {
                   <ReviewRow label="Fingerprint of the fund's rules (mandate hash)" value={`${result.params.mandateHash.slice(0, 10)}…${result.params.mandateHash.slice(-6)}`} />
                   <ReviewRow label="Where to read the rules (mandate link)" value={result.params.mandateUri} />
                   <ReviewRow label="Raise open for" value={`${Number(result.params.raiseDuration / 86_400n)} days`} />
-                  <ReviewRow label="Tokens it may buy" value={result.params.assets.length ? `${result.params.assets.length} asset(s)` : 'WETH only'} />
+                  <ReviewRow label="Tokens it may buy" value={result.params.assets.length ? `WETH + ${result.params.assets.length} token(s)` : 'WETH only'} />
                   <ReviewRow label="Limits (one token / per trade / price gap)" value={`${bpsLabel(Number(result.params.maxPositionBps))} / ${bpsLabel(Number(result.params.maxTradeBps))} / ${bpsLabel(Number(result.params.maxDeviationBps))}`} />
                 </>
               )}
@@ -504,10 +518,11 @@ export function CreateFundWizard() {
           ) : (
             <Button onClick={handleCreate} disabled={deploying || !result.params} className="gap-2">
               {deploying && <Loader2 className="h-4 w-4 animate-spin" />}
-              {deploying ? 'Creating…' : 'Create fund'}
+              {deploying ? 'Creating…' : 'Create fund (sign 1 transaction, no ETH sent)'}
             </Button>
           )}
         </div>
+        {steps[step]?.next && <p className="text-[12px] text-white/50">{steps[step].next}</p>}
       </div>
       <FundNotice mode="invest" />
     </div>
@@ -518,18 +533,18 @@ function PreviewCard({ draft }: { draft: FundDraft }) {
   const { preview, issues } = previewDraft(draft);
   if (!preview) {
     const message = issues.find((issue) => issue.field === 'mintPriceEth' || issue.field === 'raiseCapEth')?.message;
-    return <p className="rounded-lg bg-secondary/30 p-3 text-[12px] text-white/60">{message ?? 'Enter a mint price and a raise goal.'}</p>;
+    return <p className="rounded-lg bg-secondary/30 p-3 text-[12px] text-white/60">{message ?? 'Enter a price per share and a raise goal.'}</p>;
   }
   const supplyIssue = issues.find((issue) => issue.field === 'raiseCapEth' && issue.message.includes('10,000'));
   return (
     <div className="space-y-1 rounded-lg bg-secondary/30 p-3 text-[12px] leading-relaxed text-white/70">
-      <p><span className="text-white">{preview.maxSupply.toString()} NFTs</span> at {formatFundEth(preview.mintPrice)} ETH.</p>
+      <p><span className="text-white">{preview.maxSupply.toString()} shares</span> at {formatFundEth(preview.mintPrice)} ETH each.</p>
       <p>
         {preview.dust === 0n
-          ? 'No leftover. The goal divides into whole NFTs.'
-          : `${formatFundEth(preview.dust)} ETH of the goal is left over and cannot mint another NFT. The raise can collect ${formatFundEth(preview.effectiveRaise)} ETH.`}
+          ? 'No leftover. The goal divides into whole shares.'
+          : `${formatFundEth(preview.dust)} ETH of the goal is left over and cannot buy another share. The raise can collect ${formatFundEth(preview.effectiveRaise)} ETH.`}
       </p>
-      <p>You mint {preview.skinRequired.toString()} before anyone else, which costs {formatFundEth(preview.managerEth)} ETH. The 0.2% protocol fee on that is {formatFundEth(preview.protocolFeeOnManagerMint)} ETH.</p>
+      <p>You buy {preview.skinRequired.toString()} shares before anyone else, which costs {formatFundEth(preview.managerEth)} ETH. The 0.2% protocol fee on that is {formatFundEth(preview.protocolFeeOnManagerMint)} ETH.</p>
       {supplyIssue && <p className="text-red-300">{supplyIssue.message}</p>}
     </div>
   );

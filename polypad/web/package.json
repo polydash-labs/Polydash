@@ -1,14 +1,16 @@
 {
-  "name": "polypad-web",
+  "name": "app",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
-    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts lib/agents-api/v2/v2.unit.test.ts",
-    "test:fork": "node --import tsx --test lib/agents-api/v2/v2.fork.test.ts",
-    "gen:agent-tools": "node --import tsx lib/agents-api/v2/export-schemas.ts"
+    "postinstall": "prisma generate",
+    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts lib/fund/phase3.test.ts lib/fund/phase4.test.ts lib/fund/phase5.test.ts lib/fund/phase6.test.ts",
+    "lint": "eslint ."
+  },
+  "prisma": {
+    "seed": "tsx --require dotenv/config scripts/safe-seed.ts"
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "16.4.1",
@@ -26,6 +28,7 @@
     "eslint-plugin-prettier": "5.1.3",
     "eslint-plugin-react-hooks": "7.1.1",
     "postcss": "8.4.47",
+    "prisma": "6.7.0",
     "tailwind-merge": "2.5.2",
     "tailwindcss": "3.4.0",
     "tailwindcss-animate": "1.0.7",
@@ -34,12 +37,18 @@
     "typescript": "5.6.3"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "2.11.3",
     "@aws-sdk/client-s3": "3.1105.0",
     "@aws-sdk/s3-presigned-post": "3.1105.0",
+    "@aws-sdk/s3-request-presigner": "3.1105.0",
     "@azure/storage-blob": "12.33.0",
+    "@bevorai/sdk": "0.2.0-rc4",
     "@floating-ui/react": "0.26.0",
     "@headlessui/react": "2.2.10",
     "@hookform/resolvers": "3.9.0",
+    "@moonpay/moonpay-js": "^0.7.6",
+    "@openzeppelin/merkle-tree": "1.0.8",
+    "@prisma/client": "6.7.0",
     "@radix-ui/react-accordion": "1.2.0",
     "@radix-ui/react-alert-dialog": "1.1.1",
     "@radix-ui/react-aspect-ratio": "1.1.0",
@@ -91,6 +100,7 @@
     "lucide-react": "0.446.0",
     "mapbox-gl": "1.13.3",
     "next": "16.4.1",
+    "next-auth": "5.0.0-beta.32",
     "next-themes": "0.4.0",
     "plotly.js": "2.35.3",
     "react": "19.2.8",
@@ -122,6 +132,10 @@
     "node": ">=20.9.0"
   },
   "resolutions": {
+    "motion-dom": "12.23.12",
+    "motion-utils": "12.23.6"
+  },
+  "overrides": {
     "motion-dom": "12.23.12",
     "motion-utils": "12.23.6"
   }

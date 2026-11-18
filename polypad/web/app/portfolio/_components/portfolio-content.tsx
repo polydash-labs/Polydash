@@ -14,6 +14,7 @@ import { formatUsd } from '@/lib/format';
 import { FadeIn, Stagger, StaggerItem } from '@/components/ui/animate';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { BuyEthButton, BridgeEthLink } from '@/components/onramp/buy-eth';
 
 export function PortfolioContent() {
   const { isConnected, address } = useAccount();
@@ -51,6 +52,10 @@ export function PortfolioContent() {
               <Button onClick={openConnectModal}>Connect wallet</Button>
             )}
           </ConnectButton.Custom>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <BuyEthButton className="items-center" />
+            <BridgeEthLink />
+          </div>
         </FadeIn>
       </div>
     );
@@ -70,6 +75,17 @@ export function PortfolioContent() {
       <ContractsBanner />
 
       <h1 className="text-lg sm:text-xl font-semibold">Portfolio</h1>
+
+      <div className="glass-card flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[14px] font-medium">Add ETH to your wallet</p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">Buy ETH, or bridge ETH you already have on Base to Robinhood Chain.</p>
+        </div>
+        <div className="flex flex-wrap items-start gap-3">
+          <BuyEthButton />
+          <BridgeEthLink />
+        </div>
+      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">

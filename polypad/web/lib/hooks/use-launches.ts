@@ -2,15 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
-import { formatEther, parseAbiItem, type PublicClient } from 'viem';
-import { PolydashFactoryABI, PolydashLaunchABI, PolydashTokenABI } from '@/lib/contracts/abis';
-import { getFactoryAddress } from '@/lib/contracts/addresses';
+import { formatEther, type PublicClient } from 'viem';
+import { getFactoryAddresses } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
 import type { LaunchToken } from '@/lib/token-types';
+import { BOUGHT, SOLD, fetchLaunchAddresses, fetchLaunchDetails, getLogsFromDeploy, resolveLaunchAddress } from '@/lib/launches-core';
 
-export const DEPLOY_BLOCK = BigInt(85405135);
-const BOUGHT = parseAbiItem('event Bought(address indexed buyer, uint256 ethIn, uint256 tokensOut, uint256 platformFee, uint256 creatorFee, uint256 price)');
-const SOLD = parseAbiItem('event Sold(address indexed seller, uint256 tokensIn, uint256 ethOut, uint256 platformFee, uint256 creatorFee, uint256 price)');
+export { DEPLOY_BLOCK, fetchLaunchDetails } from '@/lib/launches-core';
 
 export function useEthPrice() {
   return useQuery({
@@ -24,128 +22,48 @@ export function useEthPrice() {
   });
 }
 
-const LAUNCH_FIELDS = ['token', 'creator', 'creatorFeeBps', 'phase', 'spotPrice', 'realEthRaised', 'graduationThreshold', 'tokensSold', 'curveSupply', 'totalSupply', 'virtualEth', 'launchTime', 'graduated', 'k', 'totalCommitted', 'committersLength', 'commitmentCursor'] as const;
-const TOKEN_FIELDS = ['name', 'symbol', 'imageUri', 'description', 'socialLinks'] as const;
-
-async function fetchVolumes(client: PublicClient, launches: `0x${string}`[]): Promise<Record<string, number>> {
-  const vol: Record<string, number> = {};
-  if (launches.length === 0) return vol;
-  try {
-    const [buys, sells] = await Promise.all([
-      client.getLogs({ address: launches, event: BOUGHT, fromBlock: DEPLOY_BLOCK, toBlock: 'latest' }),
-      client.getLogs({ address: launches, event: SOLD, fromBlock: DEPLOY_BLOCK, toBlock: 'latest' }),
-    ]);
-    for (const l of buys) vol[l.address.toLowerCase()] = (vol[l.address.toLowerCase()] ?? 0) + Number(formatEther(l.args.ethIn ?? BigInt(0)));
-    for (const l of sells) vol[l.address.toLowerCase()] = (vol[l.address.toLowerCase()] ?? 0) + Number(formatEther(l.args.ethOut ?? BigInt(0)));
-  } catch (e) {
-    console.error('Failed to load trade volume logs', e);
-  }
-  return vol;
-}
-
-export async function fetchLaunchDetails(client: PublicClient, addrs: `0x${string}`[], ethUsd: number): Promise<LaunchToken[]> {
-  if (addrs.length === 0) return [];
-  const launchRes = await client.multicall({
-    contracts: addrs.flatMap((a) => LAUNCH_FIELDS.map((f) => ({ address: a, abi: PolydashLaunchABI, functionName: f }))) as any,
-    allowFailure: true,
-  });
-  const perLaunch = addrs.map((_, i) => {
-    const slice = launchRes.slice(i * LAUNCH_FIELDS.length, (i + 1) * LAUNCH_FIELDS.length);
-    const o: Record<string, any> = {};
-    LAUNCH_FIELDS.forEach((f, j) => { o[f] = slice[j]?.status === 'success' ? slice[j].result : undefined; });
-    return o;
-  });
-  const tokenAddrs = perLaunch.map((l) => l.token as `0x${string}` | undefined);
-  const tokenRes = await client.multicall({
-    contracts: tokenAddrs.flatMap((t) => TOKEN_FIELDS.map((f) => ({ address: t ?? '0x0000000000000000000000000000000000000000', abi: PolydashTokenABI, functionName: f }))) as any,
-    allowFailure: true,
-  });
-  const vols = await fetchVolumes(client, addrs);
-
-  return addrs.map((addr, i) => {
-    const l = perLaunch[i];
-    const tslice = tokenRes.slice(i * TOKEN_FIELDS.length, (i + 1) * TOKEN_FIELDS.length);
-    const t: Record<string, any> = {};
-    TOKEN_FIELDS.forEach((f, j) => { t[f] = tslice[j]?.status === 'success' ? tslice[j].result : undefined; });
-    const zero = BigInt(0);
-    const priceEth = Number(formatEther((l.spotPrice as bigint) ?? zero));
-    const totalSupplyTokens = Number(formatEther((l.totalSupply as bigint) ?? zero));
-    const raised = Number(formatEther((l.realEthRaised as bigint) ?? zero));
-    const threshold = Number(formatEther((l.graduationThreshold as bigint) ?? zero));
-    const phase = Number(l.phase ?? 0);
-    const graduated = Boolean(l.graduated) || phase === 4;
-    const progress = graduated ? 100 : threshold > 0 ? Math.min(100, Math.round((raised / threshold) * 1000) / 10) : 0;
-    const volEth = vols[addr.toLowerCase()] ?? 0;
-    return {
-      launchAddress: addr,
-      tokenAddress: (l.token as string) ?? '',
-      name: (t.name as string) ?? 'Unknown',
-      symbol: (t.symbol as string) ?? '???',
-      imageUri: (t.imageUri as string) ?? '',
-      description: (t.description as string) ?? '',
-      creator: (l.creator as string) ?? '',
-      creatorFeeBps: Number(l.creatorFeeBps ?? 0),
-      curveProgress: progress,
-      marketCapUsd: priceEth * totalSupplyTokens * ethUsd,
-      volumeUsd: volEth * ethUsd,
-      priceEth,
-      ethRaised: raised,
-      graduationThreshold: threshold,
-      graduated,
-      totalSupply: String(Math.round(totalSupplyTokens)),
-      socialLinks: ((t.socialLinks as string[]) ?? []).filter(Boolean),
-      createdAt: Number(l.launchTime ?? 0) * 1000,
-      phase,
-      launchTime: Number(l.launchTime ?? 0) * 1000,
-      totalCommitted: Number(formatEther((l.totalCommitted as bigint) ?? zero)),
-      committers: Number(l.committersLength ?? 0),
-      commitmentCursor: Number(l.commitmentCursor ?? 0),
-      virtualEthWei: String(l.virtualEth ?? 0),
-      curveSupplyWei: String(l.curveSupply ?? 0),
-      tokensSoldWei: String(l.tokensSold ?? 0),
-      kWei: String(l.k ?? 0),
-    } satisfies LaunchToken;
-  });
-}
-
-/** All launches created through the factory, read live from the chain. */
-export function useLaunches() {
+/** All launches created through the factory, read live from the chain. `initial` (server snapshot) is shown until the first live read. */
+export function useLaunches(initial?: LaunchToken[] | null) {
   const client = usePublicClient({ chainId: robinhoodChain.id });
   const { data: ethUsd } = useEthPrice();
-  const factory = getFactoryAddress();
+  const factories = getFactoryAddresses();
   return useQuery({
-    queryKey: ['launches', factory, ethUsd ?? 0],
-    enabled: !!client && !!factory,
+    queryKey: ['launches', factories.join(','), ethUsd ?? 0],
+    enabled: !!client && factories.length > 0,
     refetchInterval: 30_000,
+    placeholderData: (prev) => prev ?? initial ?? undefined,
     queryFn: async () => {
-      if (!client || !factory) return [];
-      const len = (await client.readContract({ address: factory, abi: PolydashFactoryABI, functionName: 'allLaunchesLength' })) as bigint;
-      const n = Number(len);
-      if (n === 0) return [];
-      const addrRes = await client.multicall({
-        contracts: Array.from({ length: n }, (_, i) => ({ address: factory, abi: PolydashFactoryABI, functionName: 'allLaunches', args: [BigInt(i)] })) as any,
-        allowFailure: true,
-      });
-      const addrs = addrRes.filter((r) => r.status === 'success').map((r) => r.result as `0x${string}`);
+      if (!client || factories.length === 0) return [];
+      // Strict: an inconclusive address lookup throws instead of resolving
+      // to [], so a flaky refetch keeps the last good list instead of
+      // blanking the homepage. [] then only means every factory genuinely
+      // reports zero launches.
+      const addrs = await fetchLaunchAddresses(client as PublicClient, factories, true);
+      if (addrs.length === 0) return [];
       return fetchLaunchDetails(client as PublicClient, addrs, ethUsd ?? 0);
     },
   });
 }
 
-/** A single launch by its launch contract address. */
-export function useLaunch(address: string) {
+/** A single launch by its launch contract address or its token address (any known factory). `initial` (server snapshot) is shown until the first live read. */
+export function useLaunch(address: string, initial?: LaunchToken | null) {
   const client = usePublicClient({ chainId: robinhoodChain.id });
   const { data: ethUsd } = useEthPrice();
-  const factory = getFactoryAddress();
+  const factories = getFactoryAddresses();
   return useQuery({
     queryKey: ['launch', address, ethUsd ?? 0],
-    enabled: !!client && !!factory && /^0x[0-9a-fA-F]{40}$/.test(address),
+    enabled: !!client && factories.length > 0 && /^0x[0-9a-fA-F]{40}$/.test(address),
     refetchInterval: 15_000,
+    placeholderData: (prev) => prev ?? initial ?? undefined,
     queryFn: async () => {
-      if (!client || !factory) return null;
-      const ok = (await client.readContract({ address: factory, abi: PolydashFactoryABI, functionName: 'isLaunch', args: [address as `0x${string}`] })) as boolean;
-      if (!ok) return null;
-      const [t] = await fetchLaunchDetails(client as PublicClient, [address as `0x${string}`], ethUsd ?? 0);
+      if (!client || factories.length === 0) return null;
+      // Strict: an inconclusive lookup (an RPC call failed) throws instead of
+      // resolving null, so a flaky refetch keeps the last good data instead of
+      // flipping a loaded page to "Token not found". Null then only means the
+      // address genuinely is not a launch on any factory.
+      const launch = await resolveLaunchAddress(client as PublicClient, factories, address as `0x${string}`, true);
+      if (!launch) return null;
+      const [t] = await fetchLaunchDetails(client as PublicClient, [launch], ethUsd ?? 0);
       return t ?? null;
     },
   });
@@ -165,8 +83,8 @@ export function useTrades(address: string) {
       if (!client) return [];
       const a = address as `0x${string}`;
       const [buys, sells] = await Promise.all([
-        client.getLogs({ address: a, event: BOUGHT, fromBlock: DEPLOY_BLOCK, toBlock: 'latest' }),
-        client.getLogs({ address: a, event: SOLD, fromBlock: DEPLOY_BLOCK, toBlock: 'latest' }),
+        getLogsFromDeploy(client as PublicClient, (fromBlock, toBlock) => client.getLogs({ address: a, event: BOUGHT, fromBlock, toBlock })),
+        getLogsFromDeploy(client as PublicClient, (fromBlock, toBlock) => client.getLogs({ address: a, event: SOLD, fromBlock, toBlock })),
       ]);
       const rows = [
         ...buys.map((l) => ({ isBuy: true, trader: l.args.buyer ?? '', eth: Number(formatEther(l.args.ethIn ?? BigInt(0))), tokens: Number(formatEther(l.args.tokensOut ?? BigInt(0))), priceEth: Number(formatEther(l.args.price ?? BigInt(0))), txHash: l.transactionHash, block: l.blockNumber, idx: l.logIndex })),

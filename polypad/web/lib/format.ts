@@ -18,8 +18,30 @@ export function formatTokens(wei: bigint | undefined | null, decimals = 18, disp
   return val.toLocaleString('en-US', { maximumFractionDigits: display });
 }
 
+const SUBSCRIPT = '₀₁₂₃₄₅₆₇₈₉';
+
+/**
+ * Small numbers without scientific notation. Four or more leading zeros collapse into a
+ * subscript count: 0.00000000187 -> "0.0₈187". Larger values use up to `sig` significant digits.
+ */
+export function formatSmall(v: number, sig = 3): string {
+  if (!Number.isFinite(v)) return 'n/a';
+  if (v === 0) return '0';
+  const sign = v < 0 ? '-' : '';
+  const a = Math.abs(v);
+  if (a >= 0.0001) return sign + a.toLocaleString('en-US', { maximumSignificantDigits: sig, useGrouping: false });
+  let zeros = Math.floor(-Math.log10(a));
+  // `zeros` = zeros right after the decimal point; `digits` = the first `sig` significant digits.
+  let digits = Math.round(a * 10 ** (zeros + sig));
+  if (digits >= 10 ** sig) { digits = Math.round(digits / 10); zeros -= 1; }
+  const sub = String(zeros).split('').map((d) => SUBSCRIPT[Number(d)]).join('');
+  const body = String(digits).replace(/0+$/, '') || '0';
+  return `${sign}0.0${sub}${body}`;
+}
+
 export function formatUsd(val: number | undefined | null): string {
   if (val == null) return '$0';
+  if (val > 0 && val < 0.01) return `$${formatSmall(val)}`;
   if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(2)}M`;
   if (val >= 1_000) return `$${(val / 1_000).toFixed(2)}K`;
   return `$${val.toFixed(2)}`;
@@ -32,7 +54,7 @@ export function formatCompact(v: number): string {
   if (v >= 1e3) return `${(v / 1e3).toFixed(2)}K`;
   if (v >= 1) return v.toFixed(2);
   if (v === 0) return '0';
-  return v.toPrecision(3);
+  return formatSmall(v);
 }
 
 export function shortenAddress(addr: string | undefined | null): string {

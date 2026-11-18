@@ -15,6 +15,7 @@ import { PolydashLaunchABI, PolydashTokenABI } from '@/lib/contracts/abis';
 import { getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
 import { toast } from 'sonner';
+import { OnrampInline } from '@/components/onramp/buy-eth';
 
 function safeParse(v: string): bigint {
   try { const s = (v || '').trim(); return s ? parseEther(s) : BigInt(0); } catch { return BigInt(0); }
@@ -236,6 +237,7 @@ export function TradePanel({ token }: { token: LaunchToken | null }) {
               Buy {token?.symbol ?? 'Token'}
             </Button>
           )}
+          <OnrampInline />
         </TabsContent>
 
         {/* SELL */}

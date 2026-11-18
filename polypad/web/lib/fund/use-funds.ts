@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
 import type { PublicClient } from 'viem';
 import { FundFactoryABI, FundNFTABI, FundVaultABI } from '@/lib/contracts/fund-abi';
-import { getFundFactoryAddress, getFundInvestFactoryAddress } from '@/lib/fund/address';
+import { getFundInvestFactoryAddress } from '@/lib/fund/address';
 import { fundStatus, type FundStatus } from '@/lib/fund/model';
 import { readInvest } from '@/lib/fund/read-invest';
 import type { FundInvestView } from '@/lib/fund/invest';
@@ -140,53 +140,46 @@ async function listFunds(client: PublicClient, factory: `0x${string}`, generatio
   return funds.filter((fund): fund is FundSummary => fund !== null);
 }
 
-/** Funds created through FundFactory, newest index last in the raw list. */
+/** Funds created through the invest factory (Phase 2) only. The Phase 1 factory is never read. */
 export function useFunds() {
   const client = usePublicClient({ chainId: robinhoodChain.id });
-  const factory = getFundFactoryAddress();
   const investFactory = getFundInvestFactoryAddress();
   return useQuery({
-    queryKey: ['funds', factory, investFactory ?? ''],
-    enabled: !!client && !!factory,
+    queryKey: ['funds', investFactory ?? ''],
+    enabled: !!client,
     refetchInterval: 20_000,
+    // A slow first-paint chain read must not flash the error state: the
+    // single RPC times out at 10s under concurrent load, so retry with
+    // backoff inside the loading state, and keep the last good list when
+    // a background refetch fails (same pattern as useV3Funds).
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    placeholderData: (prev) => prev,
     queryFn: async () => {
-      if (!client) return [];
-      const primary = await listFunds(client, factory, 1);
-      if (!investFactory) return primary;
-      const extra = await listFunds(client, investFactory, 2);
-      return [...primary, ...extra];
+      if (!client || !investFactory) return [];
+      return listFunds(client, investFactory, 2);
     },
   });
 }
 
 export function useFund(address: string, account?: `0x${string}`) {
   const client = usePublicClient({ chainId: robinhoodChain.id });
-  const factory = getFundFactoryAddress();
   const investFactory = getFundInvestFactoryAddress();
   const valid = /^0x[0-9a-fA-F]{40}$/.test(address);
   return useQuery({
-    queryKey: ['fund', factory, investFactory ?? '', address.toLowerCase(), account ?? ''],
+    queryKey: ['fund', investFactory ?? '', address.toLowerCase(), account ?? ''],
     enabled: !!client && valid,
     refetchInterval: 15_000,
     queryFn: async (): Promise<FundDetail | null> => {
-      if (!client) return null;
+      if (!client || !investFactory) return null;
       const fundAddress = address as `0x${string}`;
-      let generation: 1 | 2 = 1;
-      let listed = await client.readContract({
-        address: factory,
+      const generation: 1 | 2 = 2;
+      const listed = await client.readContract({
+        address: investFactory,
         abi: FundFactoryABI,
         functionName: 'isFund',
         args: [fundAddress],
       });
-      if (!listed && investFactory) {
-        listed = await client.readContract({
-          address: investFactory,
-          abi: FundFactoryABI,
-          functionName: 'isFund',
-          args: [fundAddress],
-        });
-        generation = 2;
-      }
       if (!listed) return null;
       const summary = await readFund(client, fundAddress, 0, account, generation);
       if (!summary) return null;

@@ -83,31 +83,31 @@ type Ok<T> = { ok: true } & T;
 type Err = { ok: false; message: string };
 
 const ROWS: { id: ProtectionId; bit: number; label: string }[] = [
-  { id: 'custody', bit: PROTECTION_BITS.custody, label: 'Custody locked' },
-  { id: 'allowlist', bit: PROTECTION_BITS.allowlist, label: 'Allowlist' },
-  { id: 'hwm', bit: PROTECTION_BITS.hwm, label: 'High-water mark' },
-  { id: 'skin', bit: PROTECTION_BITS.skin, label: 'Skin in the game' },
-  { id: 'source', bit: PROTECTION_BITS.source, label: 'Open source' },
-  { id: 'timelock', bit: PROTECTION_BITS.timelock, label: 'Timelock' },
+  { id: 'custody', bit: PROTECTION_BITS.custody, label: 'Money stays in the vault' },
+  { id: 'allowlist', bit: PROTECTION_BITS.allowlist, label: 'Approved tokens only (allowlist)' },
+  { id: 'hwm', bit: PROTECTION_BITS.hwm, label: 'Fees only on new highs (high-water mark)' },
+  { id: 'skin', bit: PROTECTION_BITS.skin, label: 'Manager invested before others' },
+  { id: 'source', bit: PROTECTION_BITS.source, label: 'Public code' },
+  { id: 'timelock', bit: PROTECTION_BITS.timelock, label: 'Waiting period for changes (timelock)' },
 ];
 
 function detailFor(id: ProtectionId, met: boolean, phase2: boolean): string {
   if (id === 'custody') {
     return met
-      ? 'The vault has no function that sends the raise to a wallet.'
-      : 'Custody is not recorded on this fund.';
+      ? 'The vault has no way to send the money raised to any wallet, including the manager\'s.'
+      : 'This fund does not record that the money is locked in the vault.';
   }
   if (id === 'allowlist') {
-    if (!met) return phase2 ? 'No allowlist is set on this fund.' : 'This raise does not swap.';
-    return 'A swap has to use an allowlisted router and an asset on this fund. Later allowlist changes wait out a delay.';
+    if (!met) return phase2 ? 'This fund has no approved list of tokens it may buy (the allowlist).' : 'This fund only collects ETH and does not buy tokens.';
+    return 'The manager can only trade through approved trading routes and buy tokens from the approved list of tokens the fund may buy (the allowlist).';
   }
-  if (id === 'hwm') return met ? 'A high-water mark is recorded on this fund.' : 'Not in this version.';
+  if (id === 'hwm') return met ? 'The manager only takes fees when fund value per share reaches a new high (the high-water mark).' : 'Not in this version.';
   if (id === 'skin') {
-    return met ? 'The manager minted the required share.' : 'The manager has not minted the required share yet.';
+    return met ? 'The manager bought their required shares with their own ETH.' : 'The manager has not bought their required shares yet.';
   }
-  if (id === 'source') return 'Source is in this repository. Unaudited.';
-  if (!met) return phase2 ? 'The allowlist delay is shorter than one day.' : 'Not in this version.';
-  return 'Changes to routers and assets wait out the allowlist delay (2 days on the live allowlist, never under one day). Pause takes effect immediately.';
+  if (id === 'source') return 'The contract code is public so anyone can read it. Unaudited.';
+  if (!met) return phase2 ? 'Changes to the approved list wait less than one day.' : 'Not in this version.';
+  return 'Changes to the approved list only take effect after a waiting period of at least one day (the timelock). Pausing trading works right away.';
 }
 
 /** Score the protections this fund actually exposes. High-water mark stays off unless the vault sets that bit. */

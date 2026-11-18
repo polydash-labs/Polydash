@@ -4,10 +4,11 @@ import { useState, useMemo } from 'react';
 import { TokenAvatar } from '@/components/token-avatar';
 import { ContractsBanner } from '@/components/contracts-banner';
 import { useLaunches } from '@/lib/hooks/use-launches';
-import { formatUsd } from '@/lib/format';
+import { formatUsd, formatSmall } from '@/lib/format';
 import { FadeIn, Stagger, StaggerItem } from '@/components/ui/animate';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { isHiddenLaunch } from '@/lib/hidden-launches';
 
 type LeaderboardTab = 'volume' | 'mcap' | 'gainers';
 
@@ -16,7 +17,7 @@ export function LeaderboardContent() {
   const { data: launches, isLoading } = useLaunches();
 
   const sorted = useMemo(() => {
-    const list = [...(launches ?? [])];
+    const list = (launches ?? []).filter((t) => !isHiddenLaunch(t));
     switch (tab) {
       case 'volume': list.sort((a: any, b: any) => (b?.volumeUsd ?? 0) - (a?.volumeUsd ?? 0)); break;
       case 'mcap': list.sort((a: any, b: any) => (b?.marketCapUsd ?? 0) - (a?.marketCapUsd ?? 0)); break;
@@ -87,7 +88,7 @@ export function LeaderboardContent() {
                     {formatUsd(token?.marketCapUsd)}
                   </div>
                   <div className="col-span-4 sm:col-span-2 text-right font-mono text-xs sm:text-sm">
-                    {formatUsd(token?.volumeUsd)}
+                    {token?.volumeUsd == null ? '—' : formatUsd(token.volumeUsd)}
                   </div>
                   <div className="hidden sm:block col-span-2 text-right">
                     <div className="inline-flex items-center gap-1">
@@ -98,7 +99,7 @@ export function LeaderboardContent() {
                     </div>
                   </div>
                   <div className="hidden sm:block col-span-2 text-right font-mono text-xs text-muted-foreground">
-                    {(token?.priceEth ?? 0) < 0.0001 ? (token?.priceEth ?? 0).toExponential(2) : (token?.priceEth ?? 0).toFixed(6)}
+                    {formatSmall(token?.priceEth ?? 0)}
                   </div>
                 </Link>
               </StaggerItem>
@@ -107,7 +108,7 @@ export function LeaderboardContent() {
 
           <div className="px-4 py-3 text-center text-xs text-muted-foreground">
             {isLoading ? 'Loading live rankings…' : sorted.length === 0 ? (
-              <>No tokens launched yet. <Link href="/create" className="text-primary hover:underline">Create one</Link></>
+              <>No tokens launched yet. <Link href="/create" className="text-primary hover:underline">Create the first one</Link></>
             ) : 'Live data from Robinhood Chain'}
           </div>
         </div>

@@ -6,9 +6,12 @@ import { BondingCurveBar } from './bonding-curve-bar';
 import { formatUsd, formatEth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { LaunchToken as MockToken } from '@/lib/token-types';
-import { isAgentLaunched } from '@/lib/agent-mark';
-import { AgentLaunchedBadge } from '@/components/agent-launched-badge';
 import { HoverLift } from '@/components/ui/animate';
+import { PromiseBadge } from '@/components/cto/promise-badge';
+import { AgentBadge } from '@/components/agent-badge';
+import { StakingBadge } from '@/components/staking-badge';
+import { HpChip } from '@/components/holder-protections';
+import { SliceChip } from '@/components/slice/slice-chip';
 
 export function TokenCard({ token }: { token: MockToken }) {
   const t = token;
@@ -26,9 +29,15 @@ export function TokenCard({ token }: { token: MockToken }) {
                     Graduated
                   </span>
                 )}
-                {isAgentLaunched(t?.socialLinks) && <AgentLaunchedBadge />}
               </div>
-              <p className="text-xs text-muted-foreground font-mono">${t?.symbol ?? '???'}</p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="text-xs text-muted-foreground font-mono">${t?.symbol ?? '???'}</p>
+                {t?.launchAddress && <PromiseBadge launch={t.launchAddress} className="text-[10px]" />}
+                {t?.launchAddress && <AgentBadge launch={t.launchAddress} token={t.tokenAddress} />}
+                {t?.tokenAddress && <StakingBadge token={t.tokenAddress} />}
+                {t?.launchAddress && <HpChip launch={t.launchAddress} />}
+                <SliceChip token={t?.tokenAddress} />
+              </div>
             </div>
           </div>
 
@@ -41,13 +50,13 @@ export function TokenCard({ token }: { token: MockToken }) {
             </div>
             <div className="bg-secondary/50 rounded-lg px-2.5 py-1.5">
               <span className="text-muted-foreground">Volume</span>
-              <p className="font-mono font-semibold text-foreground">{formatUsd(t?.volumeUsd)}</p>
+              <p className="font-mono font-semibold text-foreground">{t?.volumeUsd == null ? '—' : formatUsd(t.volumeUsd)}</p>
             </div>
           </div>
 
           <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
             <span className="font-mono">{formatEth(BigInt(Math.floor((t?.ethRaised ?? 0) * 1e18)))} ETH raised</span>
-            <span>{getTimeAgo(t?.createdAt)}</span>
+            <span suppressHydrationWarning>{getTimeAgo(t?.createdAt)}</span>
           </div>
         </div>
       </Link>

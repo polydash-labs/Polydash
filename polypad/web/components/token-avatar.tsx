@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { proxiedImage } from '@/lib/sanitize';
 
 const COLORS = [
   ['#00E676', '#000000'],
@@ -38,11 +40,13 @@ export function TokenAvatar({
   const initials = (symbol ?? name ?? '??')?.slice(0, 2)?.toUpperCase() ?? '??';
   const colorIdx = hashStr(symbol ?? name ?? '') % COLORS.length;
   const [bg, fg] = COLORS[colorIdx] ?? ['#00E676', '#000000'];
+  const [failed, setFailed] = useState<string | null>(null);
+  const src = proxiedImage(imageUri);
 
-  if (imageUri) {
+  if (src && failed !== src) {
     return (
       <div className={cn('relative rounded-full overflow-hidden flex-shrink-0', sizeClass, className)}>
-        <img src={imageUri} alt={name ?? 'Token'} className="h-full w-full object-cover" />
+        <img src={src} alt={name ?? 'Token'} className="h-full w-full object-cover" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(src)} />
       </div>
     );
   }
