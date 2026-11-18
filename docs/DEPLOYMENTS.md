@@ -94,4 +94,19 @@ Deploy transactions: [`0xc92c6bc4…ebf1`](https://robinhoodchain.blockscout.com
 
 The factory uses the live Phase 2 allowlist `0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`. Its delay is 172800 seconds (2 days). Changes to routers and assets wait those 2 days. The contract floor is 1 day (`MIN_DELAY` is 86400) and `setDelay` cannot go below it. Pause takes effect immediately.
 
+Price feeds the Phase 6 factory reads: V3 TWAP feeds (6-hour window) for the V3 pools and generic V4 feeds for the V4 pools, plus the generic V4 router adapter. Sourcify status was not checked for these ten at the time of this record.
+
+| Contract | Address | Verification |
+| --- | --- | --- |
+| `UniswapV3TwapFeed (PONS)` | [`0xf62E32C96cB4A86EEE7e5cC037bFD37E852965ED`](https://robinhoodchain.blockscout.com/address/0xf62E32C96cB4A86EEE7e5cC037bFD37E852965ED) | Not checked |
+| `UniswapV3TwapFeed (CASHCAT)` | [`0xF523C9750583419b78346C229d388d5DaCfde962`](https://robinhoodchain.blockscout.com/address/0xF523C9750583419b78346C229d388d5DaCfde962) | Not checked |
+| `UniswapV3TwapFeed (WALLET)` | [`0xDeA5850B516e5F8Afbd21e26C6d2456E3ad027B6`](https://robinhoodchain.blockscout.com/address/0xDeA5850B516e5F8Afbd21e26C6d2456E3ad027B6) | Not checked |
+| `UniswapV3TwapFeed (PIPEDOG)` | [`0xFEb8324DBd32D14C79bca9BAFC510B32C24451F7`](https://robinhoodchain.blockscout.com/address/0xFEb8324DBd32D14C79bca9BAFC510B32C24451F7) | Not checked |
+| `UniswapV3TwapFeed (USDG/WETH reference)` | [`0xBf3e62DBd9Ce598d8Bdb4346701b8A67Bb35212a`](https://robinhoodchain.blockscout.com/address/0xBf3e62DBd9Ce598d8Bdb4346701b8A67Bb35212a) | Not checked |
+| `GenericV4RouterAdapter` | [`0x5B79f2A4f3dBAFd463065D31EaA95aC6675D2429`](https://robinhoodchain.blockscout.com/address/0x5B79f2A4f3dBAFd463065D31EaA95aC6675D2429) | Not checked |
+| `GenericV4TwapFeed (TIBBIR)` | [`0x02a860B295c0266b735AcF566A522AE8929002e0`](https://robinhoodchain.blockscout.com/address/0x02a860B295c0266b735AcF566A522AE8929002e0) | Not checked |
+| `GenericV4TwapFeed (TORCH)` | [`0xc1d960dE6697D318fcDa85dEc0A4D35914fdD3f0`](https://robinhoodchain.blockscout.com/address/0xc1d960dE6697D318fcDa85dEc0A4D35914fdD3f0) | Not checked |
+| `GenericV4TwapFeed (FOBO)` | [`0x0314809D9e6D73Dc13512E91391dadE06D4e8e2d`](https://robinhoodchain.blockscout.com/address/0x0314809D9e6D73Dc13512E91391dadE06D4e8e2d) | Not checked |
+| `GenericV4TwapFeed (ORBIO)` | [`0x463A5d50AAf56dB5FF87361c5bC0D1edfe96a285`](https://robinhoodchain.blockscout.com/address/0x463A5d50AAf56dB5FF87361c5bC0D1edfe96a285) | Not checked |
+
 Not audited.

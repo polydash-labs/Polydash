@@ -15,17 +15,54 @@ jobs:
   test:
     name: Foundry
     runs-on: ubuntu-latest
+    env:
+      # Keyed Alchemy endpoint (GitHub secret FORK_RPC_URL) — the fork
+      # tests read it via vm.envOr("FORK_RPC", dRPC fallback). dRPC's
+      # public endpoint rate-limits the bulk archive fetch with HTTP 429,
+      # so CI uses Alchemy; local runs without FORK_RPC keep using dRPC.
+      FORK_RPC: ${{ secrets.FORK_RPC_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: foundry-rs/foundry-toolchain@v1
+      # Fork tests read historical state from a keyed Alchemy endpoint
+      # (FORK_RPC, from the FORK_RPC_URL secret). Cache the RPC responses
+      # across runs so cold fork fetches stay fast; the key includes the
+      # commit SHA so each run SAVES a fresh, more complete cache (a static
+      # key would freeze the cache at the first run that wrote it).
+      - name: Cache Foundry RPC data
+        uses: actions/cache@v4
+        with:
+          path: ~/.foundry/cache
+          key: foundry-rpc-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            foundry-rpc-${{ runner.os }}-
       - name: Format
         run: forge fmt --check
       - name: Build
         run: forge build --sizes
       - name: Test
-        run: forge test -vvv
+        run: forge test -vvv --no-match-contract ManagerProposedAssetsForkTest || forge test --rerun -vvv
+      - name: Fork test
+        # The ManagerProposedAssets fork test reads deep archive storage for
+        # the RNJ pool. It now runs against the keyed Alchemy endpoint
+        # (FORK_RPC, from the FORK_RPC_URL secret) instead of dRPC's public
+        # endpoint, which rate-limits the bulk fetch with HTTP 429. The
+        # retry loop stays as a safety net; each attempt also warms the
+        # RPC cache for the next one.
+        run: |
+          # Alchemy's free tier serves the ~2,000-slot archive fetch slowly:
+          # the previous run passed this step in ~25 min on a single attempt.
+          # A 5-minute cap killed attempts that would have finished, so give
+          # each attempt 30 minutes; 3 attempts still bounds a true hang.
+          for i in 1 2 3; do
+            if timeout 1800 forge test -vvv --match-contract ManagerProposedAssetsForkTest; then
+              exit 0
+            fi
+            echo "Fork test attempt $i failed, retrying..."
+          done
+          exit 1
       - name: Gas report
         run: forge test --gas-report | tee gas-report.txt
       - name: Gas snapshot
