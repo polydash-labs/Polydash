@@ -80,7 +80,16 @@ contract DeployFrongFeed is Script {
 
         vm.startBroadcast();
         GenericV4TwapFeed feed = new GenericV4TwapFeed(
-            POOL_MANAGER, FRONG, address(0), address(0), FEE, TICK_SPACING, TWAP_WINDOW, MAX_OBSERVATION_AGE, WETH, address(0)
+            POOL_MANAGER,
+            FRONG,
+            address(0),
+            address(0),
+            FEE,
+            TICK_SPACING,
+            TWAP_WINDOW,
+            MAX_OBSERVATION_AGE,
+            WETH,
+            address(0)
         );
         console2.log("FRONG feed:", address(feed));
         feed.poke();
