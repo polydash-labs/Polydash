@@ -830,6 +830,30 @@
         "src/v2/README.md",
         "docs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "name": "AgentRegistry",
+      "group": "agent-credit-score",
+      "role": "registry",
+      "address": "0x514e352A12F3DB3d4cA649dD328776390e1725eF",
+      "source": "src/agent/AgentRegistry.sol",
+      "deployTx": "0xfc4576eaf63eb8db8fcab7638c9fc26340929d66404bf69123e23844c07eccbe",
+      "notes": "Agent Credit Score registry (FICO 300-850 for AI agents; registration stake 1,000 POLYDASH). Deployed Nov 17, 2026 by 0x9a21c75aC263cC43125E70200636f6397f8776d0; owner is the deployer. Sourcify verification still TODO. Contracts unaudited (Slither only).",
+      "documentedIn": [
+        "broadcast/DeployAgentCreditScore.s.sol/4663/run-latest.json"
+      ]
+    },
+    {
+      "name": "AgentScore",
+      "group": "agent-credit-score",
+      "role": "scorer",
+      "address": "0x1F7ebaAf16aEAa2F519D2Cc69B6091f908C6C92b",
+      "source": "src/agent/AgentScore.sol",
+      "deployTx": "0xfd0a041f92379fd1766da322991cd563c0f15349f3080d913fa64306d5b1a00a",
+      "notes": "Agent Credit Score scorer (weightedScore = 300 + (35*perf + 20*hist + 15*act + 15*stake + 15*conduct) * 550 / 100000; updateScore keeper-only, SCORE_UPDATER unset). Deployed Nov 17, 2026 by 0x9a21c75aC263cC43125E70200636f6397f8776d0. Sourcify verification still TODO. Contracts unaudited (Slither only).",
+      "documentedIn": [
+        "broadcast/DeployAgentCreditScore.s.sol/4663/run-latest.json"
+      ]
     }
   ],
   "referenced": [
