@@ -149,9 +149,8 @@ contract DeployAllowlistBatch2 is Script {
         // inside its band. A stale band reverts here, before any proposal.
         address[] memory v3feeds = new address[](v3items.length);
         for (uint256 i = 0; i < v3items.length; ++i) {
-            UniswapV3TwapFeed feed = new UniswapV3TwapFeed(
-                v3items[i].pool, v3items[i].asset, WETH, V3_TWAP_WINDOW, V3_MAX_OBSERVATION_AGE
-            );
+            UniswapV3TwapFeed feed =
+                new UniswapV3TwapFeed(v3items[i].pool, v3items[i].asset, WETH, V3_TWAP_WINDOW, V3_MAX_OBSERVATION_AGE);
             v3feeds[i] = address(feed);
             (uint256 twapPriceX18,) = feed.latestPrice(v3items[i].asset);
             if (twapPriceX18 < v3items[i].minPriceX18 || twapPriceX18 > v3items[i].maxPriceX18) {
@@ -164,7 +163,16 @@ contract DeployAllowlistBatch2 is Script {
         // Phase 2: deploy the HOOKR V4 feed, poke once, and check the live
         // spot price sits inside its band before anything is proposed.
         GenericV4TwapFeed hookrFeed = new GenericV4TwapFeed(
-            POOL_MANAGER, hookrAsset, address(0), address(0), 2500, 25, V4_TWAP_WINDOW, V4_MAX_OBSERVATION_AGE, WETH, address(0)
+            POOL_MANAGER,
+            hookrAsset,
+            address(0),
+            address(0),
+            2500,
+            25,
+            V4_TWAP_WINDOW,
+            V4_MAX_OBSERVATION_AGE,
+            WETH,
+            address(0)
         );
         address hookrFeedAddr = address(hookrFeed);
         hookrFeed.poke();
@@ -187,8 +195,9 @@ contract DeployAllowlistBatch2 is Script {
 
         // Phase 3: queue the four asset proposals (owner-only; 2-day delay).
         for (uint256 i = 0; i < v3items.length; ++i) {
-            uint256 id =
-                allowlist.proposeAsset(v3items[i].asset, v3feeds[i], MAX_STALE, v3items[i].minPriceX18, v3items[i].maxPriceX18);
+            uint256 id = allowlist.proposeAsset(
+                v3items[i].asset, v3feeds[i], MAX_STALE, v3items[i].minPriceX18, v3items[i].maxPriceX18
+            );
             console2.log(v3items[i].name, "proposal id:", id);
         }
         uint256 hookrId = allowlist.proposeAsset(hookrAsset, hookrFeedAddr, MAX_STALE, hookrMin, hookrMax);

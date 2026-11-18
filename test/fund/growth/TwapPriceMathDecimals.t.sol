@@ -7,11 +7,7 @@ import {TwapPriceMath} from "src/fund/growth/TwapPriceMath.sol";
 
 /// @notice Exposes the library for testing.
 contract TwapPriceMathHarness {
-    function priceX18FromTick(int256 avgTick, bool assetIsCurrency0)
-        external
-        pure
-        returns (uint256)
-    {
+    function priceX18FromTick(int256 avgTick, bool assetIsCurrency0) external pure returns (uint256) {
         return TwapPriceMath.priceX18FromTick(avgTick, assetIsCurrency0);
     }
 }
@@ -33,12 +29,12 @@ contract TwapPriceMathDecimalsTest is Test {
     }
 
     function testOrbioTick() public view {
-        uint256 p = harness.priceX18FromTick(311593, false);
+        uint256 p = harness.priceX18FromTick(311_593, false);
         console2.log("ORBIO priceX18 (raw USDG per 1e18 ORBIO):", p);
         // 1 ORBIO = 0.0297 USDG = 29,700 raw USDG per 1e18 raw ORBIO.
         // Allow a wide band for the tick-vs-trade difference.
-        assertGe(p, 25000, "ORBIO price far below trade-implied price");
-        assertLe(p, 35000, "ORBIO price far above trade-implied price");
+        assertGe(p, 25_000, "ORBIO price far below trade-implied price");
+        assertLe(p, 35_000, "ORBIO price far above trade-implied price");
     }
 
     function testSixDecimalAssetInWeth() public view {
@@ -46,7 +42,7 @@ contract TwapPriceMathDecimalsTest is Test {
         // raw WETH per raw asset, i.e. 1 token = 1e-9 WETH (the decimal gap
         // moves the token-unit price). priceX18 = 1e18 raw asset (= 1e12 tokens)
         // * 1e-9 WETH/token * 1e18 wei/WETH = 1e21 wei.
-        uint256 p = harness.priceX18FromTick(-69077, false);
+        uint256 p = harness.priceX18FromTick(-69_077, false);
         console2.log("6-dec asset priceX18 (wei per 1e18 raw):", p);
         assertGe(p, 9e20, "6-dec asset price far below 1e21");
         assertLe(p, 11e20, "6-dec asset price far above 1e21");
@@ -55,7 +51,7 @@ contract TwapPriceMathDecimalsTest is Test {
     function testEighteenEighteenUnchanged() public view {
         // POLYDASH-like: 18-dec asset, 18-dec quote, asset is currency1.
         // tick 95112 -> price ~7.4e13 wei per 1e18 raw asset (fork spot).
-        uint256 p = harness.priceX18FromTick(95112, false);
+        uint256 p = harness.priceX18FromTick(95_112, false);
         console2.log("18/18 priceX18:", p);
         assertGe(p, 7e13, "18/18 price far below fork spot");
         assertLe(p, 8e13, "18/18 price far above fork spot");

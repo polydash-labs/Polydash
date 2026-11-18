@@ -107,9 +107,7 @@ contract GenericV4TwapFeedTest is Test {
         // feed (the constructor requires one); the mock returns 1e18, so the
         // conversion is price-neutral and only the ordering is under test.
         address ref = (quote == weth || quote == address(0)) ? address(0) : address(mockReference);
-        return new GenericV4TwapFeed(
-            address(pm), asset, quote, address(0), 0x800000, 200, window, maxAge, weth, ref
-        );
+        return new GenericV4TwapFeed(address(pm), asset, quote, address(0), 0x800000, 200, window, maxAge, weth, ref);
     }
 
     function _feedDefault() internal returns (GenericV4TwapFeed) {
@@ -167,28 +165,49 @@ contract GenericV4TwapFeedTest is Test {
 
     function test_constructor_reverts_zero_addresses_and_same_asset() public {
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(0), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0));
+        new GenericV4TwapFeed(
+            address(0), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0)
+        );
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), polydash, polydash, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(mockReference));
+        new GenericV4TwapFeed(
+            address(pm),
+            polydash,
+            polydash,
+            address(0),
+            0x800000,
+            200,
+            30 minutes,
+            10 minutes,
+            weth,
+            address(mockReference)
+        );
     }
 
     function test_constructor_reverts_bad_window_and_age() public {
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 4 minutes, 4 minutes, weth, address(0));
+        new GenericV4TwapFeed(
+            address(pm), polydash, weth, address(0), 0x800000, 200, 4 minutes, 4 minutes, weth, address(0)
+        );
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 31 minutes, weth, address(0));
+        new GenericV4TwapFeed(
+            address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 31 minutes, weth, address(0)
+        );
     }
 
     function test_constructor_reverts_uninitialized_pool() public {
         pm.clearSlot0();
         vm.expectRevert(GenericV4TwapFeed.PriceUnavailable.selector);
-        new GenericV4TwapFeed(address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0));
+        new GenericV4TwapFeed(
+            address(pm), polydash, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0)
+        );
     }
 
     function test_constructor_reverts_decimals_over_24() public {
         address weird = address(new MockToken(25));
         vm.expectRevert(GenericV4TwapFeed.InvalidParams.selector);
-        new GenericV4TwapFeed(address(pm), weird, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0));
+        new GenericV4TwapFeed(
+            address(pm), weird, weth, address(0), 0x800000, 200, 30 minutes, 10 minutes, weth, address(0)
+        );
     }
 
     // ------------------------------------------------------------------ currency ordering
@@ -237,8 +256,9 @@ contract GenericV4TwapFeedTest is Test {
         address six = address(new MockToken(6));
         address eighteen = address(new MockToken(18));
         // Feed the 6-decimal token as the asset whichever side it sorts on.
-        GenericV4TwapFeed feed =
-            new GenericV4TwapFeed(address(pm), six, eighteen, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference));
+        GenericV4TwapFeed feed = new GenericV4TwapFeed(
+            address(pm), six, eighteen, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference)
+        );
         _prime(feed);
         (uint256 px,) = feed.latestPrice(six);
         uint256 expected =
@@ -258,8 +278,9 @@ contract GenericV4TwapFeedTest is Test {
         // is converted to WETH (a reference feed), not in the raw TWAP.
         address six = address(new MockToken(6));
         address eighteen = address(new MockToken(18));
-        GenericV4TwapFeed feed =
-            new GenericV4TwapFeed(address(pm), eighteen, six, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference));
+        GenericV4TwapFeed feed = new GenericV4TwapFeed(
+            address(pm), eighteen, six, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference)
+        );
         _prime(feed);
         (uint256 px,) = feed.latestPrice(eighteen);
         uint256 expected =
@@ -274,8 +295,9 @@ contract GenericV4TwapFeedTest is Test {
         address a = address(new MockToken(6));
         address b = address(new MockToken(6));
         (address asset, address quote) = a < b ? (b, a) : (a, b);
-        GenericV4TwapFeed feed =
-            new GenericV4TwapFeed(address(pm), asset, quote, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference));
+        GenericV4TwapFeed feed = new GenericV4TwapFeed(
+            address(pm), asset, quote, address(0), 0x800000, 200, 30 minutes, 30 minutes, weth, address(mockReference)
+        );
         _prime(feed);
         (uint256 px,) = feed.latestPrice(asset);
         uint256 expected =

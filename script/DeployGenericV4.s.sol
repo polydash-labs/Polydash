@@ -143,8 +143,7 @@ contract DeployGenericV4 is Script {
 
         // 2. The USDG/WETH V3 reference feed (reads the pool's own observations;
         //    needs no poking). Only ORBIO uses it.
-        UniswapV3TwapFeed ref =
-            new UniswapV3TwapFeed(USDG_WETH_V3_POOL, USDG, WETH, TWAP_WINDOW, MAX_OBSERVATION_AGE);
+        UniswapV3TwapFeed ref = new UniswapV3TwapFeed(USDG_WETH_V3_POOL, USDG, WETH, TWAP_WINDOW, MAX_OBSERVATION_AGE);
         console2.log("USDG/WETH reference feed:", address(ref));
         (uint256 refPx,) = ref.latestPrice(USDG);
         console2.log("USDG/WETH reference priceX18:", refPx);

@@ -83,9 +83,9 @@ contract DeployFeeMenuTemplates is Script {
         assets[0] = POLYDASH;
 
         vm.startBroadcast();
-        uint256 id3 = tmpl.publish(HASH_3, URI_3, assets, 8000, 1000, 500, 0, 2000, 2592000);
-        uint256 id4 = tmpl.publish(HASH_4, URI_4, assets, 8000, 1000, 500, 1000, 2000, 2592000);
-        uint256 id5 = tmpl.publish(HASH_5, URI_5, assets, 8000, 1000, 500, 2000, 2000, 2592000);
+        uint256 id3 = tmpl.publish(HASH_3, URI_3, assets, 8000, 1000, 500, 0, 2000, 2_592_000);
+        uint256 id4 = tmpl.publish(HASH_4, URI_4, assets, 8000, 1000, 500, 1000, 2000, 2_592_000);
+        uint256 id5 = tmpl.publish(HASH_5, URI_5, assets, 8000, 1000, 500, 2000, 2000, 2_592_000);
         vm.stopBroadcast();
 
         console2.log("published template ids:", id3, id4, id5);

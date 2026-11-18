@@ -48,7 +48,7 @@ contract MockFoT is ERC20 {
     }
 
     function transfer(address to, uint256 value) public override returns (bool) {
-        uint256 fee = (value * FEE_BPS) / 10000;
+        uint256 fee = (value * FEE_BPS) / 10_000;
         super.transfer(to, value - fee);
         if (fee > 0) _burn(msg.sender, fee);
         return true;
@@ -99,12 +99,8 @@ contract GenericV4RouterAdapterTest is Test {
             deployCode("PoolModifyLiquidityTest.sol:PoolModifyLiquidityTest", abi.encode(address(pm)))
         );
         deployCodeTo("test/fund/growth/GenericV4RouterAdapter.t.sol:MockWETH", WETH_ADDR);
-        deployCodeTo(
-            "test/mocks/MockERC20.sol:MockERC20", abi.encode("Token", "TOKEN", uint256(0)), TOKEN_ADDR
-        );
-        deployCodeTo(
-            "test/mocks/MockERC20.sol:MockERC20", abi.encode("TokenLow", "TLOW", uint256(0)), TOKEN_LOW_ADDR
-        );
+        deployCodeTo("test/mocks/MockERC20.sol:MockERC20", abi.encode("Token", "TOKEN", uint256(0)), TOKEN_ADDR);
+        deployCodeTo("test/mocks/MockERC20.sol:MockERC20", abi.encode("TokenLow", "TLOW", uint256(0)), TOKEN_LOW_ADDR);
         deployCodeTo("test/fund/growth/GenericV4RouterAdapter.t.sol:MockFoT", FOT_ADDR);
         weth = MockWETH(payable(WETH_ADDR));
         token = MockERC20(TOKEN_ADDR);
@@ -113,8 +109,7 @@ contract GenericV4RouterAdapterTest is Test {
 
         ethKey = PoolKey(Currency.wrap(address(0)), Currency.wrap(TOKEN_ADDR), 3000, 60, IHooks(address(0)));
         wethKey = PoolKey(Currency.wrap(WETH_ADDR), Currency.wrap(TOKEN_ADDR), 3000, 60, IHooks(address(0)));
-        wethLowKey =
-            PoolKey(Currency.wrap(TOKEN_LOW_ADDR), Currency.wrap(WETH_ADDR), 3000, 60, IHooks(address(0)));
+        wethLowKey = PoolKey(Currency.wrap(TOKEN_LOW_ADDR), Currency.wrap(WETH_ADDR), 3000, 60, IHooks(address(0)));
         ethFotKey = PoolKey(Currency.wrap(address(0)), Currency.wrap(FOT_ADDR), 3000, 60, IHooks(address(0)));
 
         // ~1000 tokens per ETH, as in the buyback tests. For the TOKEN_LOW/WETH pool
@@ -133,17 +128,13 @@ contract GenericV4RouterAdapterTest is Test {
         fot.approve(address(lp), type(uint256).max);
         weth.approve(address(lp), type(uint256).max);
 
-        vm.deal(address(this), 10000 ether);
+        vm.deal(address(this), 10_000 ether);
         lp.modifyLiquidity{value: 2000 ether}(
             ethKey, IPoolManager.ModifyLiquidityParams(-887_220, 887_220, 1e22, 0), ""
         );
         weth.deposit{value: 2000 ether}();
-        lp.modifyLiquidity(
-            wethKey, IPoolManager.ModifyLiquidityParams(-887_220, 887_220, 1e22, 0), ""
-        );
-        lp.modifyLiquidity(
-            wethLowKey, IPoolManager.ModifyLiquidityParams(-887_220, 887_220, 1e22, 0), ""
-        );
+        lp.modifyLiquidity(wethKey, IPoolManager.ModifyLiquidityParams(-887_220, 887_220, 1e22, 0), "");
+        lp.modifyLiquidity(wethLowKey, IPoolManager.ModifyLiquidityParams(-887_220, 887_220, 1e22, 0), "");
         lp.modifyLiquidity{value: 2000 ether}(
             ethFotKey, IPoolManager.ModifyLiquidityParams(-887_220, 887_220, 1e22, 0), ""
         );
@@ -181,9 +172,7 @@ contract GenericV4RouterAdapterTest is Test {
 
     function test_eth_pool_buy_with_eth() public {
         uint256 before = token.balanceOf(address(this));
-        uint256 out = adapter.swap{value: 1 ether}(
-            address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(address(0))
-        );
+        uint256 out = adapter.swap{value: 1 ether}(address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(address(0)));
         assertGt(out, 900 ether);
         assertLt(out, 1100 ether);
         assertEq(token.balanceOf(address(this)), before + out);
@@ -231,9 +220,7 @@ contract GenericV4RouterAdapterTest is Test {
 
     function test_weth_pool_buy_with_eth_wraps() public {
         uint256 before = token.balanceOf(address(this));
-        uint256 out = adapter.swap{value: 1 ether}(
-            address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(WETH_ADDR)
-        );
+        uint256 out = adapter.swap{value: 1 ether}(address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(WETH_ADDR));
         assertGt(out, 900 ether);
         assertLt(out, 1100 ether);
         assertEq(token.balanceOf(address(this)), before + out);
@@ -284,15 +271,11 @@ contract GenericV4RouterAdapterTest is Test {
         // Same buy on the clean ETH pool and on the FoT pool: the FoT output is
         // 98% of the clean output, and the adapter returns the measured amount
         // (the old adapter would revert trying to transfer the delta amount).
-        uint256 clean = adapter.swap{value: 1 ether}(
-            address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(address(0))
-        );
+        uint256 clean = adapter.swap{value: 1 ether}(address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(address(0)));
         // The caller already holds a large FOT balance from the mint, so check
         // the balance *increase*, not the absolute balance.
         uint256 before = fot.balanceOf(address(this));
-        uint256 fotOut = adapter.swap{value: 1 ether}(
-            address(0), FOT_ADDR, 1 ether, 1, _dataNoLimit(address(0))
-        );
+        uint256 fotOut = adapter.swap{value: 1 ether}(address(0), FOT_ADDR, 1 ether, 1, _dataNoLimit(address(0)));
         assertGt(fotOut, 0);
         // The adapter returns what IT received (98% of clean: the take was
         // taxed once). The caller receives 98% of that, because the payout
@@ -301,7 +284,10 @@ contract GenericV4RouterAdapterTest is Test {
         // its minAmountOut / deviation checks enforce against.
         assertApproxEqRel(fotOut, (clean * 98) / 100, 0.001e18, "adapter return should be ~98% of clean");
         assertApproxEqRel(
-            fot.balanceOf(address(this)) - before, (fotOut * 98) / 100, 0.001e18, "caller receives ~98% of the adapter return"
+            fot.balanceOf(address(this)) - before,
+            (fotOut * 98) / 100,
+            0.001e18,
+            "caller receives ~98% of the adapter return"
         );
         assertEq(address(adapter).balance, 0);
         assertEq(fot.balanceOf(address(adapter)), 0);
@@ -310,9 +296,7 @@ contract GenericV4RouterAdapterTest is Test {
     function test_fot_buy_min_amount_out_uses_measured_output() public {
         // Demanding the full (pre-tax) clean output must revert: the measured
         // output is 2% less, so `minAmountOut` is enforced against what arrived.
-        uint256 clean = adapter.swap{value: 1 ether}(
-            address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(address(0))
-        );
+        uint256 clean = adapter.swap{value: 1 ether}(address(0), TOKEN_ADDR, 1 ether, 1, _dataNoLimit(address(0)));
         vm.expectRevert(GenericV4RouterAdapter.Slippage.selector);
         adapter.swap{value: 1 ether}(address(0), FOT_ADDR, 1 ether, clean, _dataNoLimit(address(0)));
     }
@@ -374,18 +358,14 @@ contract GenericV4RouterAdapterTest is Test {
     function test_explicit_limit_with_room_succeeds() public {
         uint160 spot = adapter.spotSqrtPriceX96(address(0), TOKEN_ADDR, 3000, 60, address(0));
         uint160 limit = uint160((uint256(spot) * 90) / 100);
-        uint256 out = adapter.swap{value: 1 ether}(
-            address(0), TOKEN_ADDR, 1 ether, 1, _data(address(0), limit)
-        );
+        uint256 out = adapter.swap{value: 1 ether}(address(0), TOKEN_ADDR, 1 ether, 1, _data(address(0), limit));
         assertGt(out, 900 ether);
     }
 
     function test_explicit_limit_too_tight_reverts() public {
         uint160 spot = adapter.spotSqrtPriceX96(address(0), TOKEN_ADDR, 3000, 60, address(0));
         vm.expectRevert();
-        adapter.swap{value: 1 ether}(
-            address(0), TOKEN_ADDR, 1 ether, 1, _data(address(0), spot - 1)
-        );
+        adapter.swap{value: 1 ether}(address(0), TOKEN_ADDR, 1 ether, 1, _data(address(0), spot - 1));
         assertEq(token.balanceOf(address(adapter)), 0);
         assertEq(weth.balanceOf(address(adapter)), 0);
     }

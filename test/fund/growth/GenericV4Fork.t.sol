@@ -163,10 +163,7 @@ contract GenericV4ForkTest is Test {
     }
 
     /// @notice Deploy a generic feed for an ETH-quoted pool.
-    function _ethFeed(address asset, address hook, uint24 fee, int24 tickSpacing)
-        internal
-        returns (GenericV4TwapFeed)
-    {
+    function _ethFeed(address asset, address hook, uint24 fee, int24 tickSpacing) internal returns (GenericV4TwapFeed) {
         return new GenericV4TwapFeed(
             POOL_MANAGER, asset, address(0), hook, fee, tickSpacing, TWAP_WINDOW, MAX_OBS_AGE, WETH, address(0)
         );
@@ -314,26 +311,36 @@ contract GenericV4ForkTest is Test {
         address[] memory assets = new address[](1);
         assets[0] = HOOKR;
         vm.prank(OWNER);
-        uint256 templateId = ITemplates(TEMPLATES).publish(
-            keccak256("generic-v4-hookr-mandate"), "ipfs://generic-v4-hookr", assets, 8000, 1000, 500, 500, 2000, 30 days
-        );
+        uint256 templateId = ITemplates(TEMPLATES)
+            .publish(
+                keccak256("generic-v4-hookr-mandate"),
+                "ipfs://generic-v4-hookr",
+                assets,
+                8000,
+                1000,
+                500,
+                500,
+                2000,
+                30 days
+            );
 
         // Create a small fund and fund it.
         vm.prank(manager);
-        address nftAddr = IFactoryPhase3(FACTORY).createFund(
-            IFactoryPhase3.Params({
-                templateId: templateId,
-                name: "HOOKR Test Fund",
-                symbol: "HKRT",
-                imageUri: "",
-                baseURI: "",
-                mintPrice: 0.01 ether,
-                raiseCap: 0.1 ether,
-                entryFeeBps: 0,
-                minSkinBps: 500,
-                raiseDuration: 1 hours
-            })
-        );
+        address nftAddr = IFactoryPhase3(FACTORY)
+            .createFund(
+                IFactoryPhase3.Params({
+                    templateId: templateId,
+                    name: "HOOKR Test Fund",
+                    symbol: "HKRT",
+                    imageUri: "",
+                    baseURI: "",
+                    mintPrice: 0.01 ether,
+                    raiseCap: 0.1 ether,
+                    entryFeeBps: 0,
+                    minSkinBps: 500,
+                    raiseDuration: 1 hours
+                })
+            );
         address vaultAddr = INFTPhase3(nftAddr).vault();
         vm.prank(manager);
         INFTPhase3(nftAddr).mint{value: 0.01 ether}(1);
@@ -352,9 +359,8 @@ contract GenericV4ForkTest is Test {
         uint256 expectedOut = (amountIn * 1e18) / px;
         uint256 minOut = (expectedOut * 80) / 100;
         vm.prank(manager);
-        IVaultPhase3(vaultAddr).swap(
-            address(adapter), address(0), HOOKR, amountIn, minOut, _ethData(2500, 25, address(0))
-        );
+        IVaultPhase3(vaultAddr)
+            .swap(address(adapter), address(0), HOOKR, amountIn, minOut, _ethData(2500, 25, address(0)));
         uint256 hookrBal = IERC20(HOOKR).balanceOf(vaultAddr);
         assertGe(hookrBal, minOut, "vault should hold HOOKR after the buy");
         emit log_named_uint("vault HOOKR after buy", hookrBal);
@@ -366,9 +372,8 @@ contract GenericV4ForkTest is Test {
         uint256 minEth = (expectedEth * 80) / 100;
         uint256 ethBefore = address(vaultAddr).balance;
         vm.prank(manager);
-        IVaultPhase3(vaultAddr).swap(
-            address(adapter), HOOKR, address(0), sellAmount, minEth, _ethData(2500, 25, address(0))
-        );
+        IVaultPhase3(vaultAddr)
+            .swap(address(adapter), HOOKR, address(0), sellAmount, minEth, _ethData(2500, 25, address(0)));
         assertLt(IERC20(HOOKR).balanceOf(vaultAddr), hookrBal, "vault HOOKR should fall after the sell");
         assertGt(address(vaultAddr).balance, ethBefore, "vault ETH should rise after the sell");
         emit log_named_uint("vault HOOKR after sell", IERC20(HOOKR).balanceOf(vaultAddr));
@@ -390,8 +395,7 @@ contract GenericV4ForkTest is Test {
         // the reference price is the same to within a basis point either way.
         // In production the reference uses a 30-minute window and stays fresh
         // because the USDG/WETH pool trades continuously.
-        UniswapV3TwapFeed ref =
-            new UniswapV3TwapFeed(USDG_WETH_V3_POOL, USDG, WETH, 21_600, 21_600);
+        UniswapV3TwapFeed ref = new UniswapV3TwapFeed(USDG_WETH_V3_POOL, USDG, WETH, 21_600, 21_600);
         (uint256 refPx,) = ref.latestPrice(USDG);
         emit log_named_uint("USDG/WETH reference priceX18 (wei per 1e18 raw USDG)", refPx);
         assertGt(refPx, 0);
