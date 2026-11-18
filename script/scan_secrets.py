@@ -105,6 +105,16 @@ def scan_text(rel: str, text: str) -> list[str]:
             value = assigned.group(1)
             if value.startswith("0x") and len(value) == 42:
                 continue
+            # An env read holds no literal secret; a regex literal is a
+            # pattern, not a value. Neither belongs in this file.
+            if value.startswith("process.env") or value.startswith("/"):
+                continue
+            # An ALL_CAPS identifier is a variable reference (e.g. a
+            # constant imported from another module), not a literal secret.
+            # A leaked token is a quoted or mixed-case literal, not a
+            # constant name.
+            if re.fullmatch(r"[A-Z][A-Z0-9_]*[,;]?", value):
+                continue
             if len(value) >= 12:
                 findings.append(f"{rel}:{i}: assigned secret ({assigned.group(0).split('=')[0].strip()})")
     return findings
