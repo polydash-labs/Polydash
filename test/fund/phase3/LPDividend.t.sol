@@ -43,8 +43,7 @@ contract MockPoolManager {
     mapping(bytes32 => uint256) public fees1;
 
     function unlock(bytes calldata data) external returns (bytes memory) {
-        (bool ok, bytes memory ret) =
-            msg.sender.call(abi.encodeWithSignature("unlockCallback(bytes)", data));
+        (bool ok, bytes memory ret) = msg.sender.call(abi.encodeWithSignature("unlockCallback(bytes)", data));
         require(ok, "callback failed");
         // The real V4 PoolManager returns the callback's bytes verbatim (it calls
         // unlockCallback via a high-level call and returns the decoded bytes). A
@@ -215,12 +214,10 @@ contract LPDividendTest is Test {
     // --- Helpers ---
 
     function _key(address token) internal view returns (FundLiquidityStore.LpPoolKey memory) {
-        (address c0, address c1) = address(token) < address(weth)
-            ? (address(token), address(weth))
-            : (address(weth), address(token));
-        return FundLiquidityStore.LpPoolKey({
-            currency0: c0, currency1: c1, fee: 3000, tickSpacing: 60, hooks: address(0)
-        });
+        (address c0, address c1) =
+            address(token) < address(weth) ? (address(token), address(weth)) : (address(weth), address(token));
+        return
+            FundLiquidityStore.LpPoolKey({currency0: c0, currency1: c1, fee: 3000, tickSpacing: 60, hooks: address(0)});
     }
 
     function _open() internal returns (FundNFTPhase3 nft, FundVaultPhase3V3 vault) {

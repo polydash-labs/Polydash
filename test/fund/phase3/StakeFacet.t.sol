@@ -11,11 +11,7 @@ import {FundVaultStore} from "../../../src/fund/phase2/FundVaultStore.sol";
 import {FundPhase3Store} from "../../../src/fund/phase3/FundPhase3Store.sol";
 import {FundProposalStore} from "../../../src/fund/phase3/FundProposalStore.sol";
 import {FundLiquidityStore} from "../../../src/fund/phase3/FundLiquidityStore.sol";
-import {
-    FundStakeFacetPhase3,
-    FundStakeStore,
-    IStakingPool
-} from "../../../src/fund/phase3/FundStakeFacetPhase3.sol";
+import {FundStakeFacetPhase3, FundStakeStore, IStakingPool} from "../../../src/fund/phase3/FundStakeFacetPhase3.sol";
 import {PolydashStakingFactoryV2} from "../../../src/v2/PolydashStakingFactoryV2.sol";
 import {PolydashStakingPoolV2} from "../../../src/v2/PolydashStakingPoolV2.sol";
 import {MockERC20} from "../../mocks/MockERC20.sol";
@@ -284,9 +280,8 @@ contract StakeFacetHarness is
     }
 
     function claimRewards(address pool, uint256 maxGross) external nonReentrant {
-        (bool ok, bytes memory ret) = stakeFacet.delegatecall(
-            abi.encodeWithSelector(FundStakeFacetPhase3.claimRewards.selector, pool, maxGross)
-        );
+        (bool ok, bytes memory ret) =
+            stakeFacet.delegatecall(abi.encodeWithSelector(FundStakeFacetPhase3.claimRewards.selector, pool, maxGross));
         if (!ok) _bubble(ret);
     }
 
@@ -302,7 +297,8 @@ contract StakeFacetHarness is
     }
 
     function stakedValueEth(address pool) external view returns (uint256) {
-        return allowlist.quote(stakeToken, IStakingPool(pool).sharesToAmount(IStakingPool(pool).balanceOf(address(this))));
+        return
+            allowlist.quote(stakeToken, IStakingPool(pool).sharesToAmount(IStakingPool(pool).balanceOf(address(this))));
     }
 
     function earnedRewards(address pool) external view returns (uint256) {
@@ -400,8 +396,15 @@ contract StakeFacetTest is Test {
         address legacyAddr
     ) internal returns (StakeFacetHarness h) {
         h = new StakeFacetHarness(
-            manager, address(allow), address(weth), stakeTokenAddr, factoryAddr, legacyAddr, address(facet),
-            maxPositionBps, inMandate
+            manager,
+            address(allow),
+            address(weth),
+            stakeTokenAddr,
+            factoryAddr,
+            legacyAddr,
+            address(facet),
+            maxPositionBps,
+            inMandate
         );
         vm.deal(address(h), 100 ether);
         IERC20(stakeTokenAddr).transfer(address(h), 100 ether);
@@ -466,7 +469,8 @@ contract StakeFacetTest is Test {
         StakeFacetHarness h = _harness(8000, true);
         // A REAL pool, but from a factory the vault does not trust.
         polydash.approve(address(otherFactory), type(uint256).max);
-        address pool = otherFactory.createPool(address(polydash), address(polydash), 1000 ether, 0, 10 days, 0, 100, "x", "d");
+        address pool =
+            otherFactory.createPool(address(polydash), address(polydash), 1000 ether, 0, 10 days, 0, 100, "x", "d");
         vm.prank(manager);
         vm.expectRevert(FundStakeStore.NotStakingPool.selector);
         h.stake(pool, 1 ether);
@@ -698,6 +702,6 @@ contract StakeFacetTest is Test {
         assertEq(h.stakedPools()[0], address(pool));
         assertEq(h.stakedAmount(address(pool)), 10 ether);
         assertEq(h.stakedValueEth(address(pool)), 10 ether);
-        assertGt(h.earnedRewards(address(pool)), 9_000 ether);
+        assertGt(h.earnedRewards(address(pool)), 9000 ether);
     }
 }

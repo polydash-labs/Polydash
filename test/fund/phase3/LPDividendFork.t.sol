@@ -221,7 +221,17 @@ contract LPDividendForkTest is Test {
         factoryV3 = deployCode(
             "src/fund/phase3/FundFactoryPhase3V3.sol:FundFactoryPhase3V3",
             abi.encode(
-                OWNER, ALLOWLIST, WETH, facetV2, facetLp, TEMPLATES, address(0), STAKING_FACTORY, LEGACY_STAKING_FACTORY, POLYDASH, POOL_MANAGER
+                OWNER,
+                ALLOWLIST,
+                WETH,
+                facetV2,
+                facetLp,
+                TEMPLATES,
+                address(0),
+                STAKING_FACTORY,
+                LEGACY_STAKING_FACTORY,
+                POLYDASH,
+                POOL_MANAGER
             )
         );
         vm.deal(manager, 10 ether);
@@ -293,7 +303,8 @@ contract LPDividendForkTest is Test {
         vm.startPrank(OWNER);
         uint256 idPolydash;
         if (!IAllowlist(ALLOWLIST).assetAllowed(POLYDASH)) {
-            idPolydash = IAllowlist(ALLOWLIST).proposeAsset(POLYDASH, address(feed), MAX_STALE, MIN_PRICE_X18, MAX_PRICE_X18);
+            idPolydash =
+                IAllowlist(ALLOWLIST).proposeAsset(POLYDASH, address(feed), MAX_STALE, MIN_PRICE_X18, MAX_PRICE_X18);
         }
         uint256 idV4Router = IAllowlist(ALLOWLIST).propose(address(adapter), true, true);
         vm.stopPrank();
@@ -308,27 +319,37 @@ contract LPDividendForkTest is Test {
         address[] memory assets = new address[](1);
         assets[0] = POLYDASH;
         vm.prank(OWNER);
-        uint256 templateId = ITemplates(TEMPLATES).publish(
-            keccak256("lp-dividend-fork-mandate"), "ipfs://lp-dividend-fork", assets, 8000, 1000, 500, 500, 2000, 30 days
-        );
+        uint256 templateId = ITemplates(TEMPLATES)
+            .publish(
+                keccak256("lp-dividend-fork-mandate"),
+                "ipfs://lp-dividend-fork",
+                assets,
+                8000,
+                1000,
+                500,
+                500,
+                2000,
+                30 days
+            );
         assertGt(templateId, 0);
 
         // 4. Create a V3 fund: 0.01 ETH mint, 0.1 ETH cap, 5% skin, 1h raise.
         vm.prank(manager);
-        address nftAddr = IFactoryPhase3V3(factoryV3).createFund(
-            IFactoryPhase3V3.Params({
-                templateId: templateId,
-                name: "LP Dividend Fund",
-                symbol: "LPDIV",
-                imageUri: "",
-                baseURI: "",
-                mintPrice: 0.01 ether,
-                raiseCap: 0.1 ether,
-                entryFeeBps: 0,
-                minSkinBps: 500,
-                raiseDuration: 1 hours
-            })
-        );
+        address nftAddr = IFactoryPhase3V3(factoryV3)
+            .createFund(
+                IFactoryPhase3V3.Params({
+                    templateId: templateId,
+                    name: "LP Dividend Fund",
+                    symbol: "LPDIV",
+                    imageUri: "",
+                    baseURI: "",
+                    mintPrice: 0.01 ether,
+                    raiseCap: 0.1 ether,
+                    entryFeeBps: 0,
+                    minSkinBps: 500,
+                    raiseDuration: 1 hours
+                })
+            );
         address vaultAddr = INFTPhase3(nftAddr).vault();
         assertTrue(IFactoryPhase3V3(factoryV3).isFund(nftAddr));
         assertEq(INFTPhase3(nftAddr).skinRequired(), 1);
@@ -371,9 +392,8 @@ contract LPDividendForkTest is Test {
         int24 tickLower = ((tick / 200) - 5) * 200;
         int24 tickUpper = ((tick / 200) + 5) * 200;
         vm.prank(manager);
-        uint256 lpId = IVaultPhase3V3(vaultAddr).proposeLiquidity(
-            key, tickLower, tickUpper, 0, "POLYDASH/WETH earns trading fees", "ipfs://thesis-lp"
-        );
+        uint256 lpId = IVaultPhase3V3(vaultAddr)
+            .proposeLiquidity(key, tickLower, tickUpper, 0, "POLYDASH/WETH earns trading fees", "ipfs://thesis-lp");
         assertEq(lpId, 1);
         assertFalse(IVaultPhase3V3(vaultAddr).lpApproved(poolId));
         vm.prank(manager);
@@ -399,11 +419,8 @@ contract LPDividendForkTest is Test {
         uint160 sqrtB = TickMath.getSqrtPriceAtTick(tickUpper);
         uint256 wethBal = IERC20(WETH).balanceOf(vaultAddr);
         uint256 pdBal = IERC20(POLYDASH).balanceOf(vaultAddr);
-        uint128 liquidity = LiquidityAmounts.getLiquidityForAmounts(
-            sqrtPriceX96, sqrtA, sqrtB, wethBal / 2, pdBal
-        );
-        (uint256 amt0, uint256 amt1) =
-            LiquidityAmounts.getAmountsForLiquidity(sqrtPriceX96, sqrtA, sqrtB, liquidity);
+        uint128 liquidity = LiquidityAmounts.getLiquidityForAmounts(sqrtPriceX96, sqrtA, sqrtB, wethBal / 2, pdBal);
+        (uint256 amt0, uint256 amt1) = LiquidityAmounts.getAmountsForLiquidity(sqrtPriceX96, sqrtA, sqrtB, liquidity);
         assertGt(amt0, 0);
         assertGt(amt1, 0);
         assertLe(amt0, wethBal);
@@ -412,11 +429,9 @@ contract LPDividendForkTest is Test {
         emit log_named_uint("lp amount0 WETH", amt0);
         emit log_named_uint("lp amount1 POLYDASH", amt1);
         vm.prank(manager);
-        IVaultPhase3V3(vaultAddr).addLiquidity(
-            key, tickLower, tickUpper, liquidity, (amt0 * 105) / 100, (amt1 * 105) / 100
-        );
-        (,,,,,,, uint256 liq, uint256 a0, uint256 a1,,,, bool active) =
-            IVaultPhase3V3(vaultAddr).lpPositions(poolId);
+        IVaultPhase3V3(vaultAddr)
+            .addLiquidity(key, tickLower, tickUpper, liquidity, (amt0 * 105) / 100, (amt1 * 105) / 100);
+        (,,,,,,, uint256 liq, uint256 a0, uint256 a1,,,, bool active) = IVaultPhase3V3(vaultAddr).lpPositions(poolId);
         assertTrue(active);
         assertEq(liq, liquidity);
         assertGt(a0, 0);
@@ -455,9 +470,8 @@ contract LPDividendForkTest is Test {
 
         // 13. A second LP proposal waits in public; the investor exits mid-wait.
         vm.prank(manager);
-        uint256 lpId2 = IVaultPhase3V3(vaultAddr).proposeLiquidity(
-            key, tickLower, tickUpper, 0, "Re-range the position", "ipfs://thesis-lp-2"
-        );
+        uint256 lpId2 = IVaultPhase3V3(vaultAddr)
+            .proposeLiquidity(key, tickLower, tickUpper, 0, "Re-range the position", "ipfs://thesis-lp-2");
         assertEq(lpId2, 2);
         uint256[] memory ids = new uint256[](1);
         ids[0] = 2; // investor's first share (manager holds 1, investor holds 2..10)

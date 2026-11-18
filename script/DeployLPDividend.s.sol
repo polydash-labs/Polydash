@@ -147,10 +147,10 @@ contract DeployLPDividend is Script {
             POOL_MANAGER
         );
         console2.log("V3 factory:", address(factory));
-        uint256 id6 = tmpl.publish(HASH_6, uri6, assets, 8000, 1000, 500, 500, 2000, 2592000);
-        uint256 id7 = tmpl.publish(HASH_7, uri7, assets, 8000, 1000, 500, 0, 2000, 2592000);
-        uint256 id8 = tmpl.publish(HASH_8, uri8, assets, 8000, 1000, 500, 1000, 2000, 2592000);
-        uint256 id9 = tmpl.publish(HASH_9, uri9, assets, 8000, 1000, 500, 2000, 2000, 2592000);
+        uint256 id6 = tmpl.publish(HASH_6, uri6, assets, 8000, 1000, 500, 500, 2000, 2_592_000);
+        uint256 id7 = tmpl.publish(HASH_7, uri7, assets, 8000, 1000, 500, 0, 2000, 2_592_000);
+        uint256 id8 = tmpl.publish(HASH_8, uri8, assets, 8000, 1000, 500, 1000, 2000, 2_592_000);
+        uint256 id9 = tmpl.publish(HASH_9, uri9, assets, 8000, 1000, 500, 2000, 2000, 2_592_000);
         vm.stopBroadcast();
 
         console2.log("published strategy ids:");
@@ -187,8 +187,10 @@ contract DeployLPDividend is Script {
 
     function _checkUri(string memory uri) internal pure {
         bytes memory b = bytes(uri);
-        if (b.length < 10 || b[0] != "i" || b[1] != "p" || b[2] != "f" || b[3] != "s" || b[4] != ":" || b[5] != "/"
-            || b[6] != "/") revert BadMandateUri(uri);
+        if (
+            b.length < 10 || b[0] != "i" || b[1] != "p" || b[2] != "f" || b[3] != "s" || b[4] != ":" || b[5] != "/"
+                || b[6] != "/"
+        ) revert BadMandateUri(uri);
         if (keccak256(b) == keccak256(bytes("ipfs://PENDING-PIN"))) revert BadMandateUri(uri);
     }
 }
