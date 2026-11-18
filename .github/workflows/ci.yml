@@ -21,6 +21,11 @@ jobs:
       # public endpoint rate-limits the bulk archive fetch with HTTP 429,
       # so CI uses Alchemy; local runs without FORK_RPC keep using dRPC.
       FORK_RPC: ${{ secrets.FORK_RPC_URL }}
+      # Same endpoint for the `robinhood` named RPC (foundry.toml), used by
+      # StakeFacetForkTest via vm.createSelectFork("robinhood"). That test
+      # forks at the latest block (no archive reads), but without this the
+      # variable is unset in CI and the test fails before it starts.
+      ROBINHOOD_RPC_URL: ${{ secrets.FORK_RPC_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,7 +46,15 @@ jobs:
       - name: Format
         run: forge fmt --check
       - name: Build
-        run: forge build --sizes
+        # Plain `forge build`, not `--sizes`: Robinhood Chain does not
+        # enforce the EIP-170 (24,576 B runtime) / EIP-3860 (49,152 B
+        # initcode) limits — the live Polyfund vault is 27,562 B on-chain
+        # and the V3 factory's initcode is 53,303 B, both deployed and
+        # working. `--sizes` fails the build on those limits, so it is a
+        # false alarm for this chain. Do not shrink the contracts to fit:
+        # the deployed bytecode is Sourcify-verified against the current
+        # optimizer settings, and changing them would break that match.
+        run: forge build
       - name: Test
         run: forge test -vvv --no-match-contract ManagerProposedAssetsForkTest || forge test --rerun -vvv
       - name: Fork test
