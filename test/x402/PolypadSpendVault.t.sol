@@ -28,8 +28,9 @@ contract PolypadSpendVaultTest is Test {
     uint256 internal keyPk = 0x1234;
     address internal key;
 
-    bytes32 internal constant SPEND_TYPEHASH =
-        keccak256("SpendAuthorization(address key,address token,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce)");
+    bytes32 internal constant SPEND_TYPEHASH = keccak256(
+        "SpendAuthorization(address key,address token,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce)"
+    );
 
     function setUp() public {
         vm.prank(owner);
@@ -72,9 +73,7 @@ contract PolypadSpendVaultTest is Test {
     }
 
     function _spend(uint256 value, bytes32 nonce) internal returns (bytes memory sig) {
-        sig = _sign(
-            keyPk, key, address(token), payee, value, block.timestamp, block.timestamp + 120, nonce
-        );
+        sig = _sign(keyPk, key, address(token), payee, value, block.timestamp, block.timestamp + 120, nonce);
         vm.prank(facilitator);
         vault.spendWithAuthorization(
             key, address(token), payee, value, block.timestamp, block.timestamp + 120, nonce, sig
@@ -99,8 +98,7 @@ contract PolypadSpendVaultTest is Test {
         address[] memory allow = new address[](1);
         allow[0] = payee;
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
-        (address o, address t, uint256 perPay, uint256 daily, uint64 exp, bool rev,,,) =
-            vault.keys(key);
+        (address o, address t, uint256 perPay, uint256 daily, uint64 exp, bool rev,,,) = vault.keys(key);
         assertEq(o, depositor);
         assertEq(t, address(token));
         assertEq(perPay, 10e6);
@@ -139,9 +137,8 @@ contract PolypadSpendVaultTest is Test {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
         address other = address(0x0BAD);
-        bytes memory sig = _sign(
-            keyPk, key, address(token), other, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), other, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vault.spendWithAuthorization(
             key, address(token), other, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)), sig
@@ -154,9 +151,8 @@ contract PolypadSpendVaultTest is Test {
         allow[0] = payee;
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
         address other = address(0x0BAD);
-        bytes memory sig = _sign(
-            keyPk, key, address(token), other, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), other, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.PayeeNotAllowlisted.selector);
         vault.spendWithAuthorization(
@@ -167,9 +163,8 @@ contract PolypadSpendVaultTest is Test {
     function testSpendOverPerPaymentCapReverts() public {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 11e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 11e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.OverPerPaymentCap.selector);
         vault.spendWithAuthorization(
@@ -181,9 +176,8 @@ contract PolypadSpendVaultTest is Test {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 15e6, allow, uint64(block.timestamp + 3 days));
         _spend(10e6, bytes32(uint256(1)));
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 6e6, block.timestamp, block.timestamp + 120, bytes32(uint256(2))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 6e6, block.timestamp, block.timestamp + 120, bytes32(uint256(2)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.OverDailyCap.selector);
         vault.spendWithAuthorization(
@@ -191,9 +185,8 @@ contract PolypadSpendVaultTest is Test {
         );
         // Next UTC day: the window resets and the same size spend works.
         vm.warp(block.timestamp + 1 days + 1);
-        bytes memory sig2 = _sign(
-            keyPk, key, address(token), payee, 10e6, block.timestamp, block.timestamp + 120, bytes32(uint256(3))
-        );
+        bytes memory sig2 =
+            _sign(keyPk, key, address(token), payee, 10e6, block.timestamp, block.timestamp + 120, bytes32(uint256(3)));
         vm.prank(facilitator);
         vault.spendWithAuthorization(
             key, address(token), payee, 10e6, block.timestamp, block.timestamp + 120, bytes32(uint256(3)), sig2
@@ -205,9 +198,8 @@ contract PolypadSpendVaultTest is Test {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
         _spend(5e6, bytes32(uint256(1)));
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.NonceUsed.selector);
         vault.spendWithAuthorization(
@@ -218,9 +210,8 @@ contract PolypadSpendVaultTest is Test {
     function testSpendWrongSignerReverts() public {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
-        bytes memory sig = _sign(
-            0x9999, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(0x9999, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.InvalidSignature.selector);
         vault.spendWithAuthorization(
@@ -231,9 +222,8 @@ contract PolypadSpendVaultTest is Test {
     function testSpendExpiredAuthorizationReverts() public {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 60, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 60, bytes32(uint256(1)));
         vm.warp(block.timestamp + 61);
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.ExpiredAuthorization.selector);
@@ -247,9 +237,8 @@ contract PolypadSpendVaultTest is Test {
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
         vm.prank(depositor);
         vault.revokeKey(key);
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.KeyIsRevoked.selector);
         vault.spendWithAuthorization(
@@ -262,9 +251,8 @@ contract PolypadSpendVaultTest is Test {
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
         vm.prank(owner);
         vault.pause();
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(facilitator);
         vm.expectRevert(PolypadSpendVault.PausedSpend.selector);
         vault.spendWithAuthorization(
@@ -275,9 +263,8 @@ contract PolypadSpendVaultTest is Test {
     function testSpendNonFacilitatorReverts() public {
         address[] memory allow = new address[](0);
         _keyPolicy(10e6, 100e6, allow, uint64(block.timestamp + 1 days));
-        bytes memory sig = _sign(
-            keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1))
-        );
+        bytes memory sig =
+            _sign(keyPk, key, address(token), payee, 5e6, block.timestamp, block.timestamp + 120, bytes32(uint256(1)));
         vm.prank(depositor);
         vm.expectRevert(PolypadSpendVault.NotFacilitator.selector);
         vault.spendWithAuthorization(
