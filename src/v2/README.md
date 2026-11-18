@@ -11,10 +11,14 @@ byte-identical to that library version.
 
 | Contract | Address | Verification |
 | --- | --- | --- |
-| `PolydashStakingFactoryV2` | [`0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0`](https://robinhoodchain.blockscout.com/address/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0?tab=contract) | Sourcify exact match (creation and runtime), verified 2026-10-28 15:45:59 UTC. [Sourcify](https://repo.sourcify.dev/4663/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0) |
+| `PolydashStakingFactoryV2` | [`0x4C87aff7009DE1c58E052FEe202349a10b28Be9c`](https://robinhoodchain.blockscout.com/address/0x4C87aff7009DE1c58E052FEe202349a10b28Be9c?tab=contract) | Sourcify exact match. Deployed 2026-11-11 — current factory for new pools; carries the fee-on-transfer claim fix (learned `rewardOutFeeBps`, outflow-aware `_claim` sizing, `claimAmount` partial claims). [Sourcify](https://repo.sourcify.dev/4663/0x4C87aff7009DE1c58E052FEe202349a10b28Be9c) |
 | `PolydashStakingPoolV2` | Deployed by the factory with `new` (one contract per pool, not proxies), e.g. [`0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518`](https://robinhoodchain.blockscout.com/address/0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518), [`0x0F50043E172B8652bb786C4F14f30c415E5760AB`](https://robinhoodchain.blockscout.com/address/0x0F50043E172B8652bb786C4F14f30c415E5760AB) | Source included in the factory verification. Pools are not individually verified on the explorer; their runtime bytecode matches this source (see below). |
 
-Factory deployment: block 83248798, tx [`0x72f9c126...0c42c`](https://robinhoodchain.blockscout.com/tx/0x72f9c126ac1d900233a6863eb67b89a016fa59121662d7872706ab0d8ef0c42c), deployer `0x351BDe628892Aeb055F717300DBd2848af178479`.
+Legacy factory [`0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0`](https://robinhoodchain.blockscout.com/address/0x904b8F5d95B593b5F4a6Dbb116b58e1d5CBe93f0?tab=contract) (deployed Oct 8 2026, Sourcify exact match) stays live for its 4 pools, which are unaffected by the new factory. The front end lists pools from both factories.
+
+Factory deployment (current): tx [`0x8c3e26d09625dc1f5852ed4061ed315a9867af796e4fb63fe151c9cac1c51e8c`](https://robinhoodchain.blockscout.com/tx/0x8c3e26d09625dc1f5852ed4061ed315a9867af796e4fb63fe151c9cac1c51e8c), deployer `0x9a21c75aC263cC43125E70200636f6397f8776d0`, fee recipient `0x351BDe628892Aeb055F717300DBd2848af178479`.
+
+Factory deployment (legacy): block 83248798, tx [`0x72f9c126...0c42c`](https://robinhoodchain.blockscout.com/tx/0x72f9c126ac1d900233a6863eb67b89a016fa59121662d7872706ab0d8ef0c42c), deployer `0x351BDe628892Aeb055F717300DBd2848af178479`.
 
 ## Compiler settings (from the verification metadata)
 
