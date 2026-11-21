@@ -5,11 +5,17 @@
 <h1 align="center">Polydash</h1>
 
 <p align="center">
-  Polydash builds Polypad, a token launchpad on Robinhood Chain (chain ID 4663), with staking pools, creator contracts, and read-only AI agents.
+  Polydash builds Polypad: launch, trade and stake tokens, NFTs and tokenized funds on Robinhood Chain (chain ID 4663).
+  Any AI agent can use it through a remote MCP server with 21 tools. No signup, no API key, and your wallet signs every transaction.
 </p>
 
 <p align="center">
   <a href="https://github.com/polydash-labs/Polydash/actions/workflows/ci.yml"><img src="https://github.com/polydash-labs/Polydash/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://registry.modelcontextprotocol.io/v0/servers?search=family.polypad"><img src="https://img.shields.io/badge/MCP%20Registry-family.polypad-6E56CF" alt="MCP Registry"></a>
+  <a href="https://www.npmjs.com/package/polypad-agent"><img src="https://img.shields.io/npm/v/polypad-agent?label=npm%20polypad-agent" alt="npm"></a>
+  <a href="https://pypi.org/project/polypad-agent/"><img src="https://img.shields.io/pypi/v/polypad-agent?label=PyPI%20polypad-agent" alt="PyPI"></a>
+  <a href="https://polypad.family/pulse"><img src="https://img.shields.io/badge/usage-live%20on%20%2Fpulse-22C55E" alt="Live usage on /pulse"></a>
+  <a href="https://github.com/polydash-labs/Polydash/stargazers"><img src="https://img.shields.io/github/stars/polydash-labs/Polydash?style=social" alt="GitHub stars"></a>
   <a href="https://heyresearch.xyz"><img src="https://heyresearch.xyz/api/badge/polydashdev-polydash" alt="HEY Research"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT"></a>
   <img src="https://img.shields.io/badge/Solidity-0.8.24%20%2F%200.8.26-363636.svg" alt="Solidity">
@@ -18,6 +24,7 @@
 
 <p align="center">
   <a href="https://polypad.family">Polypad</a> ·
+  <a href="https://polypad.family/build">Build</a> ·
   <a href="docs/README.md">Docs</a> ·
   <a href="https://dasheco.xyz">Website</a> ·
   <a href="https://x.com/Polydash_">X @Polydash_</a> ·
@@ -28,11 +35,64 @@
 
 <p align="center"><img src="assets/polydash_banner_1360x430.png" alt="Polydash banner" width="100%"></p>
 
+## Connect your AI agent in about a minute
+
+Free path, no signup and no API key. Details: [polypad.family/build](https://polypad.family/build).
+
+```bash
+npx -y polypad-agent connect claude     # or: cursor, codex, gemini, vscode
+```
+
+Restart your client and ask:
+
+> What tokens launched on Robinhood Chain today?
+
+That's it: no account, no key. Prefer config? Point any MCP client at the remote server:
+
+```json
+{ "mcpServers": { "polypad": { "url": "https://polypad.family/api/mcp" } } }
+```
+
+Claude Code plugin:
+
+```
+/plugin marketplace add polydash-labs/polypad-agent
+/plugin install polypad@polypad-agent
+```
+
+Or install the SDK and make a call in five lines:
+
+```bash
+npm install polypad-agent
+# or: pip install polypad-agent
+```
+
+```ts
+import { PolypadClient } from "polypad-agent";
+
+const client = new PolypadClient();
+const tokens = await client.listTokens({ sort: "new", limit: 5 });
+console.log(tokens);
+```
+
+**What your agent can do (21 tools):** list and read token launches, check a token's on-chain protections, quote trades, prepare buys, sells, NFT mints and token launches, browse and create tokenized funds, read a wallet portfolio, and follow a transaction. Every write comes back as an **unsigned transaction**. You (or an agent wallet with spending limits you set) sign it.
+
+| | |
+|---|---|
+| MCP server | `https://polypad.family/api/mcp` · Official MCP Registry: [`family.polypad/polypad`](https://registry.modelcontextprotocol.io/v0/servers?search=family.polypad) |
+| SDKs | [`polypad-agent`](https://github.com/polydash-labs/polypad-agent) on [npm](https://www.npmjs.com/package/polypad-agent) and [PyPI](https://pypi.org/project/polypad-agent/) |
+| Build guide | [polypad.family/build](https://polypad.family/build) |
+| Capability Index | [Polypad listing](https://capability-index-dhn.pages.dev/?q=polypad) |
+| Pay-per-call reports | x402: token report $0.01, CTO report $0.05, fund NAV $0.01 (USDG or POLYDASH) |
+| Agent identity | On-chain Agent Credit Score (300–850): [polypad.family/agents](https://polypad.family/agents) |
+| Agent wallets | Session keys with per-payment and daily limits, expiry, one-transaction revoke: [/agents/wallets](https://polypad.family/agents/wallets) |
+| Public numbers | [polypad.family/pulse](https://polypad.family/pulse) |
+
+> ⭐ **If Polypad saves you time, a star helps other agent builders find it.** Issues and feature requests are welcome too.
+
 Polypad ([polypad.family](https://polypad.family)) is the launchpad. The company site is [dasheco.xyz](https://dasheco.xyz). This repository is the source for the staking contracts, the Polypad creator contracts, the launchpad package, and the Poly Agent and PolyCTO code.
 
 Projects that launch on Polypad go through [@Bevor_io](https://x.com/Bevor_io) pre-launch checks and have a doxxed lead. The on-chain `createLaunch` call itself is permissionless. See [docs/AGENTS_LAUNCH.md](docs/AGENTS_LAUNCH.md).
-
-The contracts in this repository are **unaudited**. An outside review is planned. Verification on Sourcify and the automated scans in CI are not a review.
 
 ## Architecture
 
@@ -77,6 +137,7 @@ flowchart TB
   Vest -.->|optional stake| Pools
   Agents[Poly Agent and PolyCTO] -. read only .-> launchpad
   Agents -. read only .-> staking
+  MCP[Polypad MCP API] -->|unsigned txs| launchpad
 ```
 
 Staking v1 behaviour, roles, and fees are written up in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Creator-module design is in [docs/CREATOR_CONTRACTS.md](docs/CREATOR_CONTRACTS.md). Launchpad design is in [polypad/contracts/docs/ARCHITECTURE.md](polypad/contracts/docs/ARCHITECTURE.md).
@@ -99,7 +160,7 @@ Staking v1 behaviour, roles, and fees are written up in [docs/ARCHITECTURE.md](d
 | Poly Agent | Read-only staking monitor: pool sizes, reward rates, inflows and outflows. | [`agents/poly-agent/`](agents/poly-agent) |
 | PolyCTO | Read-only multi-role agent for a launch: community, marketing drafts, token stats, and a heuristic source scan. The scan is not a review. | [`agents/polycto/`](agents/polycto) |
 | Agent launch API | Validates `createLaunch` parameters, simulates the call with `eth_call`, and returns an unsigned transaction. Non-custodial. | [`polypad/web/app/api/agents/v1`](polypad/web/app/api/agents/v1) · [`docs/AGENTS_API.md`](docs/AGENTS_API.md) |
-| Polypad MCP | Tools an external agent can call to validate or prepare a launch. | [`agents/polypad-mcp`](agents/polypad-mcp) |
+| Polypad MCP | 21 tools served live at `https://polypad.family/api/mcp`: reads plus unsigned transactions for trades, NFT mints, token launches and tokenized funds. The live server is ahead of this folder; see [polypad.family/build](https://polypad.family/build) and the [changelog](https://polypad.family/changelog). | [`agents/polypad-mcp`](agents/polypad-mcp) |
 
 Reward rates reported by Poly Agent are token-denominated snapshots. They are not a promised return.
 
@@ -127,7 +188,7 @@ Deployed `.sol` sources under `src/` and `polypad/contracts/src/` match the veri
 
 A map of the docs is in [docs/README.md](docs/README.md).
 
-## Quickstart
+## Quickstart for contract developers
 
 Requirements: [Foundry](https://book.getfoundry.sh/) (`forge` 1.x) and Git.
 
@@ -199,7 +260,7 @@ Web unit tests, from `polypad/web`: `corepack enable && corepack prepare yarn@4.
 forge script script/Deploy.s.sol --rpc-url robinhood --broadcast
 ```
 
-`script/DeployFundFactory.s.sol` deployed `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT` on the machine that signs. `createFund` deploys each `FundVault` and `FundNFT`. The live Phase 1a factory is [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878). Commands and Sourcify status are in [`src/fund/README.md`](src/fund/README.md). Phase 2 and Phase 3 addresses, creation transactions, and Blockscout links are in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md). `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`. Not audited. Not financial advice.
+`script/DeployFundFactory.s.sol` deployed `FundFactory` for the Phase 1a tokenized-fund raise. It requires `PRIVATE_KEY` and `FEE_RECIPIENT` on the machine that signs. `createFund` deploys each `FundVault` and `FundNFT`. The live Phase 1a factory is [`0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878`](https://robinhoodchain.blockscout.com/address/0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878). Commands and Sourcify status are in [`src/fund/README.md`](src/fund/README.md). Phase 2 and Phase 3 addresses, creation transactions, and Blockscout links are in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md). `script/DeployFundFactoryInvest.s.sol` reverts unless `CONFIRM_FUND_PHASE2_DEPLOY=yes`.
 
 The Polypad launchpad deploy script in `polypad/contracts/script/Deploy.s.sol` refuses chain ID 4663 unless `MAINNET` and `I_HAVE_WRITTEN_APPROVAL_AND_AUDIT` are both set. That guard is a script check. It is not a statement that a review has been completed. The live addresses below were already deployed; their sources are in this repository where noted.
 
@@ -240,11 +301,11 @@ Explorer links use [robinhoodchain.blockscout.com](https://robinhoodchain.blocks
 
 V2 pools are deployed with `new` from the verified pool source. Two example pools are in [`src/v2/README.md`](src/v2/README.md): [`0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518`](https://robinhoodchain.blockscout.com/address/0xB2BBc1752FAa5BCfC67571819af30CE2AaF58518) and [`0x0F50043E172B8652bb786C4F14f30c415E5760AB`](https://robinhoodchain.blockscout.com/address/0x0F50043E172B8652bb786C4F14f30c415E5760AB). They are not the full set.
 
-`FundVault` and `FundNFT` are created per fund by `createFund` on `FundFactory`. Phase 1a is a raise that mints ERC-721 units. Phase 2 and Phase 3 are deployed on Robinhood Chain and listed in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md): `FundSwapFacet` `0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0`, `UniswapV3RouterAdapter` `0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581`, `FundAllowlist` `0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`, `FundFactoryInvest` `0xd3c6ae470c25989cC8d2876c1855fB570B98894E`, `StrategyTemplate` `0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba`, `FundSwapFacetPhase3` `0x40Ef3ae910A46aDDC14f45F0983060161884f045`, and `FundFactoryPhase3` `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. Sourcify exact match. The site is [polypad.family/funds](https://polypad.family/funds). Not audited. Not financial advice.
+`FundVault` and `FundNFT` are created per fund by `createFund` on `FundFactory`. Phase 1a is a raise that mints ERC-721 units. Phase 2 and Phase 3 are deployed on Robinhood Chain and listed in [docs/DEPLOYMENTS.md](docs/DEPLOYMENTS.md): `FundSwapFacet` `0xA2620b14d1A39d4afbEAA4b87a7E7871050b50a0`, `UniswapV3RouterAdapter` `0xA5187f8e56Dd0784624D833CEE3bF6f2Aa5E7581`, `FundAllowlist` `0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19`, `FundFactoryInvest` `0xd3c6ae470c25989cC8d2876c1855fB570B98894E`, `StrategyTemplate` `0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba`, `FundSwapFacetPhase3` `0x40Ef3ae910A46aDDC14f45F0983060161884f045`, and `FundFactoryPhase3` `0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B`. Sourcify exact match. The site is [polypad.family/funds](https://polypad.family/funds).
 
 ## Security
 
-- The contracts are unaudited. An outside review is planned. Security-scanned with Bevor. Not a formal audit. Scans are not audits. Not financial advice.
+- An outside review is planned. Security-scanned with Bevor. Scans are not a review.
 - Source is public here and on Sourcify where the table says so.
 - CI runs Foundry tests and an advisory Slither job. Slither findings are not a review, and a green run does not remove risk.
 - Staking has a small self-hosted bug bounty. Scope, amounts, and rules are in [SECURITY.md](SECURITY.md).
@@ -263,13 +324,19 @@ Agent launch rails are in the repository. [docs/AGENTS_API.md](docs/AGENTS_API.m
 
 Logos, colors, and naming: [polypad.family/brand](https://polypad.family/brand). Use "Polydash" for the company, "Polypad" for the launchpad, and "POLYDASH" for the token ticker. The Uniswap-schema token list is [`tokenlist/polydash.tokenlist.json`](tokenlist/polydash.tokenlist.json); raw URL after merge: `https://raw.githubusercontent.com/polydash-labs/Polydash/main/tokenlist/polydash.tokenlist.json`.
 
+## Support the project
+
+- ⭐ Star this repo. It's the simplest way to help other builders find Polypad.
+- Built an agent on Polypad? Open an issue with the `showcase` label and we'll add it to the README.
+- Questions: [@Polydash_](https://x.com/Polydash_) · [Telegram](https://t.me/polydashofficial)
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Disclaimer
 
-Using these contracts can result in loss of funds. See the [risk disclosure](https://polypad.family/risk). This repository is not financial advice. The contracts are unaudited.
+Using these contracts can result in loss of funds. See the [risk disclosure](https://polypad.family/risk).
 
 ## License
 
