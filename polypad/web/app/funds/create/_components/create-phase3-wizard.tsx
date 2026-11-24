@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Upload, X } from 'lucide-react';
@@ -32,8 +32,8 @@ import {
   type StrategyTemplateView,
 } from '@/lib/fund/phase3';
 import { usePhase3Templates, usePhase3Tx } from '@/lib/fund/use-phase3';
-import { ALLOWLIST_NOTE, FUND_FACTORY_V2, GROWTH_DEFAULT_TEMPLATE_ID, GROWTH_FEE_COPY, GROWTH_FEE_OPTIONS, TEMPLATE2, TEMPLATE2_AVAILABLE_AT_MS, TEMPLATE2_BADGE, THESIS_LINES, checkThesisUri, clampThesis, factoryForTemplate, growthLabel, growthLines, ipfsToHttp, isGrowthTemplate, matchesGrowthStrategy, phase6TxError, templateTitle } from '@/lib/fund/phase6';
-import { FUND_FACTORY_V3, LP_DEFAULT_TEMPLATE_ID, LP_FEE_OPTIONS, LP_SUMMARY, OPTIN_COPY, isLpTemplate, lpLines } from '@/lib/fund/phase7';
+import { ALLOWLIST_NOTE, FUND_FACTORY_V2, GROWTH_DEFAULT_TEMPLATE_ID, GROWTH_FEE_COPY, GROWTH_FEE_OPTIONS, MOMENTUM_SUMMARY, TEMPLATE2, THESIS_LINES, YIELD_SUMMARY, checkThesisUri, clampThesis, factoryForTemplate, growthLabel, growthLines, ipfsToHttp, isGrowthTemplate, isMomentumTemplate, matchesGrowthStrategy, momentumLines, phase6TxError, templateTitle, yieldLines } from '@/lib/fund/phase6';
+import { FUND_FACTORY_V3, LP_DEFAULT_TEMPLATE_ID, LP_FEE_OPTIONS, LP_SUMMARY, OPTIN_COPY, isLpTemplate, isYieldTemplate, lpLines } from '@/lib/fund/phase7';
 import { DERIVED_MANDATE_NOTE, bundledMandate, isDerivedMandate } from '@/lib/fund/mandates';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -61,18 +61,25 @@ export function CreatePhase3Wizard() {
   const [uploading, setUploading] = useState(false);
   const [thesis, setThesis] = useState('');
   const [thesisUri, setThesisUri] = useState('');
+  const [thesisCopied, setThesisCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  // Locked by default (also during SSR); unlocked on the client once Nov 12 has passed.
-  const [t2Open, setT2Open] = useState(false);
-  useEffect(() => {
-    const check = () => setT2Open(Date.now() >= TEMPLATE2_AVAILABLE_AT_MS);
-    check();
-    const id = setInterval(check, 60_000);
-    return () => clearInterval(id);
-  }, []);
-  useEffect(() => {
-    if (!t2Open && isGrowthTemplate(draft.templateId)) setDraft((p) => ({ ...p, templateId: null }));
-  }, [t2Open, draft.templateId]);
+
+  const copyThesis = async () => {
+    const text = [thesis.trim(), thesisUri.trim()].filter(Boolean).join('\n');
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setThesisCopied(true);
+    setTimeout(() => setThesisCopied(false), 3000);
+  };
 
   const checked = checkPhase3Draft(draft);
   const stepIssues = checked.issues.filter((i) => STEPS[step].fields.includes(i.field));
@@ -97,7 +104,7 @@ export function CreatePhase3Wizard() {
   const [optLp, setOptLp] = useState(true);
   const [optStake, setOptStake] = useState(true);
   const cards = list.filter((t) => (!isGrowthTemplate(t.id) || t.id === TEMPLATE2.id) && (!isLpTemplate(t.id) || t.id === LP_DEFAULT_TEMPLATE_ID));
-  const pickGrowthFee = (id: number) => { if (!t2Open) return; setGrowthPick(id); set('templateId', id); };
+  const pickGrowthFee = (id: number) => { setGrowthPick(id); set('templateId', id); };
 
   const next = () => {
     if (stepIssues.length || (step === 1 && thesisUriError)) { setReveal(true); return; }
@@ -166,9 +173,6 @@ export function CreatePhase3Wizard() {
         <p className="mt-1 text-[12px] text-white/50">About 2 minutes: 5 short steps, then 1 wallet signature (network gas only, no ETH sent). Your page goes live as soon as the transaction confirms.</p>
         <p className="text-[13px] leading-relaxed text-white/60">
           Five short steps. Your tokenized fund follows a locked strategy, charges a performance fee only on new gains, and you put your own ETH in alongside investors. You sign 1 transaction at the end. No ETH is sent when you create the tokenized fund.
-        </p>
-        <p className="text-[12px] text-white/45">
-          Prefer the older setup where you write your own rules? <Link href="/funds/create?phase=2" className="text-white underline underline-offset-2">Create a Phase 2 tokenized fund instead</Link>.
         </p>
         <BuyEthButton className="pt-1" />
       </div>
@@ -248,7 +252,7 @@ export function CreatePhase3Wizard() {
             ) : noTemplates ? (
               <div className="rounded-lg border border-white/10 p-4 text-[13px] leading-relaxed text-white/60">
                 <p className="text-white">No strategies are published yet</p>
-                <p className="mt-1">Phase 3 tokenized funds can be created once the strategy contract has at least one strategy. Check back later, or <Link href="/funds/create?phase=2" className="text-white underline">create a Phase 2 tokenized fund</Link>.</p>
+                <p className="mt-1">Tokenized funds can be created once the strategy contract has at least one strategy. Check back later, or <Link href="/funds/create?phase=2" className="text-white underline">create a tokenized fund with your own rules</Link>.</p>
                 <div className="mt-3"><ContractLink label="Strategies" address={STRATEGY_TEMPLATE} /></div>
               </div>
             ) : (
@@ -256,27 +260,23 @@ export function CreatePhase3Wizard() {
                 {cards.map((t) => {
                   const growth = t.id === TEMPLATE2.id;
                   const lp = t.id === LP_DEFAULT_TEMPLATE_ID;
+                  const yld = isYieldTemplate(t.id);
+                  const mom = isMomentumTemplate(t.id);
                   const v3 = factoryForTemplate(t.id) === FUND_FACTORY_V3;
                   const on = growth ? isGrowthTemplate(draft.templateId) : lp ? isLp : draft.templateId === t.id;
-                  const locked = growth && !t2Open;
                   return (
                     <button
                       key={t.id}
                       type="button"
                       role="radio"
                       aria-checked={on}
-                      aria-disabled={locked}
-                      disabled={locked}
-                      data-testid={growth ? 'growth-card' : lp ? 'lp-card' : undefined}
-                      onClick={() => { if (!locked) set('templateId', growth ? growthPick : lp ? lpPick : t.id); }}
-                      className={cn('flex h-full flex-col items-stretch justify-start rounded-xl border p-4 text-left transition-colors', locked ? 'cursor-not-allowed border-white/10 opacity-60' : on ? 'border-white bg-white/[0.06]' : 'border-white/10 hover:border-white/30')}
+                      data-testid={growth ? 'growth-card' : lp ? 'lp-card' : yld ? 'yield-card' : mom ? 'momentum-card' : undefined}
+                      onClick={() => { set('templateId', growth ? growthPick : lp ? lpPick : t.id); }}
+                      className={cn('flex h-full flex-col items-stretch justify-start rounded-xl border p-4 text-left transition-colors', on ? 'border-white bg-white/[0.06]' : 'border-white/10 hover:border-white/30')}
                     >
-                      {locked && <span className="mb-2 self-start rounded-full border border-amber-300/40 bg-amber-300/10 px-2 py-0.5 text-[11px] font-medium text-amber-200">{TEMPLATE2_BADGE}</span>}
                       <span className="flex items-center justify-between gap-2">
-                        <span className="text-[14px] font-semibold text-white">{growth || lp ? templateTitle(t.id) : templateName(t.id)}</span>
+                        <span className="text-[14px] font-semibold text-white">{growth || lp || yld || mom ? templateTitle(t.id) : templateName(t.id)}</span>
                         <span className="flex items-center gap-1.5">
-                          {v3 && <span className="rounded-full border border-white/20 px-2 py-0.5 text-[10px] text-white/70">New V3 factory</span>}
-                          {factoryForTemplate(t.id) === FUND_FACTORY_V2 && <span className="rounded-full border border-white/20 px-2 py-0.5 text-[10px] text-white/70">New V2 factory</span>}
                           {on && <Check className="h-4 w-4 text-white" />}
                         </span>
                       </span>
@@ -290,6 +290,16 @@ export function CreatePhase3Wizard() {
                           <span className="block text-white/80">{LP_SUMMARY}</span>
                           {lpLines(lpFeeBps).map((l) => <span key={l} className="block">{l}</span>)}
                         </span>
+                      ) : yld ? (
+                        <span className="mt-1 block space-y-0.5 text-[12px] leading-relaxed text-white/60">
+                          <span className="block text-white/80">{YIELD_SUMMARY}</span>
+                          {yieldLines().map((l) => <span key={l} className="block">{l}</span>)}
+                        </span>
+                      ) : mom ? (
+                        <span className="mt-1 block space-y-0.5 text-[12px] leading-relaxed text-white/60">
+                          <span className="block text-white/80">{MOMENTUM_SUMMARY}</span>
+                          {momentumLines().map((l) => <span key={l} className="block">{l}</span>)}
+                        </span>
                       ) : (
                         <span className="mt-1 block space-y-0.5 text-[12px] leading-relaxed text-white/60">
                           {templateLine(t).replace(/\.$/, '').split(', ').map((l) => <span key={l} className="block">{l.charAt(0).toUpperCase() + l.slice(1)}.</span>)}
@@ -297,7 +307,7 @@ export function CreatePhase3Wizard() {
                       )}
                       <span className="mt-auto block pt-3">
                         <span className="block border-t border-white/10 pt-3 text-[11px] text-white/45">
-                          {v3 ? 'Created on the new V3 factory (adds liquidity and staking tools)' : factoryForTemplate(t.id) === FUND_FACTORY_V2 ? 'Created on the new V2 factory' : 'Created on the Phase 3 factory'}. Locked once the tokenized fund is created.
+                          {v3 ? 'Includes liquidity and staking tools. ' : ''}Locked once the tokenized fund is created.
                         </span>
                       </span>
                     </button>
@@ -306,7 +316,7 @@ export function CreatePhase3Wizard() {
               </div>
             )}
             {growthOpts.length > 0 && (
-              <div className={cn('space-y-2 rounded-xl border p-4', isGrowthTemplate(draft.templateId) ? 'border-white/30' : 'border-white/10', !t2Open && 'opacity-60')} data-testid="growth-fee-choice">
+              <div className={cn('space-y-2 rounded-xl border p-4', isGrowthTemplate(draft.templateId) ? 'border-white/30' : 'border-white/10')} data-testid="growth-fee-choice">
                 <p className="text-[13px] font-semibold text-white">Polydash Growth Tokenized Fund: performance fee</p>
                 <p className="text-[12px] leading-relaxed text-white/60">{GROWTH_FEE_COPY}</p>
                 <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Performance fee">
@@ -318,10 +328,9 @@ export function CreatePhase3Wizard() {
                         type="button"
                         role="radio"
                         aria-checked={on}
-                        disabled={!t2Open}
                         data-template-id={o.templateId}
                         onClick={() => pickGrowthFee(o.templateId)}
-                        className={cn('rounded-lg border px-2 py-2 text-center transition-colors', on ? 'border-white bg-white text-black' : 'border-white/15 text-white hover:border-white/40', !t2Open && 'cursor-not-allowed')}
+                        className={cn('rounded-lg border px-2 py-2 text-center transition-colors', on ? 'border-white bg-white text-black' : 'border-white/15 text-white hover:border-white/40')}
                       >
                         <span className="block font-mono text-[15px] font-semibold">{o.feeBps / 100}%</span>
                         <span className={cn('block text-[10px]', on ? 'text-black/60' : 'text-white/45')}>Strategy #{o.templateId}{o.templateId === GROWTH_DEFAULT_TEMPLATE_ID ? ' · default' : ''}</span>
@@ -380,6 +389,14 @@ export function CreatePhase3Wizard() {
                 <Input value={thesisUri} onChange={(e) => setThesisUri(e.target.value)} placeholder="ipfs://… or https://…" className="bg-secondary/50 font-mono text-[12px]" />
               </Field>
               <p className="text-[11px] text-white/45">The creation transaction does not store the thesis on-chain. Use the same text and link as the reason and write-up of your first asset proposal, so investors see it on the live page.</p>
+              <p className="rounded-lg border border-amber-300/30 bg-amber-400/[0.06] p-3 text-[12px] leading-relaxed text-amber-100">
+                Your thesis won&apos;t appear on the tokenized fund page unless you also add it to your first asset proposal — copy it there after creating.
+              </p>
+              <div>
+                <Button type="button" variant="secondary" size="sm" disabled={!thesis.trim() && !thesisUri.trim()} onClick={copyThesis}>
+                  {thesisCopied ? 'Copied — paste it into your first proposal' : 'Copy thesis'}
+                </Button>
+              </div>
             </div>
           </>
         )}
@@ -440,9 +457,8 @@ export function CreatePhase3Wizard() {
               <Row k="Price per share" v={`${formatFundEth(checked.params.mintPrice)} ETH`} />
               <Row k="Raise goal" v={`${formatFundEth(checked.params.raiseCap)} ETH · ${preview.maxSupply.toString()} shares`} />
               <Row k="Raise open for" v={`${Number(checked.params.raiseDuration / 86_400n)} days`} />
-              <Row k="Strategy (locked)" v={chosen ? (isGrowthTemplate(chosen.id) ? growthLabel(chosen.id, chosen.hwmFeeBps) : isLpTemplate(chosen.id) ? `${templateTitle(chosen.id)} · ${pct(chosen.hwmFeeBps)} fee (Strategy #${chosen.id})` : templateName(chosen.id)) : '—'} wrap />
-              <Row k="Strategy id (used to create)" v={`#${checked.params.templateId.toString()}`} />
-              {chosen && <Row k="What it allows" v={isGrowthTemplate(chosen.id) ? growthLines(chosen.hwmFeeBps).join('. ') : isLpTemplate(chosen.id) ? lpLines(chosen.hwmFeeBps).join('. ') : templateLine(chosen)} wrap />}
+              <Row k="Strategy (locked)" v={chosen ? (isGrowthTemplate(chosen.id) ? growthLabel(chosen.id, chosen.hwmFeeBps) : isLpTemplate(chosen.id) ? `${templateTitle(chosen.id)} · ${pct(chosen.hwmFeeBps)} fee (Strategy #${chosen.id})` : templateTitle(chosen.id)) : '—'} wrap />
+              {chosen && <Row k="What it allows" v={isGrowthTemplate(chosen.id) ? growthLines(chosen.hwmFeeBps).join('. ') : isLpTemplate(chosen.id) ? lpLines(chosen.hwmFeeBps).join('. ') : isYieldTemplate(chosen.id) ? yieldLines().join('. ') : isMomentumTemplate(chosen.id) ? momentumLines().join('. ') : templateLine(chosen)} wrap />}
               <Row k="Tokenized fund factory" v={isV3 ? 'Tokenized Fund factory V3' : isV2 ? 'Tokenized Fund factory V2' : 'Tokenized Fund factory (Phase 3)'} wrap />
               {isV2 && <Row k="Note" v={ALLOWLIST_NOTE} wrap />}
               {isLp && <Row k="Liquidity (LP yield)" v={optLp ? 'Planned (optional)' : 'Not planned'} />}
@@ -455,6 +471,14 @@ export function CreatePhase3Wizard() {
               <Row k="Protocol fee" v="0.2% of every share purchase" />
               <Row k="Thesis" v={thesisLines.length ? `${thesisLines.length} of ${THESIS_LINES} lines` : 'none'} />
             </dl>
+            {thesisLines.length > 0 && (
+              <div className="rounded-lg border border-amber-300/30 bg-amber-400/[0.06] p-3 text-[12px] leading-relaxed text-amber-100">
+                Your thesis won&apos;t appear on the tokenized fund page unless you also add it to your first asset proposal — copy it there after creating.{' '}
+                <button type="button" className="font-medium text-white underline underline-offset-2" onClick={copyThesis}>
+                  {thesisCopied ? 'Copied' : 'Copy thesis'}
+                </button>
+              </div>
+            )}
             <PagePreview
               name={checked.params.name}
               symbol={checked.params.symbol}
@@ -486,10 +510,13 @@ export function CreatePhase3Wizard() {
           ) : !isConnected ? (
             <ConnectButton.Custom>{({ openConnectModal }) => <Button onClick={openConnectModal} className={primary}>Connect wallet</Button>}</ConnectButton.Custom>
           ) : (
-            <Button onClick={create} disabled={pending === 'create' || !checked.params} className={cn('gap-2', primary)}>
-              {pending === 'create' && <Loader2 className="h-4 w-4 animate-spin" />}
-              {pending === 'create' ? 'Creating…' : 'Create your tokenized fund (sign 1 transaction, no ETH sent)'}
-            </Button>
+            <div className="flex flex-col items-end gap-1.5">
+              <Button onClick={create} disabled={pending === 'create' || !checked.params} className={cn('gap-2', primary)}>
+                {pending === 'create' && <Loader2 className="h-4 w-4 animate-spin" />}
+                {pending === 'create' ? 'Creating…' : 'Create your tokenized fund (sign 1 transaction, no ETH sent)'}
+              </Button>
+              <p className="max-w-[320px] text-right text-[11px] leading-relaxed text-white/50">Signing just approves this action in your wallet. It doesn&apos;t give Polypad access to your funds.</p>
+            </div>
           )}
         </div>
       </div>
@@ -539,7 +566,9 @@ function PagePreview(p: {
   const t = p.template;
   const isT2 = isGrowthTemplate(t?.id);
   const isLpT = isLpTemplate(t?.id);
-  const rules = t ? (isT2 ? growthLines(t.hwmFeeBps) : isLpT ? lpLines(t.hwmFeeBps) : templateLine(t).replace(/\.$/, '').split(', ').map((l) => `${l.charAt(0).toUpperCase()}${l.slice(1)}.`)) : [];
+  const isYldT = isYieldTemplate(t?.id);
+  const isMomT = isMomentumTemplate(t?.id);
+  const rules = t ? (isT2 ? growthLines(t.hwmFeeBps) : isLpT ? lpLines(t.hwmFeeBps) : isYldT ? yieldLines() : isMomT ? momentumLines() : templateLine(t).replace(/\.$/, '').split(', ').map((l) => `${l.charAt(0).toUpperCase()}${l.slice(1)}.`)) : [];
   const caps: [string, string][] = [
     ['Most in one asset (per-asset cap)', t?.maxPositionBps ? pct(t.maxPositionBps) : '30% default'],
     ['Most per trade (per-trade cap)', t?.maxTradeBps ? pct(t.maxTradeBps) : '—'],
@@ -565,7 +594,7 @@ function PagePreview(p: {
           </div>
           <div className="min-w-0">
             <p className="truncate text-[17px] font-semibold text-white">{p.name}</p>
-            <p className="text-[12px] text-white/55"><span className="font-mono">{p.symbol}</span> · {t ? (isT2 || isLpT ? templateTitle(t.id) : templateName(t.id)) : 'No strategy'} · Tokenized Fund</p>
+            <p className="text-[12px] text-white/55"><span className="font-mono">{p.symbol}</span> · {t ? (isT2 || isLpT || isYldT || isMomT ? templateTitle(t.id) : templateName(t.id)) : 'No strategy'} · Tokenized Fund</p>
           </div>
           <span className="ml-auto shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] text-amber-100">Waiting for the manager to join</span>
         </div>

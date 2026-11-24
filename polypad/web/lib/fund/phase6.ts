@@ -1,5 +1,5 @@
 import { FUND_ALLOWLIST, FUND_FACTORY_PHASE3, STRATEGY_TEMPLATE, phase3TxError } from '@/lib/fund/phase3';
-import { FUND_FACTORY_V3, LP_NAME, isLpTemplate } from '@/lib/fund/phase7';
+import { FUND_FACTORY_V3, LP_NAME, isLpTemplate, isYieldTemplate } from '@/lib/fund/phase7';
 
 // Phase 6 contracts on Robinhood Chain (chain 4663). Verified on Sourcify.
 export const FUND_FACTORY_V2 = '0xe50da719947e83f316977d9c425df95672e7b27e' as const;
@@ -11,14 +11,51 @@ export const FUND_PHASE5_V2 = '0x0827e73353beb5c688c96723bb33834cac202d0e' as co
 export const POLYDASH_TOKEN = '0x319525528f42167ef7fc18b77b889958080568e4' as const;
 export { FUND_ALLOWLIST, FUND_FACTORY_PHASE3, STRATEGY_TEMPLATE };
 
-/** The Polydash Growth templates (#2 and its fee variants #3–#5) run on the V2 factory. Every other template stays on the Phase 3 factory. */
-export const V2_TEMPLATE_IDS = [2, 3, 4, 5] as const;
+/** The Polydash Growth templates (#2 and its fee variants #3–#5) run on the V2 factory, as does Strategy #11 Momentum. Every other template stays on the Phase 3 factory, except LP/Yield templates which run on V3. */
+export const V2_TEMPLATE_IDS = [2, 3, 4, 5, 11] as const;
 export function factoryForTemplate(id: number): `0x${string}` {
-  if (isLpTemplate(id)) return FUND_FACTORY_V3;
+  if (isLpTemplate(id) || isYieldTemplate(id)) return FUND_FACTORY_V3;
   return (V2_TEMPLATE_IDS as readonly number[]).includes(id) ? FUND_FACTORY_V2 : FUND_FACTORY_PHASE3;
 }
 
-const TEMPLATE_NAMES: Record<number, string> = { 1: 'Strategy #1', 2: 'Polydash Growth Tokenized Fund', 3: 'Polydash Growth Tokenized Fund', 4: 'Polydash Growth Tokenized Fund', 5: 'Polydash Growth Tokenized Fund', 6: LP_NAME, 7: LP_NAME, 8: LP_NAME, 9: LP_NAME };
+export const YIELD_TEMPLATE_ID = 10;
+export const MOMENTUM_TEMPLATE_ID = 11;
+export const YIELD_NAME = 'Polydash Yield Tokenized Fund';
+export const MOMENTUM_NAME = 'Polydash Momentum Tokenized Fund';
+export const YIELD_SUMMARY = 'The tokenized fund buys POLYDASH, adds POLYDASH/WETH liquidity, and stakes POLYDASH — then reinvests the harvested fees and rewards so the yield compounds instead of being paid out.';
+export const MOMENTUM_SUMMARY = 'The tokenized fund buys allowlisted tokens that are rising in price and volume, and sells or trims them when that momentum fades. Every token is proposed in public with a 2-day wait.';
+/** Strategy #11 (Polydash Momentum): no fixed assets — the manager proposes allowlisted tokens. */
+export function isMomentumTemplate(id: number | null | undefined): boolean {
+  return id === MOMENTUM_TEMPLATE_ID;
+}
+/** Plain rules shown for Strategy #10 on the create card, review step, and page preview. */
+export function yieldLines(): string[] {
+  return [
+    'Buys POLYDASH only',
+    'Adds POLYDASH/WETH liquidity to earn trading fees (LP yield), at most 50% of the tokenized fund per pool',
+    'Stakes POLYDASH in staking pools to earn rewards',
+    'Harvested fees and rewards are reinvested (compounded), not paid out as dividends',
+    'At most 80% of the tokenized fund in POLYDASH, at most 10% per trade',
+    '5% performance fee on new gains only',
+    'New buys pause after a 20% drop (drawdown brake)',
+    'Manager shares locked 30 days (skin lock)',
+  ];
+}
+/** Plain rules shown for Strategy #11 on the create card, review step, and page preview. */
+export function momentumLines(): string[] {
+  return [
+    'Buys allowlisted tokens with rising price and volume (momentum)',
+    'Every token is proposed in public with a written thesis and a 2-day wait',
+    'Sells or trims a token when its momentum fades',
+    'At most 30% of the tokenized fund in any one token',
+    'At most 10% of the tokenized fund per trade',
+    '5% performance fee on new gains only',
+    'New buys pause after a 20% drop (drawdown brake)',
+    'Manager shares locked 30 days (skin lock)',
+  ];
+}
+
+const TEMPLATE_NAMES: Record<number, string> = { 1: 'Strategy #1', 2: 'Polydash Growth Tokenized Fund', 3: 'Polydash Growth Tokenized Fund', 4: 'Polydash Growth Tokenized Fund', 5: 'Polydash Growth Tokenized Fund', 6: LP_NAME, 7: LP_NAME, 8: LP_NAME, 9: LP_NAME, 10: YIELD_NAME, 11: MOMENTUM_NAME };
 export function templateTitle(id: number): string {
   return TEMPLATE_NAMES[id] ?? `Strategy #${id}`;
 }
@@ -69,10 +106,6 @@ export const TEMPLATE2 = {
 export const ALLOWLIST_DATE = 'Nov 12';
 export const ALLOWLIST_NOTE = `POLYDASH is on the approved list (allowlist) since ${ALLOWLIST_DATE}, so this tokenized fund can be created and bought.`;
 
-/** Template #2 card stays disabled until this moment (Nov 12 2026, 00:00 UTC). */
-export const TEMPLATE2_AVAILABLE_AT_MS = Date.UTC(2026, 10, 12);
-export const TEMPLATE2_BADGE = 'Available Nov 12';
-
 export const PROPOSAL_DELAY_SECONDS = 172_800;
 export const DEFAULT_ASSET_CAP_BPS = 3_000;
 export const MAX_TEXT_BYTES = 512;
@@ -80,7 +113,7 @@ export const THESIS_LINES = 3;
 
 export const P6_COPY = {
   guardrails: [
-    'No single asset can go above 30% of the tokenized fund unless the proposal says less (per-asset cap).',
+    'No single asset can go above 30% of the tokenized fund by default (per-asset cap) — except the strategy asset, POLYDASH, which can go up to 80%.',
     'Every new asset waits 2 days in public before the manager can add it (waiting period).',
     'You can leave the tokenized fund at any time during the wait. Exits are always allowed.',
     'Only tokens on the approved list (allowlist) can be added.',
@@ -194,7 +227,7 @@ export function dedupeAssets(list: FundAsset[]): FundAsset[] {
 
 /** One-line plain-English meaning of each term on the tokenized fund page. Always shown under the term. */
 export const GLOSS = {
-  nav: 'NAV (net asset value): everything the tokenized fund owns, minus what it owes, split per share.',
+  nav: 'Value per share: everything the tokenized fund owns, minus what it owes, split per share.',
   hwm: 'High-water mark: the highest value per share so far. The manager earns a fee only above it.',
   ret: 'How far the value per share is above or below that highest point.',
   aum: 'Assets under management: the total value the tokenized fund holds right now.',
