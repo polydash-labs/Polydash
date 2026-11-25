@@ -46,3 +46,6 @@ secrets/
 
 # Buyback keeper runtime data (JSONL logs)
 buyback-keeper/data/
+
+# Test buyer wallet key — live private key, never commit
+buyback-keeper/.x402-test-buyer.json
