@@ -43,3 +43,6 @@ __pycache__/
 # Local secrets
 *.secret
 secrets/
+
+# Buyback keeper runtime data (JSONL logs)
+buyback-keeper/data/
