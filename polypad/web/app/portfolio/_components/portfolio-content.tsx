@@ -14,6 +14,7 @@ import { formatUsd } from '@/lib/format';
 import { FadeIn, Stagger, StaggerItem } from '@/components/ui/animate';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { BuyEthButton, BridgeEthLink } from '@/components/onramp/buy-eth';
 
 export function PortfolioContent() {
   const { isConnected, address } = useAccount();
@@ -51,6 +52,10 @@ export function PortfolioContent() {
               <Button onClick={openConnectModal}>Connect wallet</Button>
             )}
           </ConnectButton.Custom>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <BuyEthButton className="items-center" />
+            <BridgeEthLink />
+          </div>
         </FadeIn>
       </div>
     );
@@ -71,10 +76,21 @@ export function PortfolioContent() {
 
       <h1 className="text-lg sm:text-xl font-semibold">Portfolio</h1>
 
+      <div className="glass-card flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[14px] font-medium">Add ETH to your wallet</p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">Buy ETH, or bridge ETH you already have on Base to Robinhood Chain.</p>
+        </div>
+        <div className="flex flex-wrap items-start gap-3">
+          <BuyEthButton />
+          <BridgeEthLink />
+        </div>
+      </div>
+
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: 'Total value', value: formatUsd(totalValue) },
+          { label: 'Token value (Polypad launches only)', value: formatUsd(totalValue) },
           { label: 'Tokens held', value: String(holdings?.length ?? 0) },
           { label: 'Commits', value: String(commits?.length ?? 0) },
         ].map((s) => (
@@ -86,6 +102,13 @@ export function PortfolioContent() {
           </FadeIn>
         ))}
       </div>
+
+      <p className="glass-card rounded-xl px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
+        This total only counts tokens from Polypad launches. It does not include the ETH in your wallet, your Tokenized Fund shares, staked positions, or NFTs — see{' '}
+        <Link href="/stake" className="text-primary hover:underline">Staking</Link>,{' '}
+        <Link href="/funds" className="text-primary hover:underline">Tokenized Funds</Link> and{' '}
+        <Link href="/nfts" className="text-primary hover:underline">NFTs</Link> for those.
+      </p>
 
       {/* Holdings */}
       <FadeIn delay={0.1}>
@@ -128,21 +151,32 @@ export function PortfolioContent() {
           <div className="glass-card rounded-xl p-4 sm:p-5">
             <h2 className="font-semibold text-[15px] mb-3 sm:mb-4">Active vault commitments</h2>
             <div className="space-y-2">
-              {commits.map((c: any) => (
-                <div key={c?.launchAddress} className="flex items-center justify-between bg-secondary/30 rounded-lg px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <TokenAvatar name={c?.name} symbol={c?.symbol} imageUri={c?.imageUri} size="sm" />
-                    <div>
-                      <p className="font-semibold text-sm">{c?.name}</p>
-                      <p className="text-xs text-muted-foreground">Pre-launch commit</p>
+              {commits.map((c: any) => {
+                const opensAt = c?.launchTime ? new Date(c.launchTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+                const trading = (c?.phase ?? 0) >= 3;
+                return (
+                  <Link key={c?.launchAddress} href={`/token/${c?.launchAddress ?? ''}`} className="block rounded-lg bg-secondary/30 px-4 py-3 transition-colors hover:bg-secondary/50">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <TokenAvatar name={c?.name} symbol={c?.symbol} imageUri={c?.imageUri} size="sm" />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-sm">{c?.name}</p>
+                          <p className="text-xs text-muted-foreground">Pre-launch commit</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-mono text-sm">{c.committed.toLocaleString('en-US', { maximumFractionDigits: 6 })} ETH</p>
+                        <span className="text-xs text-yellow-400">Pending</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono text-sm">{c.committed.toLocaleString('en-US', { maximumFractionDigits: 6 })} ETH</p>
-                    <span className="text-xs text-yellow-400">Pending</span>
-                  </div>
-                </div>
-              ))}
+                    <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+                      {trading
+                        ? 'Pending: trading has opened, so your committed ETH should now be tokens — see the token page for your balance.'
+                        : `Pending means your ETH is committed and waiting for trading to open${opensAt ? ` on ${opensAt}` : ''}. It turns into tokens then. This page does not show how to get your ETH back if the launch does not open — see the token page.`}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </FadeIn>

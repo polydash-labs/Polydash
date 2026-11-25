@@ -11,7 +11,8 @@ export interface LaunchToken {
   creatorFeeBps: number;
   curveProgress: number; // 0-100
   marketCapUsd: number;
-  volumeUsd: number;
+  /** null when trade logs could not be read (unknown, shown as an em dash). */
+  volumeUsd: number | null;
   priceEth: number;
   ethRaised: number;
   graduationThreshold: number;

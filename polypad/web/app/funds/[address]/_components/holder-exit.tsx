@@ -135,7 +135,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
   const run = async (kind: 'refund' | 'exit') => {
     if (!publicClient || selectedIds.length === 0) return;
     setActing(kind);
-    const tid = toast.loading(kind === 'refund' ? 'Confirm the refund in your wallet…' : 'Confirm the exit in your wallet…');
+    const tid = toast.loading(kind === 'refund' ? 'Confirm the refund in your wallet (1 transaction)…' : 'Confirm taking your part out in your wallet (1 transaction)…');
     try {
       const activeChainId = await publicClient.getChainId();
       if (activeChainId !== robinhoodChain.id) await switchChainAsync({ chainId: robinhoodChain.id });
@@ -146,7 +146,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
         chainId: robinhoodChain.id,
         args: [selectedIds],
       });
-      toast.loading(kind === 'refund' ? 'Refunding on Robinhood Chain…' : 'Exiting on Robinhood Chain…', { id: tid });
+      toast.loading('Checking the transaction… Waiting for confirmation…', { id: tid });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
       await queryClient.invalidateQueries({ queryKey: ['fund'] });
@@ -154,7 +154,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
       setSelected(new Set());
       void loadOwned();
       void loadOwed();
-      toast.success(kind === 'refund' ? 'Refunded' : 'Exited', {
+      toast.success(kind === 'refund' ? 'Done. Your refund was sent to your wallet.' : 'Done. Your part of the fund was sent to your wallet.', {
         id: tid,
         action: { label: 'View tx', onClick: () => window.open(getExplorerTxUrl(hash), '_blank') },
       });
@@ -169,7 +169,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
   const claim = async (asset: `0x${string}`) => {
     if (!publicClient) return;
     setClaiming(asset);
-    const tid = toast.loading('Confirm the claim in your wallet…');
+    const tid = toast.loading('Confirm the claim in your wallet (1 transaction)…');
     try {
       const activeChainId = await publicClient.getChainId();
       if (activeChainId !== robinhoodChain.id) await switchChainAsync({ chainId: robinhoodChain.id });
@@ -180,12 +180,12 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
         chainId: robinhoodChain.id,
         args: [asset],
       });
-      toast.loading('Claiming on Robinhood Chain…', { id: tid });
+      toast.loading('Checking the transaction… Waiting for confirmation…', { id: tid });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
       await queryClient.invalidateQueries({ queryKey: ['fund'] });
       void loadOwed();
-      toast.success('Claimed', {
+      toast.success('Done. The tokens were sent to your wallet.', {
         id: tid,
         action: { label: 'View tx', onClick: () => window.open(getExplorerTxUrl(hash), '_blank') },
       });
@@ -209,27 +209,31 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-      <h2 className="text-[15px] font-semibold">Your NFTs</h2>
-      {!account && <p className="mt-2 text-[13px] text-white/60">Connect a wallet to see your NFTs and your refund or exit.</p>}
+      <h2 className="text-[15px] font-semibold">Get your money out</h2>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-[12px] leading-relaxed text-white/55">
+        <li>Pick the shares you want to return. Next: you see about how much ETH you get back.</li>
+        <li>Press the button and confirm in your wallet (1 transaction). Next: the shares are returned and your ETH or tokens are sent to your wallet.</li>
+      </ol>
+      {!account && <p className="mt-2 text-[13px] text-white/60">Connect a wallet to see your shares and how to get your money out.</p>}
       {account && fund.balance === 0n && (
-        <p className="mt-2 text-[13px] text-white/60">You hold none of these NFTs.</p>
+        <p className="mt-2 text-[13px] text-white/60">You hold no shares of this fund.</p>
       )}
       {account && fund.balance > 0n && (
         <>
           {owned === null && !scanFailed && (
             <p className="mt-2 flex items-center gap-2 text-[13px] text-white/50">
-              <Loader2 className="h-4 w-4 animate-spin" /> Finding your NFTs…
+              <Loader2 className="h-4 w-4 animate-spin" /> Finding your shares…
             </p>
           )}
           {scanFailed && (
             <p className="mt-2 text-[12px] leading-relaxed text-yellow-200/90">
-              The Transfer log could not be read, so your NFTs are not listed. Paste their IDs below instead.
+              Your shares could not be listed automatically right now. Type their share numbers below instead.
             </p>
           )}
           {ids.length > 0 && (
             <div className="mt-3">
               <button type="button" onClick={toggleAll} className="text-[12px] text-polydash-green hover:underline">
-                {allSelected ? 'Deselect all' : `Select all (${ids.length})`}
+                {allSelected ? 'Unselect all' : `Select all my shares (${ids.length})`}
               </button>
               <ul className="mt-2 flex flex-wrap gap-2">
                 {ids.map((id) => (
@@ -247,7 +251,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
             </div>
           )}
           <label className="mt-3 block text-xs text-muted-foreground">
-            Or paste NFT IDs, comma separated
+            Or type share numbers, separated by commas
             <Input
               value={manual}
               onChange={(event) => setManual(event.target.value.replace(/[^0-9,]/g, ''))}
@@ -260,39 +264,39 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
           )}
           {fund.vaultStatus === 0 && (
             <p className="mt-3 text-[12px] leading-relaxed text-white/55">
-              The raise is still open. A refund opens if the raise fails after its deadline; an exit opens after a successful close.
+              The raise is still open. If it misses its goal by the deadline, you can get a refund. If it succeeds, you can take your part of the fund out after the raise closes.
             </p>
           )}
           {isFailed && (
             <div className="mt-3 space-y-2">
               <p className="text-[12px] leading-relaxed text-white/60">
-                This raise failed. Burning NFTs returns a share of the spendable ETH. The protocol fee and any entry fee are not returned.
+                The raise missed its goal in time. Return your shares to get your part of the ETH back. The protocol fee and any entry fee are not returned.
               </p>
               <Button onClick={() => void run('refund')} disabled={acting !== null || selectedIds.length === 0}>
                 {acting === 'refund' && <Loader2 className="h-4 w-4 animate-spin" />}
-                Refund {selectedIds.length > 0 ? `${selectedIds.length} NFT${selectedIds.length === 1 ? '' : 's'}` : 'NFTs'}
+                {selectedIds.length > 0 ? `Get my refund (return ${selectedIds.length} share${selectedIds.length === 1 ? '' : 's'}, sign 1 transaction)` : 'Pick shares to get your refund'}
               </Button>
-              {estimate !== null && <p className="text-[12px] text-white/50">About {formatFundEth(estimate)} ETH. Rounding dust goes to the last units.</p>}
+              {estimate !== null && <p className="text-[12px] text-white/50">You get about {formatFundEth(estimate)} ETH back. Tiny rounding leftovers go to the last shares returned.</p>}
             </div>
           )}
           {isExitable && (
             <div className="mt-3 space-y-2">
               <p className="text-[12px] leading-relaxed text-white/60">
-                Burning NFTs returns a pro-rata share of the vault: ETH, WETH, and mandate tokens. If a token transfer cannot complete, that share is reserved for you to claim below instead.
+                Return your shares to take your part of the vault out: ETH, WETH and any tokens the fund holds, in proportion to your shares. If a token cannot be sent right away, it is kept for you to claim below.
               </p>
               <Button onClick={() => void run('exit')} disabled={acting !== null || selectedIds.length === 0}>
                 {acting === 'exit' && <Loader2 className="h-4 w-4 animate-spin" />}
-                Exit {selectedIds.length > 0 ? `${selectedIds.length} NFT${selectedIds.length === 1 ? '' : 's'}` : 'NFTs'}
+                {selectedIds.length > 0 ? `Take my part out (return ${selectedIds.length} share${selectedIds.length === 1 ? '' : 's'}, sign 1 transaction)` : 'Pick shares to take your part out'}
               </Button>
-              {estimate !== null && <p className="text-[12px] text-white/50">About {formatFundEth(estimate)} ETH at the current NAV per NFT. A failed feed makes this blank.</p>}
+              {estimate !== null && <p className="text-[12px] text-white/50">About {formatFundEth(estimate)} ETH at today&apos;s value per share.</p>}
               {estimate === null && !invest.navKnown && (
-                <p className="text-[12px] text-yellow-200/90">NAV is unavailable — a price feed cannot be used. The exit still pays your share of the vault; the estimate is blank.</p>
+                <p className="text-[12px] text-yellow-200/90">Fund value is unknown right now: a price source could not be read. Figures shown are not a price. Taking your part out still pays your share of the vault; the estimate is left blank.</p>
               )}
             </div>
           )}
           {owed.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-white/5 pt-3">
-              <p className="text-[12px] font-medium text-white/80">Reserved for you from an earlier exit</p>
+              <p className="text-[12px] font-medium text-white/80">Kept for you from an earlier exit (claim owed)</p>
               {owed.map((row) => (
                 <div key={row.asset} className="flex items-center justify-between gap-3 text-[12px]">
                   <span className="text-white/60">
@@ -300,7 +304,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
                   </span>
                   <Button size="sm" variant="secondary" onClick={() => void claim(row.asset)} disabled={claiming !== null}>
                     {claiming === row.asset && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Claim
+                    Claim {row.symbol} (sign 1 transaction)
                   </Button>
                 </div>
               ))}

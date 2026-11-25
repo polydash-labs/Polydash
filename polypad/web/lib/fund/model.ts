@@ -27,11 +27,31 @@ export type FundStatus = 'waiting' | 'open' | 'closed' | 'investing';
 export const VAULT_STATUS_FAILED = 3;
 
 export const FUND_STATUS_LABEL: Record<FundStatus, string> = {
-  waiting: 'Waiting on manager',
-  open: 'Open for minting',
+  waiting: 'Waiting for the manager to join',
+  open: 'Open for investments',
   closed: 'Closed',
-  investing: 'Investing',
+  investing: 'Investing your money',
 };
+
+export const REFUND_STATUS_LABEL = 'Refund available — get your money back';
+
+/** Plain status label and one-line explanation. Vault status 3 (failed raise) shows the refund label. */
+export function fundStatusText(status: FundStatus, vaultStatus: number): { label: string; explain: string; refund: boolean } {
+  if (vaultStatus === 3) {
+    return {
+      label: REFUND_STATUS_LABEL,
+      explain: 'The raise did not reach its goal in time. Holders can return their shares and get their ETH back (entry fees are not returned).',
+      refund: true,
+    };
+  }
+  const explain: Record<FundStatus, string> = {
+    waiting: 'Anyone can join after the manager buys their own shares.',
+    open: 'Anyone can join by buying shares with ETH until the goal or the deadline is reached.',
+    investing: 'The raise is over. The manager is putting the money to work by buying approved tokens.',
+    closed: 'This tokenized fund is no longer taking new money. Holders can exit and take their share.',
+  };
+  return { label: FUND_STATUS_LABEL[status], explain: explain[status], refund: false };
+}
 
 export type FundFilter = 'all' | 'open' | 'waiting' | 'closed' | 'investing' | 'refund' | 'mine';
 export type FundSort = 'newest' | 'raised';
@@ -382,10 +402,11 @@ export function fundTxError(message: string): string {
     return 'Transaction cancelled';
   }
   if (m.includes('skinrequired')) return 'The manager has to mint their share before anyone else can.';
-  if (m.includes('soldout')) return 'Not enough NFTs are left at that quantity.';
+  if (m.includes('soldout')) return 'Not enough shares are left at that quantity.';
   if (m.includes('notraising')) return 'This raise is closed.';
-  if (m.includes('notallowlisted') || m.includes('notinmandate')) return 'That asset or router is not on the allowlist.';
-  if (m.includes('slippage')) return 'The vault would receive less than the minimum you set.';
+  if (m.includes('notallowlisted') || m.includes('notinmandate')) return 'That token or trading route is not on the approved list (the allowlist).';
+  if (m.includes('insufficient')) return 'You don\u2019t have enough ETH \u2014 you need the share price plus a little extra for the network fee (gas).';
+  if (m.includes('slippage')) return 'The price moved too far while your transaction was waiting. Try again.';
   if (m.includes('notinvesting')) return 'Investing is not open on this fund.';
   if (m.includes('notauthorized')) return 'Only the manager or an authorized wallet can do that.';
   if (m.includes('notclosed')) return 'The raise is still open.';
@@ -393,12 +414,19 @@ export function fundTxError(message: string): string {
   if (m.includes('positioncap')) return 'That swap would leave more than the fund’s single-asset cap in one asset.';
   if (m.includes('tradecap')) return 'That swap is larger than the fund’s per-trade cap.';
   if (m.includes('deviation')) return 'That swap executes too far from the feed price.';
-  if (m.includes('toosoon')) return 'The next NAV checkpoint is not due yet. Checkpoints run once an hour.';
+  if (m.includes('toosoon')) return 'The next fund value check (NAV checkpoint) is not due yet. Checks run once an hour.';
   if (m.includes('raiseended')) return 'The raise deadline has passed.';
   if (m.includes('baduri')) return 'The mandate link is missing or too long.';
   if (m.includes('badvalue')) return 'The ETH amount does not match the mint price.';
-  if (m.includes('badquantity')) return 'Enter at least 1 NFT.';
+  if (m.includes('badquantity')) return 'Enter at least 1 share.';
   if (m.includes('invalidparams')) return 'Those settings are outside the allowed limits.';
+  if (m.includes('notfailed')) return 'Refunds open only after the raise is marked failed.';
+  if (m.includes('notexitable')) return 'Exit opens after the raise closes.';
+  if (m.includes('tooearly')) return 'The raise deadline has not passed yet.';
+  if (m.includes('notholder')) return 'One of those shares is not held by this wallet.';
+  if (m.includes('nothingtowithdraw')) return 'Nothing is owed to this wallet for that token.';
+  if (m.includes('transferfailed')) return 'The token transfer failed. The amount stays owed to you.';
+  if (m.includes('priceunavailable')) return 'A price source could not be read right now. Try again later.';
   if (!message || message.length > 180) return 'Transaction failed.';
   return message;
 }

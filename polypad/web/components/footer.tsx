@@ -1,44 +1,115 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+type FooterLink = { label: string; href: string; external?: boolean };
+
+const columns: { title: string; links: FooterLink[] }[] = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Explore', href: '/' },
+      { label: 'Create', href: '/create' },
+      { label: 'Tokenized Funds', href: '/funds' },
+      { label: 'Bonds', href: '/bond' },
+      { label: 'Treasury', href: '/treasury' },
+      { label: 'Stake', href: '/stake' },
+      { label: 'NFTs', href: '/nfts' },
+      { label: 'Pulse', href: '/pulse' },
+    ],
+  },
+  {
+    title: 'Agents',
+    links: [
+      { label: 'Agents', href: '/agents' },
+      { label: 'Agent Accounts', href: '/agents/accounts' },
+      { label: 'Agent Wallets', href: '/agents/wallets' },
+      { label: 'Build', href: '/build' },
+      { label: 'Docs', href: '/docs' },
+      { label: 'Contracts', href: '/contracts' },
+      { label: 'Security', href: '/security' },
+      { label: 'Audits', href: '/audits' },
+    ],
+  },
+  {
+    title: 'Activity',
+    links: [
+      { label: 'Portfolio', href: '/portfolio' },
+      { label: 'Leaderboard', href: '/leaderboard' },
+      { label: 'Buybacks', href: '/buybacks' },
+      { label: 'POLYDASH Rewards Pool', href: '/rewards-pool' },
+      { label: 'Airdrop slice', href: '/slice' },
+      { label: 'Status', href: '/status' },
+      { label: 'Changelog', href: '/changelog' },
+      { label: 'Pricing', href: '/pricing' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', href: '/about' },
+      { label: 'How it works', href: '/about#how-it-works' },
+      { label: 'FAQ', href: '/about#faq' },
+      { label: 'Brand kit', href: '/brand' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Terms', href: '/terms' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Risk disclosure', href: '/risk' },
+    ],
+  },
+];
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+    </svg>
+  );
+}
+
 export function Footer() {
   return (
-    <>
-      <footer className="border-t border-black/10 bg-white text-black">
-        <div className="mx-auto max-w-container px-5 py-10 sm:px-8 sm:py-20">
-          <div className="grid grid-cols-2 gap-8 sm:gap-12 lg:grid-cols-[1.4fr_1fr_1fr]">
-            <div className="col-span-2 lg:col-span-1">
-              <Link href="/" className="flex items-center gap-2">
-                <Image src="/polydash-mark-black.png" alt="Polypad logo" width={26} height={26} className="h-[26px] w-[26px]" />
-                <span className="text-lg font-semibold tracking-tight text-black">Polypad</span>
-              </Link>
-              <p className="mt-4 max-w-sm text-[13px] leading-relaxed sm:text-sm text-black/50">
-                Token launchpad on Robinhood Chain. Bonding curve to Uniswap V4.
-              </p>
-            </div>
-            <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-black/40">Launchpad</h4>
-              <ul className="space-y-3">
-                <li><Link href="/" className="text-sm text-black/50 transition-colors hover:text-black">Explore</Link></li>
-                <li><Link href="/create" className="text-sm text-black/50 transition-colors hover:text-black">Create a token</Link></li>
-                <li><Link href="/leaderboard" className="text-sm text-black/50 transition-colors hover:text-black">Leaderboard</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-black/40">Ecosystem</h4>
-              <ul className="space-y-3">
-                <li><a href="https://dasheco.xyz/" target="_blank" rel="noopener noreferrer" className="text-sm text-black/50 transition-colors hover:text-black">Polydash ecosystem</a></li>
-                <li><Link href="/portfolio" className="text-sm text-black/50 transition-colors hover:text-black">Portfolio</Link></li>
-                <li><Link href="/about" className="text-sm text-black/50 transition-colors hover:text-black">About</Link></li>
-                <li><Link href="/docs" className="text-sm text-black/50 transition-colors hover:text-black">Docs</Link></li>
-              </ul>
-            </div>
+    <footer className="border-t border-white/10 bg-[#0A0A0A] text-white">
+      <div className="mx-auto max-w-container px-5 py-8 sm:px-8 sm:py-10">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+          <div className="col-span-2 lg:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <Image src="/polydash-mark-white.png" alt="Polypad logo" width={26} height={26} className="h-[26px] w-[26px]" />
+              <span className="text-lg font-semibold tracking-tight">Polypad</span>
+            </Link>
+            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-white/65">
+              Launch, trade and stake tokens, and create tokenized funds, on Robinhood Chain.
+            </p>
+            <a
+              href="https://x.com/Polydash_"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-[13px] text-white/80 transition-colors hover:border-white/25 hover:text-white"
+              aria-label="Polypad on X (@Polydash_)"
+            >
+              <XIcon className="h-3.5 w-3.5" />
+              @Polydash_
+            </a>
           </div>
-          <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-black/10 pt-6 sm:mt-14 sm:flex-row sm:items-center sm:pt-8">
-            <p className="text-xs text-black/50 sm:text-sm">© 2026 Polypad</p>
-          </div>
+          {columns.map((col) => (
+            <nav key={col.title} aria-label={col.title}>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/55">{col.title}</h2>
+              <ul className="space-y-0.5">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="inline-flex min-h-7 items-center text-[13px] text-white/70 transition-colors hover:text-white">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
-      </footer>
-    </>
+        <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between sm:text-[13px]">
+          <p>© 2026 Polypad</p>
+          <p>Not financial advice. Scans are not audits.</p>
+        </div>
+      </div>
+    </footer>
   );
 }

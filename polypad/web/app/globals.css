@@ -114,6 +114,12 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Telegram Mini App / notched devices: keep content clear of the notch
+       and system chrome. env() is 0px in a normal browser, so no-op there. */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
   }
 
   ::selection {
@@ -132,6 +138,11 @@
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
+  /* Telegram Mini App: sticky app headers stick below the notch/system
+     chrome instead of under it. env() is 0px in a normal browser, so no-op
+     there. Specificity (header.sticky) beats Tailwind's .top-0. */
+  header.sticky { top: env(safe-area-inset-top, 0px); }
+
   /* Polydash ecosystem (dasheco.xyz/products/poly-pad) styles */
   .hero-gradient, .dark .hero-gradient { background: #0A0A0A; }
   .pd-glow-orb { position:absolute; top:-10rem; right:0; height:min(480px, 90vw); width:min(480px, 90vw); border-radius:9999px; background: rgba(0,230,118,0.10); filter: blur(64px); pointer-events:none; }
@@ -147,4 +158,132 @@
   }
   .glass-card:hover { border-color: rgba(0,230,118,0.5); box-shadow: 0 30px 80px -30px rgba(0,230,118,0.35); }
   .pd-stripes-green { background-image: repeating-linear-gradient(90deg, rgba(0,230,118,0.4) 0 1px, transparent 1px 14px); }
+
+  /* Staking page */
+  .stk-glass { background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; }
+  .stk-hero-glow { position:absolute; inset:-40% -10% auto -10%; height: 320px; pointer-events:none; filter: blur(70px); opacity:.55;
+    background: radial-gradient(40% 60% at 30% 50%, rgba(0,230,118,0.28), transparent 70%), radial-gradient(40% 60% at 70% 40%, rgba(64,140,255,0.24), transparent 70%); }
+  .stk-shimmer { position: relative; overflow: hidden; background: rgba(255,255,255,0.05); }
+  .stk-shimmer::after { content:''; position:absolute; inset:0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); animation: stk-shimmer 1.4s infinite; }
+  @keyframes stk-shimmer { 100% { transform: translateX(100%); } }
+  .stk-lift { transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .stk-lift:hover { transform: translateY(-2px); border-color: rgba(0,230,118,0.35); box-shadow: 0 18px 50px -24px rgba(0,230,118,0.35); }
+  .stk-check { animation: stk-check .35s ease-out both; }
+  @keyframes stk-check { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .stk-shimmer::after, .stk-check { animation: none; }
+    .stk-lift, .stk-lift:hover { transition: none; transform: none; }
+  }
 }
+
+/* WCAG AA: low-alpha white text on the dark background is raised to at least 4.5:1 contrast. */
+.text-white\/30,
+.text-white\/35,
+.text-white\/40,
+.text-white\/45 {
+  color: rgb(255 255 255 / 0.56);
+}
+
+/* Holder Protections tier badge: metallic base + soft iridescent sheen + periodic shimmer */
+.hp-badge {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.25);
+  -webkit-font-smoothing: antialiased;
+}
+.hp-badge > * { position: relative; z-index: 2; }
+.hp-badge--gold { background: linear-gradient(135deg, #f6e9c4 0%, #e6cf95 48%, #d4b26f 100%); color: #33240a; }
+.hp-badge--silver { background: linear-gradient(135deg, #f5f7fa 0%, #dde3ea 48%, #c3ccd8 100%); color: #1a212b; }
+.hp-badge--bronze { background: linear-gradient(135deg, #f0c4a1 0%, #d99568 48%, #b46d45 100%); color: #1f0b02; }
+.hp-badge--gold > *,
+.hp-badge--silver > *,
+.hp-badge--bronze > * { text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
+/* Iridescent overlay (cyan, violet, pink, gold ~40%) + diagonal rainbow highlight band */
+.hp-badge--gold::before,
+.hp-badge--silver::before,
+.hp-badge--bronze::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, transparent 28%, rgba(103, 232, 249, 0.55) 38%, rgba(167, 139, 250, 0.55) 46%, rgba(244, 114, 182, 0.5) 54%, rgba(252, 211, 77, 0.55) 62%, transparent 72%),
+    linear-gradient(100deg, rgba(103, 232, 249, 0.42) 0%, rgba(167, 139, 250, 0.4) 30%, rgba(244, 114, 182, 0.38) 60%, rgba(252, 211, 77, 0.42) 85%, rgba(103, 232, 249, 0.4) 100%);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.hp-badge--gold::after,
+.hp-badge--silver::after,
+.hp-badge--bronze::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  z-index: 1;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.35) 30%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0.35) 70%, transparent 100%);
+  transform: translateX(-120%) skewX(-18deg);
+  animation: hp-shimmer 5s ease-in-out infinite;
+  pointer-events: none;
+}
+/* Untiered: dark style by default (site is dark), neutral slate on light surfaces */
+.hp-badge--none {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+html:not(.dark) .hp-badge--none,
+.light .hp-badge--none,
+[data-surface='light'] .hp-badge--none {
+  background: #eef1f5;
+  color: #3b4452;
+  border-color: #c9d0da;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+.hp-badge__dot { opacity: 0.55; }
+@keyframes hp-shimmer {
+  0%, 62% { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(340%) skewX(-18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-badge::after { animation: none !important; opacity: 0; }
+}
+
+/* Long-form audit report rendering (Warden reports, /audits/reports/*).
+   The report body is our own markdown rendered server-side with marked;
+   these styles give it the same reading treatment as the trust pages. */
+.report-md { font-size: 15px; line-height: 1.7; color: rgba(255, 255, 255, 0.7); overflow-wrap: break-word; }
+.report-md h2 { margin: 2.5rem 0 0.75rem; font-size: 20px; font-weight: 600; line-height: 1.35; color: #fff; }
+.report-md h3 { margin: 2rem 0 0.5rem; font-size: 17px; font-weight: 600; line-height: 1.4; color: #fff; }
+.report-md h4 { margin: 1.5rem 0 0.5rem; font-size: 15px; font-weight: 600; line-height: 1.45; color: #fff; }
+.report-md h5 { margin: 1.25rem 0 0.25rem; font-size: 14px; font-weight: 600; line-height: 1.45; color: rgba(255, 255, 255, 0.9); }
+.report-md p { margin: 0.75rem 0; }
+.report-md strong { color: #fff; font-weight: 600; }
+.report-md a { color: #00e676; text-decoration: underline; overflow-wrap: break-word; }
+.report-md ul, .report-md ol { margin: 0.75rem 0; padding-left: 1.25rem; }
+.report-md ul { list-style: disc; }
+.report-md ol { list-style: decimal; }
+.report-md li { margin: 0.35rem 0; }
+.report-md li > ul, .report-md li > ol { margin: 0.35rem 0; }
+.report-md table { width: 100%; margin: 1rem 0; border-collapse: collapse; font-size: 13px; line-height: 1.5; }
+.report-md th { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.2); text-align: left; font-weight: 600; color: #fff; }
+.report-md td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); vertical-align: top; }
+.report-md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; background: rgba(255, 255, 255, 0.08); border-radius: 0.375rem; padding: 0.1rem 0.35rem; overflow-wrap: break-word; }
+.report-md pre { margin: 1rem 0; padding: 0.9rem 1rem; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; overflow-x: auto; }
+.report-md pre code { background: transparent; padding: 0; }
+.report-md hr { margin: 2rem 0; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.report-md blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 2px solid rgba(255, 255, 255, 0.25); color: rgba(255, 255, 255, 0.55); }

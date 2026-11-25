@@ -202,13 +202,42 @@ export function agentIndexBody(factory = factoryAddress(), id = chainId()): Reco
     docs: 'https://polypad.family/docs#agent-launched',
     agentMark: AGENT_LAUNCH_MARK,
     rateLimit: { limit: AGENT_RATE_LIMIT, windowSeconds: AGENT_RATE_WINDOW_MS / 1000, key: 'client ip' },
-    endpoints: {
-      validate: { method: 'POST', path: '/api/agents/v1/validate' },
-      simulate: { method: 'POST', path: '/api/agents/v1/simulate' },
-      marks: { method: 'GET', path: '/api/agents/v1/marks' },
-    },
+    spec: '/api/agents/v1/spec',
+    units: 'All amounts are decimal base-unit strings (wei for ETH, 18-decimal base units for tokens).',
+    endpoints: AGENT_ENDPOINTS,
   };
 }
+
+export type AgentEndpoint = { method: 'GET' | 'POST'; path: string; auth: 'none' | 'api_key'; summary: string };
+
+/** Every public v1 endpoint. Shared by the index and the spec. */
+export const AGENT_ENDPOINTS: Record<string, AgentEndpoint> = {
+  index: { method: 'GET', path: '/api/agents/v1', auth: 'none', summary: 'This discovery document.' },
+  spec: { method: 'GET', path: '/api/agents/v1/spec', auth: 'none', summary: 'Machine-readable spec with parameters and responses.' },
+  tokens: { method: 'GET', path: '/api/agents/v1/tokens', auth: 'none', summary: 'Browse and search launches.' },
+  token: { method: 'GET', path: '/api/agents/v1/token/{address}', auth: 'none', summary: 'State of one launch, Holder Protections and agent mark.' },
+  quote: { method: 'GET', path: '/api/agents/v1/quote', auth: 'none', summary: 'Bonding-curve quote for a buy or sell.' },
+  txBuy: { method: 'POST', path: '/api/agents/v1/tx/buy', auth: 'none', summary: 'Unsigned buy on the bonding curve.' },
+  txSell: { method: 'POST', path: '/api/agents/v1/tx/sell', auth: 'none', summary: 'Unsigned sell, with an exact approve step when needed.' },
+  txCommit: { method: 'POST', path: '/api/agents/v1/tx/commit', auth: 'none', summary: 'Unsigned commit during a commitment window.' },
+  txUncommit: { method: 'POST', path: '/api/agents/v1/tx/uncommit', auth: 'none', summary: 'Unsigned full uncommit while the window is open.' },
+  txWithdrawCommitment: { method: 'POST', path: '/api/agents/v1/tx/withdraw-commitment', auth: 'none', summary: 'Unsigned withdrawal of an unprocessed commitment.' },
+  txClaimRefund: { method: 'POST', path: '/api/agents/v1/tx/claim-refund', auth: 'none', summary: 'Unsigned refund claim.' },
+  txClaimFees: { method: 'POST', path: '/api/agents/v1/tx/claim-fees', auth: 'none', summary: 'Unsigned creator-fee claim on the launch contract (creator only).' },
+  validate: { method: 'POST', path: '/api/agents/v1/validate', auth: 'none', summary: 'Validate createLaunch parameters.' },
+  simulate: { method: 'POST', path: '/api/agents/v1/simulate', auth: 'none', summary: 'Validate, simulate and return an unsigned createLaunch.' },
+  marks: { method: 'GET', path: '/api/agents/v1/marks', auth: 'none', summary: 'Agent launch mark details.' },
+  keys: { method: 'POST', path: '/api/agents/v1/keys', auth: 'none', summary: 'Issue an API key for metadata and launch builds.' },
+  metadata: { method: 'POST', path: '/api/agents/v1/metadata', auth: 'api_key', summary: 'Upload a token logo.' },
+  launchBuild: { method: 'POST', path: '/api/agents/v1/launch/build', auth: 'api_key', summary: 'Unsigned createLaunch with terms and limits.' },
+  launchRegister: { method: 'POST', path: '/api/agents/v1/launch/register', auth: 'none', summary: 'Register a sent launch: {buildId, txHash}.' },
+  launchStatus: { method: 'GET', path: '/api/agents/v1/launch/{txHash}', auth: 'none', summary: 'Status of a registered launch.' },
+  launched: { method: 'GET', path: '/api/agents/v1/launched', auth: 'none', summary: 'Launches registered as agent-launched.' },
+  treasuryTasks: { method: 'GET', path: '/api/agents/v1/treasury-tasks', auth: 'none', summary: 'Open treasury tasks.' },
+  floorVaultTasks: { method: 'GET', path: '/api/agents/v1/floor-vault-tasks', auth: 'none', summary: 'Open floor vault tasks.' },
+  buybackTasks: { method: 'GET', path: '/api/agents/v1/buyback-tasks', auth: 'none', summary: 'Open buyback tasks.' },
+  sliceTasks: { method: 'GET', path: '/api/agents/v1/slice-tasks', auth: 'none', summary: 'Open airdrop slice tasks.' },
+};
 
 let rpcClient: PublicClient | undefined;
 

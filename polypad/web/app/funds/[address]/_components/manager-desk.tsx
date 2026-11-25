@@ -15,10 +15,10 @@ import { buildSwap, parseRouterData, parseTokenAmount, type FundInvestView, type
 import { cn } from '@/lib/utils';
 
 const MODES: { key: SwapMode; label: string }[] = [
-  { key: 'buy', label: 'Buy' },
-  { key: 'sell', label: 'Sell' },
-  { key: 'wrap', label: 'Wrap' },
-  { key: 'unwrap', label: 'Unwrap' },
+  { key: 'buy', label: 'Buy a token' },
+  { key: 'sell', label: 'Sell a token' },
+  { key: 'wrap', label: 'Wrap ETH into WETH' },
+  { key: 'unwrap', label: 'Unwrap WETH into ETH' },
 ];
 
 export function ManagerDesk({
@@ -37,9 +37,9 @@ export function ManagerDesk({
   if (status === 'waiting' || status === 'open') {
     return (
       <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-        <h2 className="text-[15px] font-semibold">Manager desk</h2>
+        <h2 className="text-[15px] font-semibold">Manager tools (only shown to the manager and approved traders)</h2>
         <p className="mt-2 text-[13px] leading-relaxed text-white/60">
-          Swaps open after this raise closes. You sign that step in your wallet.
+          Trading is not available yet. Once the raise closes, you can start investing (sign 1 transaction) and then buy tokens from the approved list. The money always stays in the fund&apos;s vault.
         </p>
       </section>
     );
@@ -75,7 +75,7 @@ function EnableInvesting({ vault }: { vault: `0x${string}` }) {
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
       await queryClient.invalidateQueries({ queryKey: ['fund'] });
-      toast.success('Investing is open', {
+      toast.success('Investing has started. You can now trade for the fund.', {
         id: tid,
         action: { label: 'View tx', onClick: () => window.open(getExplorerTxUrl(hash), '_blank') },
       });
@@ -89,13 +89,13 @@ function EnableInvesting({ vault }: { vault: `0x${string}` }) {
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-      <h2 className="text-[15px] font-semibold">Manager desk</h2>
+      <h2 className="text-[15px] font-semibold">Manager tools (only shown to the manager and approved traders)</h2>
       <p className="mt-2 text-[13px] leading-relaxed text-white/60">
-        The raise is closed. Opening investing lets the manager swap through the allowlist. You sign that transaction. It does not send the vault balance to your wallet.
+        The raise is closed. Start investing to let the fund buy tokens from the approved list of tokens the fund may buy (the allowlist). This does not send any of the fund&apos;s money to your wallet; it stays in the fund&apos;s vault.
       </p>
       <Button onClick={submit} disabled={pending} className="mt-4 gap-2">
         {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-        Open investing
+        Start investing (sign 1 transaction, no ETH sent)
       </Button>
     </section>
   );
@@ -137,11 +137,11 @@ function SwapDesk({ vault, invest, isManager }: { vault: `0x${string}`; invest: 
         chainId: robinhoodChain.id,
         args: args as never,
       });
-      toast.loading('Waiting for Robinhood Chain…', { id: tid });
+      toast.loading('Waiting for confirmation…', { id: tid });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
       await queryClient.invalidateQueries({ queryKey: ['fund'] });
-      toast.success('Signed and sent', {
+      toast.success('Done. The change is confirmed.', {
         id: tid,
         action: { label: 'View tx', onClick: () => window.open(getExplorerTxUrl(hash), '_blank') },
       });
@@ -163,7 +163,7 @@ function SwapDesk({ vault, invest, isManager }: { vault: `0x${string}`; invest: 
 
   const submitSwap = async () => {
     if ((mode === 'buy' || mode === 'sell') && assets.length === 0) {
-      toast.error('This fund has no allowlisted assets to swap. Wrapping ETH is separate.');
+      toast.error('This fund has no approved tokens to buy or sell. You can still wrap or unwrap ETH.');
       return;
     }
     const parsedAmount = parseTokenAmount(amount, amountDecimals);
@@ -203,13 +203,15 @@ function SwapDesk({ vault, invest, isManager }: { vault: `0x${string}`; invest: 
 
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-      <h2 className="text-[15px] font-semibold">Manager desk</h2>
+      <h2 className="text-[15px] font-semibold">Manager tools (only shown to the manager and approved traders)</h2>
       <p className="mt-2 text-[13px] leading-relaxed text-white/60">
-        Swaps stay in the vault. You sign each one in your wallet. The minimum is the least the vault will accept back.
+        Trade for the fund. Every trade stays in the fund&apos;s vault and you sign each one in your wallet. Set the least the vault must get back (minimum) so a bad price makes the trade fail instead.
       </p>
       {paused && (
         <p className="mt-2 text-[13px] text-yellow-200/90">
-          {invest.allowlistPaused ? 'The allowlist is paused.' : 'Swaps are paused.'}
+          {invest.allowlistPaused
+            ? 'The approved list of tokens the fund may buy (the allowlist) is paused, so trading is stopped for now.'
+            : 'Trading is paused. Resume it below to trade again.'}
         </p>
       )}
       <div className="mt-4 flex flex-wrap gap-1.5">
@@ -231,66 +233,66 @@ function SwapDesk({ vault, invest, isManager }: { vault: `0x${string}`; invest: 
         {(mode === 'buy' || mode === 'sell') && (
           <>
             <label className="block text-xs text-muted-foreground">
-              Asset
+              Token (from the approved list)
               <select value={asset} onChange={(event) => setAsset(event.target.value as `0x${string}`)} className="mt-1 h-10 w-full rounded-lg border border-input bg-secondary/50 px-3 text-sm text-white">
-                {assets.length === 0 && <option value={invest.weth}>No assets on this mandate</option>}
+                {assets.length === 0 && <option value={invest.weth}>No approved tokens for this fund</option>}
                 {assets.map((row) => <option key={row.asset} value={row.asset}>{row.symbol}</option>)}
               </select>
             </label>
             <label className="block text-xs text-muted-foreground">
-              Quote
+              {mode === 'buy' ? 'Pay with' : 'Receive'}
               <select value={quote} onChange={(event) => setQuote(event.target.value === 'weth' ? 'weth' : 'eth')} className="mt-1 h-10 w-full rounded-lg border border-input bg-secondary/50 px-3 text-sm text-white">
                 <option value="eth">ETH</option>
                 <option value="weth">WETH</option>
               </select>
             </label>
             <label className="block text-xs text-muted-foreground">
-              Router
+              Trading route (router)
               <select value={router} onChange={(event) => setRouter(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-input bg-secondary/50 px-3 font-mono text-sm text-white">
-                {invest.routers.length === 0 && <option value="">No router on the allowlist</option>}
+                {invest.routers.length === 0 && <option value="">No approved trading route yet</option>}
                 {invest.routers.map((item) => <option key={item} value={item}>{item}</option>)}
               </select>
             </label>
           </>
         )}
         <label className="block text-xs text-muted-foreground">
-          Amount
+          {mode === 'sell' ? 'Amount to sell (token units)' : mode === 'unwrap' ? 'Amount (WETH)' : mode === 'wrap' ? 'Amount (ETH)' : `Amount to pay (${quote === 'weth' ? 'WETH' : 'ETH'})`}
           <Input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" className="mt-1 bg-secondary/50 font-mono" />
         </label>
         {(mode === 'buy' || mode === 'sell') && (
           <label className="block text-xs text-muted-foreground">
-            Minimum back to the vault
+            {mode === 'buy' ? 'Least the vault must get back (minimum, token units)' : `Least the vault must get back (minimum, ${quote === 'weth' ? 'WETH' : 'ETH'})`}
             <Input value={minimum} onChange={(event) => setMinimum(event.target.value)} inputMode="decimal" className="mt-1 bg-secondary/50 font-mono" />
           </label>
         )}
       </div>
       {(mode === 'buy' || mode === 'sell') && (
         <button type="button" className="mt-3 text-[12px] text-white/60 underline-offset-2 hover:text-white hover:underline" onClick={() => setAdvanced((open) => !open)}>
-          {advanced ? 'Hide router data' : 'Add router data'}
+          {advanced ? 'Hide extra route data' : 'Advanced: add extra route data'}
         </button>
       )}
       {advanced && (mode === 'buy' || mode === 'sell') && (
         <label className="mt-2 block text-xs text-muted-foreground">
-          Hex data for the router
+          Extra data for the trading route (hex, starts with 0x; leave empty if unsure)
           <Input value={dataText} onChange={(event) => setDataText(event.target.value)} placeholder="0x" className="mt-1 bg-secondary/50 font-mono text-[12px]" />
         </label>
       )}
       <Button onClick={submitSwap} disabled={pending || paused} className="mt-4 gap-2">
         {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-        Sign swap
+        {mode === 'wrap' ? 'Wrap ETH (sign 1 transaction, money stays in the vault)' : mode === 'unwrap' ? 'Unwrap WETH (sign 1 transaction, money stays in the vault)' : mode === 'sell' ? 'Sell (sign 1 transaction, money stays in the vault)' : 'Buy (sign 1 transaction, money stays in the vault)'}
       </Button>
       {isManager && (
         <div className="mt-5 space-y-3 border-t border-white/10 pt-4">
           <Button variant="secondary" onClick={() => send('setSwapsPaused', [!invest.swapsPaused])} disabled={pending}>
-            {invest.swapsPaused ? 'Unpause swaps' : 'Pause swaps'}
+            {invest.swapsPaused ? 'Resume trading (sign 1 transaction)' : 'Pause trading (sign 1 transaction)'}
           </Button>
           <label className="block text-xs text-muted-foreground">
-            Another wallet that can sign swaps
+            Let another wallet trade for this fund (wallet address)
             <Input value={executor} onChange={(event) => setExecutor(event.target.value)} placeholder="0x" className="mt-1 bg-secondary/50 font-mono text-[12px]" />
           </label>
-          <div className="flex gap-2">
-            <Button variant="secondary" disabled={pending} onClick={() => changeExecutor(true)}>Allow</Button>
-            <Button variant="secondary" disabled={pending} onClick={() => changeExecutor(false)}>Remove</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" disabled={pending} onClick={() => changeExecutor(true)}>Allow this wallet (sign 1 transaction)</Button>
+            <Button variant="secondary" disabled={pending} onClick={() => changeExecutor(false)}>Remove this wallet (sign 1 transaction)</Button>
           </div>
         </div>
       )}

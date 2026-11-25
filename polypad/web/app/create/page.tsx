@@ -1,6 +1,13 @@
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { CreateWizard } from './_components/create-wizard';
+import { pageMetadata } from '@/lib/seo';
+
+export const metadata = pageMetadata({
+  title: 'Create a token | Polypad',
+  description: 'Launch a token on Robinhood Chain: set name, ticker, logo and creator fee, with an optional commitment window before trading opens.',
+  path: '/create',
+});
 
 export default async function CreatePage({
   searchParams,

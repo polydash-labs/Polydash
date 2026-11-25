@@ -1,8 +1,7 @@
 /**
- * Server-only switch for fund routes. Unset or any other value keeps them off.
- * This is not a NEXT_PUBLIC variable, so a client bundle or an Abacus resync
- * of the public env does not turn the routes on.
+ * Server-only switch for fund routes. Funds are public by default (owner
+ * request, Nov 9 2026). Set FUND_ROUTES_ENABLED=disabled to hide them again.
  */
 export function fundsPublicEnabled(): boolean {
-  return process.env.FUND_ROUTES_ENABLED === 'enabled';
+  return process.env.FUND_ROUTES_ENABLED !== 'disabled';
 }

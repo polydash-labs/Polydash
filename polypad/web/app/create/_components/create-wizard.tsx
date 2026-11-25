@@ -169,7 +169,12 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
         id: tid,
         action: { label: 'View tx', onClick: () => window.open(getExplorerTxUrl(hash), '_blank') },
       });
-      if (launch) router.push(`/token/${launch}`);
+      if (launch) {
+        const sym = form.symbol.trim().toUpperCase();
+        const ctoUrl = `/token/${launch}#cto`;
+        toast(`Meet $${sym} CTO →`, { duration: 10000, action: { label: 'Open', onClick: () => router.push(ctoUrl) } });
+        router.push(`/token/${launch}`);
+      }
     } catch (e: any) {
       console.error('createLaunch failed', e);
       const msg = e?.shortMessage ?? e?.message ?? 'Transaction failed';

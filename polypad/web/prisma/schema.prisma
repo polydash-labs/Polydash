@@ -1,0 +1,545 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+/// One auto-assigned CTO agent per launch. launchAddress is lowercase.
+model TokenCTO {
+  launchAddress       String   @id
+  tokenAddress        String
+  creator             String
+  name                String
+  symbol              String
+  imageUri            String   @default("")
+  agentName           String
+  createdAt           DateTime @default(now())
+  launchTime          Int      @default(0)
+  totalSupply         String   @default("0")
+  graduationThreshold String   @default("0")
+  createdBlock        Int      @default(0)
+
+  @@index([creator])
+  @@index([tokenAddress])
+}
+
+model CTOProfile {
+  launchAddress String   @id
+  tone          String   @default("friendly")
+  socials       Json     @default("{}")
+  faqs          Json     @default("[]")
+  plan          String   @default("")
+  updatedAt     DateTime @updatedAt
+}
+
+model CTOSnapshot {
+  id            Int      @id @default(autoincrement())
+  launchAddress String
+  day           String
+  holders       Int
+  top10Pct      Float
+  curvePct      Float
+  ethRaised     Float
+  graduated     Boolean
+  healthScore   Int
+  flags         Json     @default("[]")
+  xrayLevel     String?
+  xraySniperPct Float?
+  xrayBundles   Int?
+  createdAt     DateTime @default(now())
+
+  @@unique([launchAddress, day])
+}
+
+model CTOAlert {
+  id            Int      @id @default(autoincrement())
+  launchAddress String
+  type          String
+  message       String
+  txHash        String?
+  dedupeKey     String   @unique
+  createdAt     DateTime @default(now())
+
+  @@index([launchAddress, createdAt])
+}
+
+model AuthNonce {
+  id        Int      @id @default(autoincrement())
+  address   String
+  nonce     String   @unique
+  expiresAt DateTime
+
+  @@index([address])
+  @@index([expiresAt])
+}
+
+/// Last computed CTO report per launch (served instantly, refreshed in the background).
+model CTOReportCache {
+  launchAddress String   @id
+  report        Json
+  generatedAt   DateTime
+  updatedAt     DateTime @updatedAt
+}
+
+/// Promise Ledger: creator self-commitments (append-only; only the evaluator updates status fields).
+/// Addresses lowercase. status: active | kept | broken | needs_review (kept/broken are final).
+model CreatorPromise {
+  id               Int      @id @default(autoincrement())
+  launchAddress    String
+  tokenAddress     String
+  creator          String
+  kind             String
+  params           Json
+  startsAt         Int
+  endsAt           Int
+  startBlock       Int
+  baselineBalance  String   @default("0")
+  linkedWallets    Json     @default("[]")
+  typedData        Json
+  signature        String
+  nonce            String   @unique
+  createdAt        DateTime @default(now())
+  status           String   @default("active")
+  statusAt         DateTime?
+  evidenceTx       String?
+  evidenceNote     String?
+  lastCheckedBlock Int
+  progress         String   @default("0")
+
+  @@index([launchAddress, createdAt])
+  @@index([status])
+}
+
+/// Bundle & Sniper X-ray: last scan result per launch (read by the CTO tab; written only by lib/xray/scan.ts).
+/// level: scanning | waiting | clean | some | heavy | partial. state = internal scan inputs/cursors (never sent to clients).
+model XrayResult {
+  launchAddress     String   @id
+  level             String
+  flaggedPct        Float    @default(0)
+  stats             Json     @default("{}")
+  clusters          Json     @default("[]")
+  partial           Boolean  @default(false)
+  lastScannedBlock  Int      @default(0)
+  earlyWindowFrozen Boolean  @default(false)
+  state             Json     @default("{}")
+  updatedAt         DateTime @updatedAt
+}
+/// Bevor AI contract audit per launch (token contract first, launch contract as fallback).
+/// status: pending | running | done | unsupported | failed
+model BevorAudit {
+  launchAddress String   @id
+  target        String?
+  status        String   @default("pending")
+  codeId        String?
+  analysisId    String?
+  critical      Int      @default(0)
+  high          Int      @default(0)
+  medium        Int      @default(0)
+  low           Int      @default(0)
+  nFindings     Int      @default(0)
+  pipelineFailed Boolean @default(false)
+  error         String?
+  attempts      Int      @default(0)
+  checkedAt     DateTime @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Holder Protections tier changes (old -> new), written when the badge is computed.
+model HolderTierChange {
+  id            String   @id @default(cuid())
+  launchAddress String
+  oldTier       String?
+  newTier       String?
+  passed        Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([launchAddress, createdAt])
+}
+
+/// Early-wallet funding history from the explorer API, cached forever (first txs, oldest first).
+model XrayFunding {
+  wallet       String   @id
+  firstFunder  String?
+  fundingTx    String?
+  fundedAt     Int?
+  txCountAtBuy Int?
+  txs          Json     @default("[]")
+  fetchedAt    DateTime @default(now())
+}
+
+/// Held tokens per flagged cluster over time (written at most every 10 minutes per cluster).
+model XrayClusterSnapshot {
+  id            Int      @id @default(autoincrement())
+  launchAddress String
+  clusterId     String
+  heldTokens    String
+  at            DateTime @default(now())
+
+  @@index([launchAddress, clusterId, at])
+}
+
+/// Indexer cursor (key = "cto").
+model SyncState {
+  key       String   @id
+  lastBlock Int
+  lastRunAt DateTime @default(now())
+}
+
+/// Polypad NFT marketplace listing (id = on-chain listingId). Addresses lowercase, prices in wei.
+model NftListing {
+  id         Int      @id
+  collection String
+  tokenId    String
+  seller     String
+  price      String
+  priceEth   Float
+  expiry     Int
+  active     Boolean  @default(true)
+  block      Int
+  createdAt  DateTime @default(now())
+
+  @@index([collection, active, priceEth])
+  @@index([seller])
+}
+
+/// Marketplace offer (id = on-chain offerId). tokenId is ignored when anyToken is true.
+model NftOffer {
+  id         Int      @id
+  collection String
+  tokenId    String
+  anyToken   Boolean
+  buyer      String
+  price      String
+  priceEth   Float
+  expiry     Int
+  active     Boolean  @default(true)
+  block      Int
+  createdAt  DateTime @default(now())
+
+  @@index([collection, active, priceEth])
+  @@index([buyer])
+}
+
+/// Marketplace activity: list, cancel, sale, offer, offer_cancel, offer_accept.
+model NftActivity {
+  id         Int      @id @default(autoincrement())
+  collection String
+  tokenId    String
+  kind       String
+  price      String   @default("0")
+  priceEth   Float    @default(0)
+  fromAddr   String   @default("")
+  toAddr     String   @default("")
+  txHash     String
+  logIndex   Int
+  block      Int
+  ts         Int
+  createdAt  DateTime @default(now())
+
+  @@unique([txHash, logIndex])
+  @@index([collection, block])
+  @@index([collection, tokenId])
+}
+
+/// Polypad for Agents: operator API keys. Only the sha256 hash of the key is stored.
+model AgentApiKey {
+  id          String   @id @default(cuid())
+  keyHash     String   @unique
+  prefix      String
+  agentName   String
+  operatorUrl String
+  ipHash      String   @default("")
+  revoked     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([ipHash, createdAt])
+}
+
+/// Append-only per-key API usage log (Pro metering, v1). One row per keyed tool call
+/// (MCP tools/call + v2 REST). kind: read | prepare | intent. status: ok | error |
+/// rate_limited. Written fire-and-forget from the request path — a failed write never
+/// fails the call. No foreign key: the log must survive key revocation, and keys are
+/// never deleted. Dashboard: /agents/usage (looks up by key hash).
+model ApiKeyUsage {
+  id        Int      @id @default(autoincrement())
+  keyId     String
+  tool      String
+  kind      String
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([keyId, createdAt])
+  @@index([createdAt])
+}
+
+/// Operator terms acceptance. subject = "wallet:<lowercase address>" or "key:<key id>".
+model AgentTermsAcceptance {
+  id         Int      @id @default(autoincrement())
+  subject    String
+  version    String
+  acceptedAt DateTime @default(now())
+
+  @@unique([subject, version])
+}
+
+/// Unsigned createLaunch transaction built for an agent (Polypad never signs). wallet lowercase.
+model AgentBuild {
+  id           String   @id
+  wallet       String
+  keyId        String
+  agentName    String
+  operatorUrl  String
+  to           String
+  data         String   @db.Text
+  value        String
+  gasEstimate  String
+  params       Json
+  termsVersion String
+  status       String   @default("built")
+  txHash       String?
+  createdAt    DateTime @default(now())
+
+  @@index([wallet, createdAt])
+  @@index([keyId, createdAt])
+}
+
+/// Launch registered as agent-launched (receipt checked, LaunchCreated decoded). Addresses lowercase.
+model AgentLaunch {
+  launchAddress String   @id
+  tokenAddress  String   @unique
+  txHash        String   @unique
+  buildId       String   @unique
+  creator       String
+  agentName     String
+  operatorUrl   String
+  createdAt     DateTime @default(now())
+}
+
+/// Build activity: GitHub repos / extra deployer wallets linked by the creator (signature-gated). Addresses lowercase.
+model BuildLink {
+  id            String    @id @default(cuid())
+  launchAddress String
+  kind          String
+  value         String
+  proof         String    @default("signature")
+  signer        String
+  signature     String    @db.Text
+  message       String    @db.Text
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  removedAt     DateTime?
+
+  @@index([launchAddress, active])
+}
+
+/// Build activity cached result per launch (pages read only this).
+model BuildActivity {
+  launchAddress String    @id
+  status        String    @default("pending")
+  earned        Float     @default(7)
+  pending       Boolean   @default(true)
+  partial       Boolean   @default(false)
+  metrics       Json
+  flags         Json
+  updatedAt     DateTime  @updatedAt
+  lastGithubAt  DateTime?
+  lastChainAt   DateTime?
+  heyUrl        String?
+  heyCheckedAt  DateTime?
+}
+
+/// Build activity timeline items (commits, releases, tags, contracts, link/unlink).
+model BuildShip {
+  id            String   @id @default(cuid())
+  launchAddress String
+  kind          String
+  title         String
+  url           String
+  at            DateTime
+  filtered      Boolean  @default(false)
+  reason        String?
+  dedupeKey     String   @unique
+  createdAt     DateTime @default(now())
+
+  @@index([launchAddress, at])
+}
+
+/// GitHub REST response cache (ETag) for Build activity.
+model GithubCache {
+  url       String   @id
+  etag      String?
+  body      Json
+  status    Int
+  fetchedAt DateTime @default(now())
+}
+
+/// Single-use nonces for Build activity link/unlink signatures.
+model BuildNonce {
+  nonce         String   @id
+  launchAddress String
+  action        String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@index([launchAddress])
+}
+
+/// Poly credits: account holding a spendable balance (integer cents).
+/// subject = "key:<AgentApiKey.id>" or "wallet:<lowercase address>".
+/// No FK: an account survives key revocation / wallet unlinking.
+model PolyCreditAccount {
+  id           String   @id @default(cuid())
+  subject      String   @unique // "key:<AgentApiKey.id>" or "wallet:<lowercase address>"
+  balanceCents Int      @default(0)
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@index([expiresAt])
+}
+
+/// Poly credits: append-only ledger. kind: grant | spend | revoke | expire | match | topup.
+/// amountCents is signed (+grant, -spend). No FK: the log must survive key revocation.
+/// txHash links a topup row to its on-chain payment (see PolyCreditTopup).
+model PolyCreditLedger {
+  id                Int      @id @default(autoincrement())
+  accountId         String
+  kind              String   // grant | spend | revoke | expire | match | topup
+  amountCents       Int      // signed: +grant, -spend
+  balanceAfterCents Int
+  productId         String?
+  reason            String?
+  txHash            String?  // on-chain payment hash for kind='topup' (paid top-ups)
+  createdAt         DateTime @default(now())
+  @@index([accountId, createdAt])
+  @@index([createdAt])
+  @@index([txHash])
+}
+
+/// Poly credits: one row per confirmed top-up payment. txHash is the replay
+/// guard — the same payment can never credit twice (unique constraint).
+model PolyCreditTopup {
+  id          String   @id @default(cuid())
+  txHash      String   @unique // lowercase 0x hash of the payment tx
+  subject     String   // "key:<AgentApiKey.id>" or "wallet:<lowercase address>"
+  asset       String   // 'ETH' | 'POLYDASH'
+  amountRaw   String   // raw amount received, decimal string (wei)
+  amountCents Int      // cents credited (floor of USD value at confirmation)
+  priceUsd    String   // USD price used at confirmation, for audit
+  sender      String   // lowercase wallet that sent the payment
+  blockNumber Int
+  createdAt   DateTime @default(now())
+
+  @@index([subject, createdAt])
+}
+
+/// Poly credits: one starter grant per wallet (enforced by the unique wallet).
+model PolyCreditClaim {
+  id          String   @id @default(cuid())
+  wallet      String   @unique // lowercase address; one starter grant per wallet
+  keyId       String?
+  amountCents Int
+  note        String? // applicant's "what you're building" text, ≤500 chars
+  createdAt   DateTime @default(now())
+
+  @@index([keyId])
+}
+
+/// Treasury rules airdrop Merkle trees (OpenZeppelin StandardMerkleTree dump). Public data; accepted only when the root matches an on-chain round or pending airdrop change.
+model TreasuryTree {
+  root      String   @id
+  vault     String
+  tree      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([vault])
+}
+
+/// Sign-page funnel events (agent links). Only the connected wallet (lowercase) is stored; no other personal data.
+model AgentAction {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  action      String
+  ref         String
+  client      String
+  wallet      String?
+  txHash      String?
+  status      String   @default("viewed")
+  valueWei    String?
+  fingerprint String?
+  matchedChat Boolean  @default(false)
+
+  @@index([createdAt])
+  @@index([action, ref, createdAt])
+}
+
+/// Agent Wallets (Phase 1): approval queue. A big move above the agent key's
+/// caps waits here until the human approves or denies it. Approval executes
+/// client-side with the owner's Safe signature; this row only records the
+/// decision + the execution tx hash. status: pending | executed | denied.
+/// Addresses lowercase. No key material is ever stored here.
+model AgentWalletApproval {
+  id             String   @id @default(cuid())
+  wallet         String
+  owner          String
+  title          String
+  description    String   @default("")
+  to             String
+  value          String   @default("0")
+  data           String   @default("0x")
+  status         String   @default("pending")
+  requestedBy    String
+  decisionTxHash String?
+  createdAt      DateTime @default(now())
+  decidedAt      DateTime?
+
+  @@index([wallet, createdAt])
+  @@index([wallet, status])
+  @@index([owner, createdAt])
+}
+
+/// Warden audit requests. Projects submit on /audits (no email intake);
+/// Warden reviews oldest first (createdAt asc). status: queued |
+/// in_review | reviewed. verdict: green | yellow | red — set only when
+/// reviewed (see the service spec for the definitions). reportUrl links
+/// the published report. contact is for the fix round only and is never
+/// returned by the public list endpoint.
+model WardenAuditRequest {
+  id                String   @id @default(cuid())
+  projectName       String
+  repoUrl           String
+  commitHash        String
+  contractsInScope  String
+  chain             String   @default("Robinhood Chain")
+  deployedAddresses String   @default("")
+  description       String
+  contact           String
+  status            String   @default("queued")
+  verdict           String?
+  reportUrl         String?
+  createdAt         DateTime @default(now())
+  reviewedAt        DateTime?
+
+  @@index([status, createdAt])
+}
+
+/// Newsletter subscribers (Explore page subscribe card). One row per email —
+/// the unique email is the dedupe guard. source: where they signed up
+/// ("explore"). unsubscribedAt is set when they opt out; the list for a
+/// send is the rows with unsubscribedAt null, oldest first.
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String    @default("explore")
+  createdAt      DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([createdAt])
+}
