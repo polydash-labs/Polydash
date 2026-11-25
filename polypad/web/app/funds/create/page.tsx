@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CreateFundWizard } from './_components/create-fund-wizard';
+import { CreateFlow } from './_components/create-flow';
 
 export const metadata: Metadata = {
   title: 'Create a fund | Polypad',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CreateFundPage() {
-  return <CreateFundWizard />;
+  return <CreateFlow />;
 }

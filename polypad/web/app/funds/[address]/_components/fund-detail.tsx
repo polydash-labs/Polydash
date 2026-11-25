@@ -26,6 +26,8 @@ import { useFund } from '@/lib/fund/use-funds';
 import { shortenAddress } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { FundNotice } from '../../_components/fund-notice';
+import { AgentBadge } from '../../_components/agent-badge';
+import { AgentCard } from './agent-card';
 import { FundTerminal } from './fund-terminal';
 import { HolderExit } from './holder-exit';
 import { ManagerDesk } from './manager-desk';
@@ -138,6 +140,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
               )}>
                 {FUND_STATUS_LABEL[fund.status]}
               </span>
+              <AgentBadge fund={fund.address} />
             </div>
             <p className="mt-1 text-[12px] text-white/50">
               Manager{' '}
@@ -241,6 +244,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
         publicOpen={fund.publicOpen}
         invest={fund.invest}
       />
+      <AgentCard fund={fund.address} vault={fund.vault} invest={fund.invest} isManager={isManager} navPerNft={fund.navPerNft} />
       <HolderExit fund={fund} account={account} />
       <ManagerDesk vault={fund.vault} status={fund.status} isManager={isManager} invest={fund.invest} />
 

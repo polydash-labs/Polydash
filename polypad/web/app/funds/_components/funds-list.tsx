@@ -18,6 +18,7 @@ import {
   type FundSort,
 } from '@/lib/fund/model';
 import { cn } from '@/lib/utils';
+import { AgentBadge } from './agent-badge';
 import { FundNotice } from './fund-notice';
 
 const FILTERS: { key: FundFilter; label: string; hint: string }[] = [
@@ -58,12 +59,20 @@ export function FundsList() {
             A fund collects ETH from many people by selling shares at a fixed price. Each share is an equal part of the fund. The money sits in the fund&apos;s vault, and you can get your part out later.
           </p>
         </div>
-        <Link
-          href="/funds/create"
-          className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-polydash-green px-4 text-[13px] font-medium text-black transition-colors hover:bg-polydash-green-light"
-        >
-          Create a fund
-        </Link>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Link
+            href="/funds/leaderboard"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-white/15 px-4 text-[13px] font-medium text-white/80 hover:bg-white/5"
+          >
+            Agent leaderboard
+          </Link>
+          <Link
+            href="/funds/create"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-polydash-green px-4 text-[13px] font-medium text-black transition-colors hover:bg-polydash-green-light"
+          >
+            Create a fund
+          </Link>
+        </div>
       </div>
 
       <FundNotice className="mt-4 max-w-xl" />
@@ -162,6 +171,7 @@ function FundRow({ fund }: { fund: FundSummary }) {
             <h2 className="truncate text-[15px] font-semibold text-white">{fund.name}</h2>
             <span className="font-mono text-[12px] text-white/45">{fund.symbol}</span>
             <StatusPill status={fund.status} />
+            <AgentBadge fund={fund.address} />
           </div>
           <p className="mt-1 font-mono text-[12px] text-white/55">
             {formatFundEth(fund.raised)} of {formatFundEth(fund.raiseCap)} ETH raised
