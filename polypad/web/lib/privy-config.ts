@@ -18,8 +18,11 @@ export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? '';
 export const privyEnabled = PRIVY_APP_ID.length > 0;
 
 export const privyClientConfig: PrivyClientConfig = {
-  // Email first, then the two social logins most newcomers already have.
-  loginMethods: ['email', 'google', 'apple'],
+  // Email first, then the social login most newcomers already have.
+  // Apple is NOT listed until its OAuth credentials are added in the Privy
+  // dashboard (needs Jon's Apple Developer Services ID + key, Nov 25, 2026);
+  // listing it here while disabled dashboard-side would show a dead button.
+  loginMethods: ['email', 'google'],
   appearance: {
     theme: 'dark',
     accentColor: '#00E676',
