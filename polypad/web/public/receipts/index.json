@@ -1,0 +1,53 @@
+{
+  "format": "polypad.agent-receipt/1",
+  "receipts": [
+    {
+      "file": "agent-score-posted-1-0x552d903e.json",
+      "id": "agent-score-posted-1-block-119995982",
+      "transactionHash": "0x552d903ee31b61a5cb19ca4d278708edb4c1263b729292516ecdb3bb4a19ad2f",
+      "type": "agent-score-posted"
+    },
+    {
+      "file": "allowlist-executed-17-0x0741a46d.json",
+      "id": "allowlist-executed-17-block-119994160",
+      "transactionHash": "0x0741a46d133efc2c9fd0cb37270b5094f606ca1dba077125c7fa7e74771a02e6",
+      "type": "allowlist-executed"
+    },
+    {
+      "file": "allowlist-executed-18-188b45e4.json",
+      "id": "allowlist-executed-18-block-120273250",
+      "transactionHash": "0x188b45e4d0c6b0ccc37b230892e9b3b7e253ceae5cc17bfba6385bd7e2be0f44",
+      "type": "allowlist-executed"
+    },
+    {
+      "file": "allowlist-executed-19-e3b9ad7f.json",
+      "id": "allowlist-executed-19-block-120273282",
+      "transactionHash": "0xe3b9ad7f5a31c23307f8abcc46d55495d6917001a163b92ff1756ecbd07bd1a8",
+      "type": "allowlist-executed"
+    },
+    {
+      "file": "allowlist-executed-20-9ec66600.json",
+      "id": "allowlist-executed-20-block-120273302",
+      "transactionHash": "0x9ec66600152747dc9466226078ae3e68a6f9891661fae38724274a499b5bca8a",
+      "type": "allowlist-executed"
+    },
+    {
+      "file": "allowlist-executed-21-d53466d3.json",
+      "id": "allowlist-executed-21-block-120273357",
+      "transactionHash": "0xd53466d3b2bde9bd745ea9f7fc1609ff54160570b401197430b40c5f7f9f8377",
+      "type": "allowlist-executed"
+    },
+    {
+      "file": "allowlist-executed-22-550bb21d.json",
+      "id": "allowlist-executed-22-block-120273413",
+      "transactionHash": "0x550bb21d296d6e7e86cf0923e41c84771eabb11bd58615079ca88a9cdbdfaf0e",
+      "type": "allowlist-executed"
+    },
+    {
+      "file": "allowlist-executed-23-8f5bf4af.json",
+      "id": "allowlist-executed-23-block-120273453",
+      "transactionHash": "0x8f5bf4af71611c403b8ea6c2c06c23022d1e596835acace38c42269fda171f27",
+      "type": "allowlist-executed"
+    }
+  ]
+}

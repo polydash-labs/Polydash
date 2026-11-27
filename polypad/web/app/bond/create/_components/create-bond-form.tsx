@@ -130,6 +130,15 @@ export function CreateBondForm({ initialToken }: { initialToken: string }) {
         Put up ETH against a token balance floor for the wallets you register. Your wallet signs every transaction on Robinhood Chain.
       </p>
 
+      <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5" role="note">
+        <h2 className="text-[14px] font-semibold text-white">Who this is for — and what happens</h2>
+        <ul className="mt-2 space-y-1.5 text-[13px] leading-relaxed text-white/70">
+          <li><span className="text-white">Who can post a bond:</span> only the wallet that launched the token. If you did not launch this token, you cannot post a bond for it.</li>
+          <li><span className="text-white">What a bond is:</span> you lock up ETH as a promise that the registered wallets will keep at least a minimum amount of the token (the floor). If the floor holds until the bond ends, you get your ETH back.</li>
+          <li><span className="text-white">What happens if…:</span> if the price/floor breaks, you lose your bond — the ETH goes to token holders, who can redeem tokens for ETH at a fixed rate.</li>
+        </ul>
+      </div>
+
       <BondNote className="mt-6" showContract />
       {!live && <BondNotLive className="mt-4" />}
 
@@ -284,12 +293,12 @@ export function CreateBondForm({ initialToken }: { initialToken: string }) {
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="bond-allow" className={label}>Allowance</label>
+                <label htmlFor="bond-allow" className={label}>How much registered wallets may move (allowance)</label>
                 <span className="font-mono text-[13px] text-white">{(allowanceBps / 100).toFixed(1)}%</span>
               </div>
               <input id="bond-allow" type="range" min={0} max={MAX_ALLOWANCE_BPS} step={50} value={allowanceBps}
                 onChange={(e) => setAllowanceBps(Number(e.target.value))} className="w-full accent-[#00E676]" />
-              <p className="text-[11px] text-white/50">How much of the committed amount the registered wallets may move. 0% to {MAX_ALLOWANCE_BPS / 100}%.</p>
+              <p className="text-[11px] text-white/50">How much of the committed amount the registered wallets may move without breaking the floor. For example, 10% means wallets may move up to 10% of the committed tokens. 0% to {MAX_ALLOWANCE_BPS / 100}%.</p>
             </div>
             <div className="rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/[0.06]">
               <p className="text-[11px] text-white/55">Floor</p>

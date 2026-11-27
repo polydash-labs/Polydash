@@ -124,7 +124,7 @@ export function AssetPicker({ excluded, inFund, waiting, pickedAddress, onPick }
         <div className="py-6 text-[12px] text-white/55">The live token list is not available right now. <button type="button" onClick={() => feed.refetch()} className="underline">Try again</button></div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-white/10">
-          <div className={cn('hidden bg-white/[0.03] px-3 py-2 text-[11px] uppercase tracking-wide text-white/40', COLS)}>
+          <div className={cn('hidden bg-emerald-500/[0.06] px-3 py-2 text-[11px] uppercase tracking-wide text-white/40', COLS)}>
             <span>Token</span><span className="text-right">Price (USD / ETH)</span><span className="text-right">Pool size</span><span className="text-right">24h volume</span><span className="text-right">24h change</span><span className="text-right">Status</span>
           </div>
           {shown.rows.length === 0 ? <p className="px-3 py-6 text-[13px] text-white/45">No tokens match.</p> : (
@@ -137,7 +137,7 @@ export function AssetPicker({ excluded, inFund, waiting, pickedAddress, onPick }
                   <div key={a.address} role="option" tabIndex={0} aria-selected={on} aria-disabled={st !== 'ready'} data-symbol={a.symbol}
                     onClick={() => st === 'ready' && onPick(a)}
                     onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && st === 'ready') { e.preventDefault(); onPick(a); } }}
-                    className={cn('block w-full px-3 py-2.5 text-left text-[13px] outline-none focus-visible:bg-white/5', COLS, on ? 'bg-white/10' : st === 'ready' ? 'cursor-pointer hover:bg-white/5' : 'cursor-default opacity-80')}>
+                    className={cn('block w-full px-3 py-2.5 text-left text-[13px] outline-none focus-visible:bg-emerald-500/[0.08]', COLS, on ? 'bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/30' : st === 'ready' ? 'cursor-pointer hover:bg-emerald-500/[0.06]' : 'cursor-default opacity-80')}>
                     <span className="block min-w-0">
                       <span className="font-medium text-white">{a.name || a.symbol}</span> <span className="text-white/50">{a.symbol}</span>
                       <span className="mt-0.5 flex flex-wrap gap-1">

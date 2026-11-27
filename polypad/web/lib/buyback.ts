@@ -150,7 +150,7 @@ export const RUN_EXPLAIN = 'The vault first records the pool price. After 5 minu
 export const CONFIG_NOTE = 'The launch factory owner can change the factory setting; the rewards target changes only through a public 48-hour timelock. Every change is listed here.';
 export const TARGET_NOTE = 'The initial target is the POLYDASH Rewards Pool. A target must accept reward top-ups. Existing V2 staking pools are funded once and cannot receive top-ups.';
 export const SET_CONFIRM = '40% of platform fees from this factory will go to the buyback vault at each fee collection.';
-export const POOL_NOTE = 'Rewards come only from buyback top-ups sent by the buyback vault (and anyone who adds rewards). Amounts vary and can be zero. New contract. Security-scanned with Bevor. Not a formal audit. Not financial advice.';
+export const POOL_NOTE = 'This is not interest from a bank. Rewards only arrive when Polypad earns fees and buys back POLYDASH. Some weeks that is zero. New contract. Security-scanned with Bevor. Not a formal audit. Not financial advice.';
 export const APR_NOTE = 'Changes with every top-up and every stake or unstake. Not a projection.';
 export const HOW_IT_WORKS = [
   'Polypad launches pay a 0.2% platform fee.',

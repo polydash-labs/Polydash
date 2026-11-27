@@ -2,6 +2,13 @@ import type { ReactNode } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 
+/**
+ * Shell choice (P2-10): TrustShell is the narrow reading shell — max-w-3xl with
+ * an h1 of 28px on mobile / 40px on desktop — for docs, pricing, security,
+ * changelog, brand, terms, privacy and risk. Wide playground pages (/build,
+ * /x402) use Header + Footer with max-w-container and a smaller h1 (22px /
+ * 28px) instead. /about matches this shell (max-w-3xl, same h1 sizes).
+ */
 export function TrustShell({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">

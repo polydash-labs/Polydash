@@ -15,7 +15,8 @@ import { PolydashLaunchABI, PolydashTokenABI } from '@/lib/contracts/abis';
 import { getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
 import { toast } from 'sonner';
-import { OnrampInline } from '@/components/onramp/buy-eth';
+import { OnrampInline, RelayBuyCard } from '@/components/onramp/buy-eth';
+import { PrivySignInRow } from '@/components/privy/privy-auth';
 
 function safeParse(v: string): bigint {
   try { const s = (v || '').trim(); return s ? parseEther(s) : BigInt(0); } catch { return BigInt(0); }
@@ -228,14 +229,23 @@ export function TradePanel({ token }: { token: LaunchToken | null }) {
                 </button>
               ))}
             </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">If the price moves while your trade runs, this is the most it can move before the trade stops instead of giving you a bad price. 1% is the usual choice.</p>
           </div>
-          {!isConnected ? connectBtn : !isTrading ? (
+          {!isConnected ? (
+            <div className="space-y-2">
+              {connectBtn}
+              <PrivySignInRow />
+            </div>
+          ) : !isTrading ? (
             <p className="text-xs text-center text-muted-foreground py-2">{notTradingMsg}</p>
           ) : (
             <Button onClick={handleBuy} className="w-full gap-2" disabled={ethIn <= BigInt(0) || !!busy}>
               {busy === 'Buy' && <Loader2 className="h-4 w-4 animate-spin" />}
               Buy {token?.symbol ?? 'Token'}
             </Button>
+          )}
+          {isConnected && isTrading && ethIn > BigInt(0) && (
+            <RelayBuyCard totalNeededWei={ethIn + 1_000_000_000_000_000n} />
           )}
           <OnrampInline />
         </TabsContent>

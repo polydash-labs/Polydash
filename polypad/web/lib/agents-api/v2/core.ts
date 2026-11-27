@@ -54,6 +54,17 @@ export function createRateBuckets(now?: () => number): RateBuckets {
   };
 }
 
+/** Pro (keyed) buckets: 10x the free limits. Same shape, separate counters — a keyed call never eats the free tier's budget. */
+export function createProRateBuckets(now?: () => number): RateBuckets {
+  const r = LIMITS.ratePro;
+  return {
+    read: createRateLimiter(r.read.limit, r.read.windowMs, now),
+    prepare: createRateLimiter(r.prepare.limit, r.prepare.windowMs, now),
+    perWalletPrepare: createRateLimiter(r.perWalletPrepare.limit, r.perWalletPrepare.windowMs, now),
+    intent: createRateLimiter(r.intent.limit, r.intent.windowMs, now),
+  };
+}
+
 export type ActionRecord = {
   at: number;
   action: string;
@@ -99,6 +110,8 @@ export function memorySink(max = 2000): ActionSink {
 export type Ctx = {
   client: PublicClient;
   limits: RateBuckets;
+  /** Pro (keyed) buckets, 10x the free limits. Keyless calls never touch these. */
+  proLimits: RateBuckets;
   sink: ActionSink;
   now: () => number;
   /** Seconds since epoch, overridable in tests. */
@@ -135,6 +148,7 @@ export function defaultCtx(): Ctx {
     sharedCtx = {
       client: defaultClient(),
       limits: createRateBuckets(),
+      proLimits: createProRateBuckets(),
       sink: memorySink(),
       now: Date.now,
       nowSec: () => Math.floor(Date.now() / 1000),
@@ -148,6 +162,7 @@ export function makeCtx(client: PublicClient, extra: Partial<Ctx> = {}): Ctx {
   return {
     client,
     limits: createRateBuckets(),
+    proLimits: createProRateBuckets(),
     sink: memorySink(),
     now: Date.now,
     nowSec: () => Math.floor(Date.now() / 1000),
@@ -158,30 +173,32 @@ export function makeCtx(client: PublicClient, extra: Partial<Ctx> = {}): Ctx {
 
 // ---------------------------------------------------------------- request meta
 
-export type Meta = { ip: string; client: string | null; ref: string };
+export type Meta = { ip: string; client: string | null; ref: string; tier: 'free' | 'pro'; keyId?: string | null };
 
 const CLIENT_RE = /^[A-Za-z0-9._:-]{1,64}$/;
 const REF_RE = /^[a-z0-9][a-z0-9_-]{0,23}$/;
 
-export function metaOf(req: Request | null, input: Record<string, unknown> = {}): Meta {
+export function metaOf(req: Request | null, input: Record<string, unknown> = {}, tier: 'free' | 'pro' = 'free', keyId: string | null = null): Meta {
   const header = req?.headers.get('x-polypad-client')?.trim() ?? '';
   const client = CLIENT_RE.test(header) ? header : null;
   const wanted = typeof input.ref === 'string' ? input.ref.trim().toLowerCase() : '';
-  return { ip: req ? clientIp(req) : 'mcp', client, ref: REF_RE.test(wanted) ? wanted : 'grok' };
+  return { ip: req ? clientIp(req) : 'mcp', client, ref: REF_RE.test(wanted) ? wanted : 'grok', tier, keyId };
 }
 
 export function takeLimit(ctx: Ctx, bucket: keyof RateBuckets, meta: Meta, wallet?: string | null): void {
-  if (!ctx.limits[bucket].allow(`${bucket}:${meta.ip}`)) {
+  const table = meta.tier === 'pro' ? LIMITS.ratePro : LIMITS.rate;
+  const set = meta.tier === 'pro' ? ctx.proLimits : ctx.limits;
+  if (!set[bucket].allow(`${bucket}:${meta.ip}`)) {
     throw new ApiError(429, 'rate_limited', 'Too many requests. Wait a minute and try again.', {
       retryAfter: 60,
-      limit: LIMITS.rate[bucket].limit,
+      limit: table[bucket].limit,
       window: '1m',
     });
   }
-  if (bucket === 'prepare' && wallet && !ctx.limits.perWalletPrepare.allow(`w:${wallet.toLowerCase()}`)) {
+  if (bucket === 'prepare' && wallet && !set.perWalletPrepare.allow(`w:${wallet.toLowerCase()}`)) {
     throw new ApiError(429, 'rate_limited_wallet', 'Too many prepared actions for this wallet. Wait a minute and try again.', {
       retryAfter: 60,
-      limit: LIMITS.rate.perWalletPrepare.limit,
+      limit: table.perWalletPrepare.limit,
       window: '1m',
     });
   }

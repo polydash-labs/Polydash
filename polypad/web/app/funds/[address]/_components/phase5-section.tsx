@@ -54,8 +54,8 @@ export function Phase5Section({ fund, isManager, now }: { fund: Phase3Detail; is
     <section id="phase5" className="space-y-4 border-t border-white/10 pt-5">
       <div>
         <h2 className="flex items-center gap-2 text-[18px] font-semibold text-white">
-          Phase 5 add-ons
-          <span className="rounded-full border border-white/25 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/80">Phase 5</span>
+          Share trading
+          <span className="rounded-full border border-white/25 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/80">Shares</span>
         </h2>
         <p className="mt-1 text-[13px] text-white/55">More tools for shares of this tokenized fund. The share stays the ownership claim. The share&apos;s own exit still works.</p>
       </div>
@@ -118,6 +118,7 @@ function ListPanel({ fund, tx, tokenId }: { fund: Phase3Detail; tx: Tx; tokenId:
           <>
             <Input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price in ETH" />
             <Hint>The fixed ETH price a buyer pays for this share.</Hint>
+            <Row label="One share is worth about" value={fund.navPerNft != null ? `${formatFundEth(fund.navPerNft)} ETH` : '—'} sub="Vault reading right now. A listing price can be above or below it — this is only a reference, not what a buyer will pay." />
             {s?.isLocked && <Hint>This share is in a conviction lock, so it cannot be listed.</Hint>}
             {tokenId && s && !mine && <Hint>Your wallet does not hold this share.</Hint>}
             {!s?.approved.market && (
@@ -141,6 +142,7 @@ function BuyPanel({ fund, tx }: { fund: Phase3Detail; tx: Tx }) {
   return (
     <Card title="Buy listed shares">
       <div className="space-y-3">
+        <Row label="Vault value per share" value={fund.navPerNft != null ? `${formatFundEth(fund.navPerNft)} ETH` : '—'} sub="A vault reading. A listing price can be above or below it." />
         {q.isLoading ? <Hint>Loading listings...</Hint> : listings.length === 0 ? <Hint>No open listings for this tokenized fund.</Hint> : (
           listings.map((l) => {
             const mineL = same(l.seller, tx.account);
@@ -225,7 +227,7 @@ function ExitPanel({ fund, tx, tokenId, now }: { fund: Phase3Detail; tx: Tx; tok
   const isHolder = same(s?.queueHolder, tx.account);
   const skin = Number(fund.skinUnlockTime ?? 0) > now;
   return (
-    <Card title={`Queue a nav-floor exit · #${tokenId.toString()}`}>
+    <Card title={`Queue a value-floor exit · #${tokenId.toString()}`}>
       <div className="space-y-3">
         <Row label="ETH per share (vault reading)" value={s?.ethShare != null ? `${formatFundEth(s.ethShare)} ETH` : '—'} sub={`Tokenized fund status: ${quoteStatusLabel(s?.quoteStatus, fund.status, fund.publicOpen)}. A vault reading, not a payout to count on.`} />
         <Row label="Queued by" value={s?.queueHolder ? shortenAddress(s.queueHolder) : 'Not queued'} sub={s?.readyAt ? `Ready ${utcDate(s.readyAt)}` : undefined} />

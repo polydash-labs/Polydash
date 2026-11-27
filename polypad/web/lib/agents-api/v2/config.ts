@@ -30,6 +30,7 @@ export const ADDR = {
     { id: 'phase3', label: 'Tokenized Funds Phase 3', factory: a('0xb9BA453677A6b2C49290CfD4D0713502Ec6bF82B'), creatable: true },
     { id: 'phase2', label: 'Tokenized Funds Phase 2', factory: a('0xd3c6ae470c25989cC8d2876c1855fB570B98894E'), creatable: false },
     { id: 'phase1a', label: 'Tokenized Funds Phase 1a', factory: a('0x6c0094BA60DaA0467Daf81f4D576d74DD3a08878'), creatable: false },
+    { id: 'v3', label: 'Tokenized Funds V3', factory: a('0xB5251BaC3CFE2A057B7703D4477Bf80f10B8154B'), creatable: true },
   ] as const,
   strategyTemplates: a('0xb2a958a9779E02764dE006C8aeEbc36174E2E3Ba'),
   fundAllowlist: a('0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19'),
@@ -77,6 +78,19 @@ export const LIMITS = {
     prepare: { limit: 30, windowMs: 60_000 },
     perWalletPrepare: { limit: 12, windowMs: 60_000 },
     intent: { limit: 40, windowMs: 60_000 },
+  },
+  /**
+   * Pro (keyed) limits: 10x the free limits — decided by Jon Nov 18, 2026 ("Pro free while
+   * growing"). A Pro key buys more calls per minute, never bigger transactions: the 25 ETH
+   * per-action cap and the 1 ETH confirmLarge rule do not change. Note: the keys design doc
+   * proposed keeping per-wallet prepares at 12/min for Pro; the approved 10x numbers make it
+   * 120/min, and the approved numbers win.
+   */
+  ratePro: {
+    read: { limit: 1200, windowMs: 60_000 },
+    prepare: { limit: 300, windowMs: 60_000 },
+    perWalletPrepare: { limit: 120, windowMs: 60_000 },
+    intent: { limit: 400, windowMs: 60_000 },
   },
   listMax: 50,
   deadlineSeconds: 20 * 60,

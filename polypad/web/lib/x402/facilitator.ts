@@ -62,6 +62,10 @@ const PROXY_ABI = parseAbi([
   'function settle(((address token, uint256 amount) permitted, uint256 nonce, uint256 deadline) permit, address owner, (address to, uint256 validAfter) witness, bytes signature) external',
 ]);
 
+const PERMIT2_NONCE_ABI = parseAbi([
+  'function nonceBitmap(address owner, uint256 word) view returns (uint256)',
+]);
+
 // --- Types (x402 v2) -------------------------------------------------------
 
 export interface PaymentRequirement {
@@ -186,7 +190,8 @@ function checkDailyCap(payer: string, valueUsd6: bigint, dailyUsd: number): bool
   const spent = entry && entry.day === day ? entry.totalUsd6 : 0n;
   return spent + valueUsd6 <= BigInt(Math.round(dailyUsd * 1e6));
 }
-function recordDailySpend(payer: string, valueUsd6: bigint) {
+/** Exported so the Base/CDP settle path records spend the same way. */
+export function recordDailySpend(payer: string, valueUsd6: bigint) {
   const day = Math.floor(Date.now() / 86_400_000);
   const entry = dailySpend.get(payer.toLowerCase());
   const spent = entry && entry.day === day ? entry.totalUsd6 : 0n;
@@ -331,7 +336,7 @@ export async function verifyPayment(
           args: [a.from as `0x${string}`, a.to as `0x${string}`, BigInt(a.value), BigInt(a.validAfter), BigInt(a.validBefore), a.nonce, v, r, s],
         }),
       });
-      const guard = await guardrailCheck(client, a.from, 'USDG', amount);
+      const guard = await guardrailCheck(client, a.from, amount);
       if (!guard.ok) return { isValid: false, invalidReason: guard.reason };
       return { isValid: true, payer: getAddress(a.from) };
     }
@@ -388,6 +393,23 @@ export async function verifyPayment(
       ]);
       if ((balance as bigint) < amount) return { isValid: false, invalidReason: 'insufficient_funds' };
       if ((allowance as bigint) < amount) return { isValid: false, invalidReason: 'permit2_allowance_required' };
+      // Clean replay check: Permit2 nonces live in a bitmap (word =
+      // nonce >> 8, bit = nonce & 255). The settle simulation below
+      // would catch a reused nonce too, but only as a generic revert;
+      // the bitmap gives the agent a readable reason. If the read
+      // itself fails, fall through — the simulation still catches it.
+      try {
+        const nonce = BigInt(p.nonce);
+        const word = (await client.readContract({
+          address: PERMIT2_ADDRESS as `0x${string}`,
+          abi: PERMIT2_NONCE_ABI,
+          functionName: 'nonceBitmap',
+          args: [p.from as `0x${string}`, nonce >> 8n],
+        })) as bigint;
+        if (((word >> (nonce & 255n)) & 1n) === 1n) return { isValid: false, invalidReason: 'nonce_already_used' };
+      } catch {
+        // fall through to the simulation
+      }
       // Simulate proxy.settle.
       await client.call({
         account: p.from as `0x${string}`,
@@ -403,7 +425,7 @@ export async function verifyPayment(
           ],
         }),
       });
-      const guard = await guardrailCheck(client, p.from, 'POLYDASH', amount);
+      const guard = await guardrailCheck(client, p.from, await usdValue6('POLYDASH', amount));
       if (!guard.ok) return { isValid: false, invalidReason: guard.reason };
       return { isValid: true, payer: getAddress(p.from) };
     }
@@ -414,15 +436,20 @@ export async function verifyPayment(
   }
 }
 
-async function guardrailCheck(
+/**
+ * Spend guardrails for a verified payer. Takes the payment value already
+ * converted to USD with 6 decimals, so it works for any settlement asset
+ * (USDG on Hood, USDC on Base, POLYDASH via usdValue6). Exported for the
+ * Base/CDP variant, which verifies through the CDP facilitator but keeps
+ * Polypad's own per-payment and daily caps.
+ */
+export async function guardrailCheck(
   client: PublicClient,
   payer: string,
-  asset: X402Asset,
-  amount: bigint,
+  valueUsd6: bigint,
 ): Promise<{ ok: boolean; reason?: string }> {
   const score = await scoreForWallet(client, payer);
   const band = bandForScore(score);
-  const valueUsd6 = await usdValue6(asset, amount);
   if (valueUsd6 <= 0n) return { ok: false, reason: 'price_unavailable' };
   if (valueUsd6 > BigInt(Math.round(band.perPaymentUsd * 1e6))) {
     return { ok: false, reason: 'over_per_payment_cap' };
@@ -464,6 +491,7 @@ export async function settlePayment(
   if (!verify.isValid || !verify.payer) {
     return { success: false, errorReason: verify.invalidReason ?? 'invalid_payment' };
   }
+  const payer = verify.payer;
   const fac = facilitatorClient();
   if (!fac) return { success: false, errorReason: 'facilitator_not_configured' };
   const req = payload.accepted;
@@ -495,19 +523,32 @@ export async function settlePayment(
     } else {
       return { success: false, errorReason: 'unsupported_payload' };
     }
+    // Record the daily spend only once settlement is confirmed.
+    const confirmed = async (): Promise<SettleResult> => {
+      const asset: X402Asset = getAddress(req.asset) === getAddress(USDG_ADDRESS) ? 'USDG' : 'POLYDASH';
+      recordDailySpend(payer, await usdValue6(asset, amount));
+      return { success: true, transaction: hash, network: X402_NETWORK, payer };
+    };
     // Wait briefly for the receipt (Robinhood Chain blocks are fast). If it
     // does not land in time, the tx was still broadcast — report pending so
     // the caller can reconcile on-chain instead of paying twice.
     try {
       const receipt = await client.waitForTransactionReceipt({ hash, timeout: 6_000 });
       if (receipt.status !== 'success') return { success: false, errorReason: 'settlement_reverted', transaction: hash, network: X402_NETWORK };
+      return confirmed();
     } catch {
-      return { success: true, pending: true, transaction: hash, network: X402_NETWORK, payer: verify.payer };
+      // The receipt may have landed just after the wait timed out — one
+      // final read before reporting pending, so a confirmed settle is not
+      // mistaken for an unknown one (a pending report gives the agent no
+      // data for a payment that may already have gone through).
+      try {
+        const receipt = await client.getTransactionReceipt({ hash });
+        if (receipt.status === 'success') return confirmed();
+        return { success: false, errorReason: 'settlement_reverted', transaction: hash, network: X402_NETWORK };
+      } catch {
+        return { success: true, pending: true, transaction: hash, network: X402_NETWORK, payer: verify.payer };
+      }
     }
-    // Record the daily spend only once settlement is confirmed.
-    const asset: X402Asset = getAddress(req.asset) === getAddress(USDG_ADDRESS) ? 'USDG' : 'POLYDASH';
-    recordDailySpend(verify.payer, await usdValue6(asset, amount));
-    return { success: true, transaction: hash, network: X402_NETWORK, payer: verify.payer };
   } catch (e: any) {
     return { success: false, errorReason: `settlement_failed:${e?.shortMessage ?? e?.message ?? 'unknown'}` };
   }

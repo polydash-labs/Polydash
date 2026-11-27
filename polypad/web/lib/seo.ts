@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 export const SITE_URL = 'https://polypad.abacusai.app';
 export const DEFAULT_OG_IMAGE = '/og-image.png';
 
-const SHARE_TITLE = 'Polypad: token launchpad on Robinhood Chain';
-const SHARE_DESCRIPTION = 'Launch and trade tokens on Robinhood Chain. Tokens trade on a bonding curve and move to Uniswap V4 when the curve fills.';
+const SHARE_TITLE = 'Polypad: The Premiere Agentic Marketplace';
+const SHARE_DESCRIPTION = 'The premiere agentic marketplace. Create your agent, give it a secure wallet, then launch, invest, stake, and pay per call — all on Robinhood Chain.';
 const SHARE_IMAGE = 'https://polypad.family/og-image.png';
 
 /** Site-wide share tags (root layout + home page). Exact values set by the owner. */
@@ -16,7 +16,7 @@ export const SITE_SHARE: Pick<Metadata, 'openGraph' | 'twitter' | 'alternates'> 
     url: 'https://polypad.family',
     title: SHARE_TITLE,
     description: SHARE_DESCRIPTION,
-    images: [{ url: SHARE_IMAGE, width: 1200, height: 630, alt: 'Polypad: Launch and trade tokens on Robinhood Chain' }],
+    images: [{ url: SHARE_IMAGE, width: 1200, height: 630, alt: 'Polypad: The Premiere Agentic Marketplace' }],
   },
   twitter: { card: 'summary_large_image', title: SHARE_TITLE, description: SHARE_DESCRIPTION, images: [SHARE_IMAGE] },
 };

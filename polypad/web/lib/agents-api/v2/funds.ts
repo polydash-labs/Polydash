@@ -10,7 +10,7 @@ import {
   type Addr, type Ctx, type Meta,
 } from './core';
 import { getLogsChunked } from './logs';
-import { finishPrepared } from './prepared';
+import { finishPrepared, validReturnUrl } from './prepared';
 
 const BPS = 10_000n;
 
@@ -120,11 +120,26 @@ export type Fund = {
 const NFT_FIELDS = ['name', 'symbol', 'manager', 'vault', 'mintPrice', 'maxSupply', 'totalMinted', 'totalBurned', 'entryFeeBps', 'protocolFeeBps', 'skinRequired', 'managerMinted', 'publicOpen', 'imageUri'] as const;
 const VAULT_FIELDS = ['status', 'raiseDeadline', 'templateId', 'navPerNft', 'protectionBits', 'mandateAssetCount'] as const;
 
+/** One retry for a single factory's fund count: a dropped RPC call used to silently drop the whole factory from the fund list. */
+async function readAllFundsLength(ctx: Ctx, factory: Addr): Promise<bigint> {
+  try {
+    return (await ctx.client.readContract({ address: factory, abi: fundFactoryAbi, functionName: 'allFundsLength' })) as bigint;
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    try {
+      return (await ctx.client.readContract({ address: factory, abi: fundFactoryAbi, functionName: 'allFundsLength' })) as bigint;
+    } catch (err) {
+      console.warn(`agents v2 fund list: allFundsLength failed for factory ${factory} after retry; skipping factory`, err);
+      return 0n;
+    }
+  }
+}
+
 async function fundAddresses(ctx: Ctx): Promise<{ address: Addr; factoryId: string; factoryLabel: string }[]> {
   return cached(ctx, 'fund-addrs', 20_000, async () => {
     const out: { address: Addr; factoryId: string; factoryLabel: string }[] = [];
     for (const f of ADDR.fundFactories) {
-      const n = Number((await ctx.client.readContract({ address: f.factory, abi: fundFactoryAbi, functionName: 'allFundsLength' }).catch(() => 0n)) as bigint);
+      const n = Number(await readAllFundsLength(ctx, f.factory));
       if (!n) continue;
       const res = await ctx.client.multicall({
         contracts: Array.from({ length: n }, (_, i) => ({ address: f.factory, abi: fundFactoryAbi, functionName: 'allFunds' as const, args: [BigInt(i)] as const })),
@@ -360,7 +375,7 @@ export async function prepareFundCreate(ctx: Ctx, rawInput: unknown, meta: Meta)
   if (!tpl) throw new ApiError(404, 'unknown_template', `Template ${templateId} does not exist.`, { availableTemplates: templates.map((t) => t.id) });
 
   const factory = ADDR.fundFactories.find((f) => f.id === (typeof input.factory === 'string' ? input.factory : 'phase6'));
-  if (!factory || !factory.creatable) throw new ApiError(400, 'invalid_params', 'factory must be "phase6" or "phase3".', { field: 'factory' });
+  if (!factory || !factory.creatable) throw new ApiError(400, 'invalid_params', 'factory must be "phase6", "phase3", or "v3".', { field: 'factory' });
 
   const name = typeof input.name === 'string' ? input.name.trim() : '';
   const symbol = typeof input.symbol === 'string' ? input.symbol.trim() : '';
@@ -399,6 +414,7 @@ export async function prepareFundCreate(ctx: Ctx, rawInput: unknown, meta: Meta)
     action: 'fund-create',
     signParams: { fx: factory.id, tpl: templateId, n: name, s: symbol, mp: mintPrice.toString(), rc: raiseCap.toString(), ef: entryFeeBps.toString(), sk: skinBpsIn.toString(), rd: duration.toString(), img: imageUri, bu: baseURI },
     from, meta, allowTargets: [],
+    returnUrl: validReturnUrl(input.returnUrl),
     steps: [{ kind: 'create_fund', description: 'Create the fund. The sending wallet becomes the manager.', to: factory.factory, data, value: 0n, simulate: true }],
     summary: {
       headline: `Create the fund "${name}" (${symbol}) from template ${templateId}`,
@@ -450,6 +466,7 @@ export async function prepareFundMint(ctx: Ctx, rawInput: unknown, meta: Meta) {
     action: 'fund-mint',
     signParams: { fund: f.address, q: qty.toString() },
     from, meta, allowTargets: [f.address],
+    returnUrl: validReturnUrl(input.returnUrl),
     steps: [{ kind: 'fund_mint', description: 'Mint fund shares. The ETH goes into the fund vault in the same transaction.', to: f.address, data: encodeFunctionData({ abi: fundNftAbi, functionName: 'mint', args: [qty] }), value: cost, simulate: true }],
     summary: {
       headline: `Mint ${qty} share${qty === 1n ? '' : 's'} of ${f.name} for ${ethDisplay(cost)} ETH`,
@@ -520,6 +537,7 @@ export async function prepareFundRedeem(ctx: Ctx, rawInput: unknown, meta: Meta)
     action: 'fund-redeem',
     signParams: { fund: f.address, ids: ids.join(',') },
     from, meta, allowTargets: [f.address, ...(f.vault ? [f.vault] : [])],
+    returnUrl: validReturnUrl(input.returnUrl),
     steps: [
       ...(lapsed ? [{ kind: 'fail_raise', description: 'The raise deadline passed before the raise closed. Anyone can mark the raise as failed so refunds open. This is step 1 of 2.', to: f.vault as Addr, data: encodeFunctionData({ abi: failRaiseAbi, functionName: 'failRaise' }), value: 0n, simulate: true }] : []),
       { kind: mode, description: mode === 'exit' ? 'Burn the shares and take a pro-rata share of the vault.' : 'Burn the shares of the failed raise and get your share of the ETH back.', to: f.address, data: encodeFunctionData({ abi: fundNftAbi, functionName: mode, args: [ids] }), value: 0n, simulate: !lapsed },

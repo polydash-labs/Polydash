@@ -16,9 +16,11 @@ The root layout, `app/layout.tsx`, is the single place for app-wide providers an
 
 | Role | Font | Tailwind Class | Default Usage |
 |------|------|---------------|-------|
-| Body | DM Sans | `font-sans` | All body text, labels, descriptions |
-| Display | Plus Jakarta Sans | `font-display` | Page titles, hero headings, section headers |
+| Body | Inter | `font-sans` | All body text, labels, descriptions |
+| Display | Inter | `font-display` | Page titles, hero headings, section headers |
 | Mono | JetBrains Mono | `font-mono` | Code snippets, numeric data, IDs, timestamps |
+
+> Corrected Nov 19, 2026: the guide previously listed DM Sans / Plus Jakarta Sans, but `app/layout.tsx` actually loads Inter (`--font-sans`) + JetBrains Mono, and `tailwind.config.ts` maps `font-display` to the same sans stack — so there is no separate display font in practice. If a distinct display face is wanted later, change the font loading in `app/layout.tsx` first, then update this table.
 
 **Size hierarchy:** Use Tailwind's scale. Headings: `text-4xl`→`text-3xl`→`text-2xl`→`text-xl`. Body: `text-base`→`text-sm`. Captions: `text-xs`.
 

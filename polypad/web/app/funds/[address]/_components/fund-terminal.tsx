@@ -39,16 +39,16 @@ export function FundTerminal({
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 className="text-[15px] font-semibold">Fund value</h2>
+        <h2 className="text-[15px] font-semibold">Tokenized fund value</h2>
         <p className="text-[12px] text-white/45">{scored.met} of {scored.total} protections in place</p>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-          <p className="text-[12px] text-white/45">Fund value per share (NAV, net asset value)</p>
+          <p className="text-[12px] text-white/45">Value per share</p>
           {invest && !invest.navKnown && (
             <p className="mt-2 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-2 text-[12px] leading-relaxed text-yellow-100">
-              Fund value is unknown right now: a price source could not be read. Figures shown are not a price.
+              Tokenized fund value is unknown right now: a price source could not be read. Figures shown are not a price.
             </p>
           )}
           <p className="mt-1 font-mono text-[22px] text-white">
@@ -61,7 +61,7 @@ export function FundTerminal({
           </p>
           {invest && invest.lastNavCheckpoint > 0 && (
             <p className="mt-2 text-[12px] text-white/45">
-              Last recorded fund value per share (NAV checkpoint): {formatFundEth(invest.lastCheckpointNavPerNft)} ETH on {new Date(invest.lastNavCheckpoint * 1000).toLocaleString('en-US', { timeZone: 'UTC' })} UTC. It is recorded at most once an hour.
+              Last recorded value per share: {formatFundEth(invest.lastCheckpointNavPerNft)} ETH on {new Date(invest.lastNavCheckpoint * 1000).toLocaleString('en-US', { timeZone: 'UTC' })} UTC. It is recorded at most once an hour.
             </p>
           )}
           <NavTape points={points} />
@@ -71,7 +71,7 @@ export function FundTerminal({
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-          <p className="text-[12px] text-white/45">Fund protections</p>
+          <p className="text-[12px] text-white/45">Tokenized fund protections</p>
           <ul className="mt-3 space-y-2">
             {scored.rows.map((row) => (
               <li key={row.id} className="flex items-start justify-between gap-3 text-[12px]">
@@ -131,6 +131,7 @@ export function FundTerminal({
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
         <h3 className="text-[13px] font-semibold">Trade history</h3>
+        <p className="mt-1 text-[12px] text-white/50">Each row is one trade. On a small screen, swipe sideways to see all the columns.</p>
         {!invest || invest.trades.length === 0 ? (
           <p className="mt-2 text-[13px] text-white/50">No trades yet.</p>
         ) : (

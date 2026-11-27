@@ -12,7 +12,7 @@ const STEPS = [
   {
     icon: ArrowLeftRight,
     title: 'Trade',
-    body: 'Buy and sell on a bonding curve with a live quote at every step. At the graduation threshold, liquidity moves to Uniswap V4 and is locked permanently.',
+    body: 'Buy and sell on a bonding curve — a price that rises as more people buy — with a live quote at every step. Once enough has been raised, the money moves to Uniswap V4, a public exchange, and is locked there permanently.',
     href: '/',
     cta: 'Explore tokens',
   },
@@ -34,7 +34,7 @@ const STEPS = [
 
 const NFT_FEATURES = [
   { icon: Tag, title: 'Fixed-price mint', body: 'Sell at one set price, with a commitment window where buyers reserve a spot before the mint opens.' },
-  { icon: TrendingUp, title: 'Bonding-curve sale', body: 'The price moves with each mint, and holders can sell back to the pool until the collection graduates.' },
+  { icon: TrendingUp, title: 'Bonding-curve sale', body: 'The price moves with each mint, and holders can sell back to the pool until the collection moves to Uniswap V4.' },
   { icon: Flame, title: 'Floor vault', body: 'Every collection has a floor vault. Any holder can burn an NFT against it and take their share of the vault.' },
   { icon: Award, title: 'NFT staking', body: 'Stake NFTs for loyalty bonuses that grow the longer you hold, plus set bonuses for staking matching pieces.' },
   { icon: Store, title: 'Marketplace', body: 'Buy and sell on the built-in marketplace. Every sale pays the creator royalty.' },
@@ -47,7 +47,7 @@ const FAQ = [
   },
   {
     q: 'What happens to liquidity?',
-    a: 'When a launch reaches its graduation threshold, the raised ETH and the reserved 20% of supply are added as full-range liquidity to a Uniswap V4 pool. That liquidity is held by the Polypad hook contract, which has no code path to remove it, so it is locked permanently.',
+    a: 'Once a launch has raised enough, the raised ETH and the reserved 20% of supply move to a Uniswap V4 pool, where they provide trading liquidity. That liquidity is held by the Polypad hook contract, which has no code path to remove it, so it is locked permanently.',
   },
   {
     q: 'How does staking work?',

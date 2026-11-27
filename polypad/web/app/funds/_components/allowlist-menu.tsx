@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ExternalLink, Loader2, Search } from 'lucide-react';
+import { Check, ExternalLink, Loader2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { SafeDate } from '@/components/safe-format';
 import { FUND_ALLOWLIST } from '@/lib/fund/phase3';
 import { useAllowlistTokens } from '@/lib/fund/use-allowlist';
 import { shortenAddress } from '@/lib/format';
 import { EXPLORER_ADDRESS } from '@/lib/trust';
+import { EMERALD_CARD, EMERALD_PILL } from '@/lib/ui/template';
 
 /** Browsable menu of the tokens a manager may invest in, read live from the FundAllowlist contract. */
 export function AllowlistMenu({ title = 'Tokens a manager can invest in', compact }: { title?: string; compact?: boolean }) {
@@ -21,7 +22,7 @@ export function AllowlistMenu({ title = 'Tokens a manager can invest in', compac
   const approved = (data ?? []).filter((t) => t.status === 'approved').length;
 
   return (
-    <div id="approved-tokens" className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div id="approved-tokens" className={EMERALD_CARD}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-[15px] font-semibold text-white">{title}</h3>
@@ -29,7 +30,7 @@ export function AllowlistMenu({ title = 'Tokens a manager can invest in', compac
             The approved list of tokens a tokenized fund may buy (the allowlist), read live from Robinhood Chain. A manager can only add a token from this list, after a 2-day public wait.
           </p>
         </div>
-        {data && <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] text-white/80">{approved} approved</span>}
+        {data && <span className={EMERALD_PILL}>{approved} approved</span>}
       </div>
       <div className="relative mt-3">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
@@ -53,7 +54,7 @@ export function AllowlistMenu({ title = 'Tokens a manager can invest in', compac
                   </a>
                 </div>
                 {t.status === 'approved' ? (
-                  <span className="shrink-0 rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] text-emerald-200">Approved</span>
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] text-emerald-200"><Check className="h-3 w-3" strokeWidth={3} />Approved</span>
                 ) : (
                   <span className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[11px] text-amber-100">Waiting — ready <SafeDate date={t.readyAt * 1000} options={{ dateStyle: 'medium' }} localize /></span>
                 )}

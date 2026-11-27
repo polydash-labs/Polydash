@@ -93,7 +93,7 @@ export function V3Section({ fund, isManager, tx }: { fund: Phase3Detail; isManag
         <Card title="Manager: liquidity and staking" subtitle="Each action is 1 transaction you sign. New liquidity positions wait 2 days in public first.">
           <div className="space-y-2">
             <p className="text-[13px] font-medium text-white">1. Propose a POLYDASH/WETH liquidity position</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Input value={lo} onChange={(e) => setLo(e.target.value)} placeholder="Lower price tick" aria-label="Lower price tick" />
               <Input value={hi} onChange={(e) => setHi(e.target.value)} placeholder="Upper price tick" aria-label="Upper price tick" />
               <Input value={capPct} onChange={(e) => setCapPct(e.target.value)} placeholder="Max % of fund" aria-label="Most of the tokenized fund in this position, in %" />
@@ -107,7 +107,7 @@ export function V3Section({ fund, isManager, tx }: { fund: Phase3Detail; isManag
           </div>
           <div className="mt-4 space-y-2 border-t border-white/10 pt-3">
             <p className="text-[13px] font-medium text-white">2. Add or remove liquidity, harvest fees</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Input value={liq} onChange={(e) => setLiq(e.target.value)} placeholder="Liquidity units" aria-label="Liquidity units" />
               <Input value={max0} onChange={(e) => setMax0(e.target.value)} placeholder="Max WETH" aria-label="Most WETH to use" />
               <Input value={max1} onChange={(e) => setMax1(e.target.value)} placeholder="Max POLYDASH" aria-label="Most POLYDASH to use" />

@@ -9,13 +9,30 @@ import {
 } from './core';
 import { getFund, listFunds, listTemplates, prepareFundCreate, prepareFundMint, prepareFundRedeem } from './funds';
 import { prepareTokenLaunch } from './launch';
-import { launchView, protectionsFor, resolveLaunch, tokenFeed } from './launches';
-import { allCollections, listNfts, listNftListings, prepareNftBuy } from './nfts';
+import { launchView, getPlatformTokenLaunch, protectionsFor, resolveLaunch, tokenFeed } from './launches';
+import { isPlatformTokenRef } from '../../platform-token';
+import { allCollections, listNfts, listNftListings, prepareNftBuy, prepareNftCreate } from './nfts';
 import { ethToWei, parseIntent } from './intent';
 import { whatCanIDo } from './onboard';
 import { portfolioOf } from './portfolio';
 import { prepareBuy, prepareSell, quoteTrade } from './trade';
 import { txStatus } from './status';
+import { planCrossChainPayment, toExecutionPackage } from '../../x402/cross-chain';
+import { applyWalletBinding, resolveWalletToken } from './wallet-token';
+import { agentChat } from './agent-chat';
+import { SKILLS } from './skills';
+
+/** Key ids allowed to call the business agent-chat tool, from AGENT_CHAT_KEY_IDS (comma-separated). Empty = nobody. These are key *ids*, not key material. */
+const AGENT_CHAT_KEY_IDS = new Set(
+  (process.env.AGENT_CHAT_KEY_IDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
+
+export function isAgentChatAllowed(keyId: string | null | undefined): boolean {
+  return !!keyId && AGENT_CHAT_KEY_IDS.has(keyId);
+}
 
 type Json = Record<string, unknown>;
 export type Tool = {
@@ -27,6 +44,8 @@ export type Tool = {
   path: string;
   inputSchema: { type: 'object'; properties: Record<string, unknown>; required?: string[]; additionalProperties: false };
   handler: (ctx: Ctx, input: Json, meta: Meta) => Promise<Json>;
+  /** When true, only a key id in the tool's allowlist may call it (enforced in runTool, so MCP, REST, and nested intent calls all check it). */
+  requiresAllowlistedKey?: boolean;
 };
 
 const str = (description: string, extra: Json = {}) => ({ type: 'string', description, ...extra });
@@ -34,8 +53,10 @@ const int = (description: string, extra: Json = {}) => ({ type: 'integer', descr
 const bool = (description: string) => ({ type: 'boolean', description });
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object' as const, properties, required, additionalProperties: false as const });
 
-const FROM = str('The wallet address that will sign (0x...). Never a private key.');
+const FROM = str('The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead.');
 const REF = str('Attribution tag for traffic measurement. Default "grok".');
+const WALLET_TOKEN = str('A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet.');
+const RETURN_URL = str('Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored.');
 const SLIP = int(`Slippage limit in basis points. Default ${LIMITS.defaultSlippageBps}, maximum ${LIMITS.maxSlippageBps}.`, { minimum: 0, maximum: LIMITS.maxSlippageBps });
 const CONFIRM = bool(`Set true only after the user confirmed an amount above ${LIMITS.confirmLargeWei / 10n ** 18n} ETH.`);
 
@@ -71,21 +92,24 @@ export const TOOLS: Tool[] = [
     title: 'Understand a request',
     description: 'Turns a plain-language request ("buy 0.01 ETH of POLYCAT", "launch a fund with POLYDASH") into the right tool call. Runs read-only requests directly. For actions that move funds it needs the wallet address in `from`; if details are missing it returns the questions to ask.',
     kind: 'read', method: 'POST', path: 'intent',
-    inputSchema: obj({ text: str('What the user said, as written.'), from: FROM, ref: REF }, ['text']),
+    inputSchema: obj({ text: str('What the user said, as written.'), from: FROM, walletToken: WALLET_TOKEN, ref: REF }, ['text']),
     handler: async (ctx, input, meta) => {
       const text = typeof input.text === 'string' ? input.text.slice(0, 600) : '';
       const parsed = parseIntent(text);
       const from = optAddress(input, 'from');
+      const token = typeof input.walletToken === 'string' && input.walletToken !== '' ? input.walletToken : undefined;
+      const bound = token ? await resolveWalletToken(token) : undefined;
+      const wallet = from ?? bound;
       const out: Json = { ok: true, ...parsed };
       if (!parsed.tool) return out;
       if (parsed.missing.length) return out;
-      if (parsed.needsWallet && !from) {
-        out.missing = [{ field: 'from', question: 'Which wallet address will sign? Paste the 0x address.' }];
+      if (parsed.needsWallet && !wallet) {
+        out.missing = [{ field: 'from', question: 'Which wallet address will sign? Paste the 0x address, or connect once on polypad.family/sign?connect=1 and pass the wallet token instead.' }];
         return out;
       }
       const tool = TOOLS.find((t) => t.name === parsed.tool);
       if (!tool || tool.name === 'polypad_intent') return out;
-      const args: Json = { ...parsed.arguments, ...(from ? { from } : {}), ref: meta.ref };
+      const args: Json = { ...parsed.arguments, ...(wallet ? { from: wallet } : {}), ...(token ? { walletToken: token } : {}), ref: meta.ref };
       if (tool.name === 'polypad_prepare_buy' && args.amountWei) args.amount = args.amountWei;
       try {
         out.result = await runTool(ctx, tool, args, meta, false);
@@ -113,12 +137,23 @@ export const TOOLS: Tool[] = [
   {
     name: 'polypad_get_token',
     title: 'Token details',
-    description: 'One token: price reading, bonding-curve progress, creator, fees, and links. Accepts a symbol, name, token address, or launch address.',
+    description: 'One token: price reading, bonding-curve progress, creator, fees, and links. Accepts a symbol, name, token address, or launch address. POLYDASH itself works too — it is not a launch, so it has no curve or launch contract.',
     kind: 'read', method: 'GET', path: 'token',
     inputSchema: obj({ token: str('Symbol, name, token address, or launch address.') }, ['token']),
     handler: async (ctx, i) => {
-      const l = await resolveLaunch(ctx, String(i.token ?? ''));
-      return { ok: true, token: launchView(l), disclaimer: WORDING.notAudited };
+      const ref = String(i.token ?? '');
+      try {
+        const l = await resolveLaunch(ctx, ref);
+        return { ok: true, token: launchView(l), disclaimer: WORDING.notAudited };
+      } catch (e) {
+        // POLYDASH is not a launch, so the lookup above 404s — answer it
+        // from on-chain facts instead. Every other 404 passes through.
+        if (e instanceof ApiError && e.code === 'not_found' && isPlatformTokenRef(ref)) {
+          const l = await getPlatformTokenLaunch(ctx);
+          if (l) return { ok: true, token: launchView(l), disclaimer: WORDING.notAudited };
+        }
+        throw e;
+      }
     },
   },
   {
@@ -148,7 +183,7 @@ export const TOOLS: Tool[] = [
     title: 'Prepare a buy',
     description: 'Prepares a buy of a launch token with ETH. Simulates it on-chain before returning. Returns the unsigned transaction (to, data, value, chainId 4663, gas estimate), a plain summary, and a one-tap signing link. Show the summary before the link. Never signs.',
     kind: 'prepare', method: 'POST', path: 'prepare/buy',
-    inputSchema: obj({ token: str('Symbol, name, token address, or launch address.'), from: FROM, amountEth: str('ETH to spend, as a decimal such as 0.01.'), amountWei: str('ETH to spend in wei. Use instead of amountEth.'), slippageBps: SLIP, confirmLarge: CONFIRM, ref: REF }, ['token', 'from']),
+    inputSchema: obj({ token: str('Symbol, name, token address, or launch address.'), from: FROM, amountEth: str('ETH to spend, as a decimal such as 0.01.'), amountWei: str('ETH to spend in wei. Use instead of amountEth.'), slippageBps: SLIP, confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['token', 'from']),
     handler: async (ctx, i, m) => prepareBuy(ctx, ethOrWei(i, 'amountWei', 'amountEth', 'amount'), m),
   },
   {
@@ -156,7 +191,7 @@ export const TOOLS: Tool[] = [
     title: 'Prepare a sell',
     description: 'Prepares a sale of a launch token for ETH, with the exact-amount approval step if needed. Simulates step 1 on-chain. Returns unsigned transactions, a summary, and a signing link. Accepts an amount or a percent of the wallet balance.',
     kind: 'prepare', method: 'POST', path: 'prepare/sell',
-    inputSchema: obj({ token: str('Symbol, name, token address, or launch address.'), from: FROM, amount: str('Token base units (18 decimals) as a decimal string.'), percentOfBalance: int('Percent of the wallet balance, 1 to 100. Use instead of amount.', { minimum: 1, maximum: 100 }), slippageBps: SLIP, ref: REF }, ['token', 'from']),
+    inputSchema: obj({ token: str('Symbol, name, token address, or launch address.'), from: FROM, amount: str('Token base units (18 decimals) as a decimal string.'), percentOfBalance: int('Percent of the wallet balance, 1 to 100. Use instead of amount.', { minimum: 1, maximum: 100 }), slippageBps: SLIP, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['token', 'from']),
     handler: async (ctx, i, m) => prepareSell(ctx, i, m),
   },
   {
@@ -184,7 +219,7 @@ export const TOOLS: Tool[] = [
     title: 'Prepare an NFT buy or mint',
     description: 'Prepares either a marketplace purchase (listingId) or a public mint from a fixed-price collection (collection + quantity). Checks supply, wallet limits, and price, then simulates. Returns unsigned transactions, a summary, and a signing link. Collections still in their commitment window are sent to the collection page instead.',
     kind: 'prepare', method: 'POST', path: 'prepare/nft-buy',
-    inputSchema: obj({ from: FROM, listingId: int('Marketplace listing id.', { minimum: 1 }), collection: str('Collection address for a public mint.'), collectionName: str('Collection name, if no address is known.'), quantity: int('How many to mint, 1 to 50. Default 1.', { minimum: 1, maximum: 50 }), confirmLarge: CONFIRM, ref: REF }, ['from']),
+    inputSchema: obj({ from: FROM, listingId: int('Marketplace listing id.', { minimum: 1 }), collection: str('Collection address for a public mint.'), collectionName: str('Collection name, if no address is known.'), quantity: int('How many to mint, 1 to 50. Default 1.', { minimum: 1, maximum: 50 }), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from']),
     handler: async (ctx, i, m) => {
       const copy = { ...i };
       if (!copy.collection && typeof copy.collectionName === 'string') {
@@ -197,6 +232,15 @@ export const TOOLS: Tool[] = [
       delete copy.collectionName;
       return prepareNftBuy(ctx, copy, m);
     },
+  },
+  {
+    name: 'polypad_prepare_nft_create',
+    title: 'Prepare an NFT collection creation',
+    description: 'Creates a fixed-price NFT collection on the Polypad NFT factory: name, symbol, artwork, max supply, mint price, and creator royalty. The caller signs once in their own wallet and pays gas only — creating a collection costs no ETH beyond gas. Only allowlisted business API keys can call it (used by Major League Operator Card Studio). Returns unsigned transactions, a summary, and a signing link.',
+    kind: 'prepare', method: 'POST', path: 'prepare/nft-create',
+    requiresAllowlistedKey: true,
+    inputSchema: obj({ from: FROM, name: str('Collection name, 1 to 64 characters.'), symbol: str('Collection symbol, 1 to 10 characters, uppercased.'), imageUri: str('Artwork URL (https:// or ipfs://). Shown as the collection image.'), description: str('Plain description, up to 500 characters.'), baseURI: str('Metadata base URI (https:// or ipfs://). Optional.'), maxSupply: int('How many editions to mint, 1 to 10000. Default 25.', { minimum: 1, maximum: 10000 }), mintPriceEth: str('Mint price per edition in ETH as a plain decimal, above 0 to 10. Default 0.001. The factory does not allow a zero mint price. Use mintPriceWei instead for raw wei.'), mintPriceWei: str('Mint price per edition in wei. Use instead of mintPriceEth.'), royaltyBps: int('Creator royalty in basis points, 0 to 1500 (10% = 1000). Default 1000. Paid to the creator on every resale.', { minimum: 0, maximum: 1500 }), maxPerWallet: int('Max mints per wallet, 1 to 100. Default 5.', { minimum: 1, maximum: 100 }), commitWindow: int('Commitment window in seconds, 1 hour to 30 days. Default 86400 (24 hours). Buyers commit first, then mint.', { minimum: 3600, maximum: 2592000 }), floorBps: int('Share of mint price kept in the collection floor vault, in basis points, 2000 to 8000. Default 2000 (20%).', { minimum: 2000, maximum: 8000 }), ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'name', 'symbol', 'imageUri']),
+    handler: async (ctx, i, m) => prepareNftCreate(ctx, i, m),
   },
   {
     name: 'polypad_list_fund_templates',
@@ -217,7 +261,7 @@ export const TOOLS: Tool[] = [
       templateId: int('Template id.', { minimum: 1 }),
       asset: str('Asset symbol or address the fund may hold, such as POLYDASH.'),
       manager: str('Manager address.'),
-      factory: str('phase6, phase3, phase2, or phase1a.', { enum: ['phase6', 'phase3', 'phase2', 'phase1a'] }),
+      factory: str('phase6, phase3, phase2, phase1a, or v3.', { enum: ['phase6', 'phase3', 'phase2', 'phase1a', 'v3'] }),
       q: str('Search by name, symbol, or address.'),
       sort: str('newest, raise_progress, deadline, or shares.', { enum: ['newest', 'raise_progress', 'deadline', 'shares'] }),
       limit: int('1 to 50.', { minimum: 1, maximum: 50 }),
@@ -250,7 +294,7 @@ export const TOOLS: Tool[] = [
       entryFeeBps: int('Manager entry fee in basis points, 0 to 500. Default 0.', { minimum: 0, maximum: 500 }),
       raiseDurationDays: int('Raise length in days, 1 to 30. Default 7.', { minimum: 1, maximum: 30 }),
       minSkinBps: int('Manager skin requirement in basis points. 0 means the 5% default.', { minimum: 0, maximum: 10000 }),
-      imageUri: str('https:// or ipfs:// image for the fund.'), factory: str('phase6 (default) or phase3.', { enum: ['phase6', 'phase3'] }), ref: REF,
+      imageUri: str('https:// or ipfs:// image for the fund.'), factory: str('phase6 (default), phase3, or v3.', { enum: ['phase6', 'phase3', 'v3'] }), ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN,
     }, ['from', 'name', 'symbol']),
     handler: async (ctx, i, m) => prepareFundCreate(ctx, ethOrWei(ethOrWei(i, 'mintPriceWei', 'mintPriceEth', 'mintPriceWei'), 'raiseCapWei', 'raiseCapEth', 'raiseCapWei'), m),
   },
@@ -259,7 +303,7 @@ export const TOOLS: Tool[] = [
     title: 'Prepare a fund investment',
     description: 'Prepares minting shares of an open fund. Checks the raise is open, that public minting is open (the manager has to mint the required shares before anyone else), supply, and balance. Simulates, then returns unsigned transactions, a summary, and a signing link.',
     kind: 'prepare', method: 'POST', path: 'prepare/fund-mint',
-    inputSchema: obj({ from: FROM, fund: str('Fund address.'), quantity: int('Number of shares. Default 1.', { minimum: 1 }), confirmLarge: CONFIRM, ref: REF }, ['from', 'fund']),
+    inputSchema: obj({ from: FROM, fund: str('Fund address.'), quantity: int('Number of shares. Default 1.', { minimum: 1 }), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'fund']),
     handler: async (ctx, i, m) => prepareFundMint(ctx, i, m),
   },
   {
@@ -267,7 +311,7 @@ export const TOOLS: Tool[] = [
     title: 'Prepare a fund exit or refund',
     description: 'Prepares exiting a fund after its raise closes (pro-rata share of the vault) or a refund if the raise failed. Finds the wallet\'s shares on-chain, or takes a quantity or specific ids.',
     kind: 'prepare', method: 'POST', path: 'prepare/fund-redeem',
-    inputSchema: obj({ from: FROM, fund: str('Fund address.'), quantity: int('How many shares, starting from the lowest ids. Default all.', { minimum: 1 }), ids: { type: 'array', items: { type: 'string' }, description: 'Specific share ids.' }, ref: REF }, ['from', 'fund']),
+    inputSchema: obj({ from: FROM, fund: str('Fund address.'), quantity: int('How many shares, starting from the lowest ids. Default all.', { minimum: 1 }), ids: { type: 'array', items: { type: 'string' }, description: 'Specific share ids.' }, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'fund']),
     handler: async (ctx, i, m) => prepareFundRedeem(ctx, i, m),
   },
   {
@@ -278,7 +322,7 @@ export const TOOLS: Tool[] = [
     inputSchema: obj({
       from: FROM, name: str('Token name, up to 64 bytes.'), symbol: str('Ticker, up to 32 bytes.'), imageUri: str('https:// or ipfs:// logo.'), description: str('Up to 2000 characters.'),
       socialLinks: { type: 'array', items: { type: 'string' }, description: 'https:// links, up to 8.' }, creatorFeeBps: int('Creator fee in basis points, 0 to 500. Required. 0 means 0%.', { minimum: 0, maximum: 500 }),
-      devBuyEth: str('Optional buy at launch, in wei.'), launchDelay: str('Seconds before trading opens, 0 to 2592000.'), agentMark: bool('Agent-launched label. Default true.'), repository: str('https://github.com/owner/repo, optional.'), ref: REF,
+      devBuyEth: str('Optional buy at launch, in wei.'), launchDelay: str('Seconds before trading opens, 0 to 2592000.'), agentMark: bool('Agent-launched label. Default true.'), repository: str('https://github.com/owner/repo, optional.'), ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN,
     }, ['from', 'name', 'symbol', 'creatorFeeBps']),
     handler: async (ctx, i, m) => prepareTokenLaunch(ctx, i, m),
   },
@@ -306,6 +350,52 @@ export const TOOLS: Tool[] = [
     inputSchema: obj({}),
     handler: async (ctx) => ({ ok: true, ...ctx.sink.summary(), onchainAttribution: 'Main transactions end with an ERC-8021 schema 0 suffix carrying "polypad,<ref>". Indexers can count it from calldata.' }),
   },
+  {
+    name: 'x402_cross_chain_quote',
+    title: 'Cross-chain x402 quote',
+    description: 'Dry-run plan for paying any x402 endpoint from the other chain: fetch the 402, read the wallet\'s balances on Base and Robinhood Chain, and quote the Relay bridge for only the shortfall. Read-only — no key, no signature, nothing moves. Works for the USD stablecoins (USDG on Robinhood Chain, USDC on Base); a POLYDASH-only endpoint cannot cross-chain.',
+    kind: 'read', method: 'GET', path: 'x402/cross-chain/quote',
+    inputSchema: obj({ url: str('The x402 URL to pay — it must return a 402 payment challenge.'), from: FROM }, ['url', 'from']),
+    handler: async (_ctx, i) => ({ ...(await planCrossChainPayment(i)) }),
+  },
+  {
+    name: 'x402_cross_chain_pay',
+    title: 'Cross-chain x402 pay',
+    description: 'The executable package for paying any x402 endpoint from the other chain: the dry-run plan, the unsigned Relay bridge transactions (approve + deposit, shortfall only), and the EIP-3009 typed data to sign for the settlement. Returns unsigned transactions only — the agent signs the bridge steps on the origin chain, waits for the bridge to land, signs the typed data, and POSTs it to the product URL as an X-PAYMENT header. Never signs, never takes a private key.',
+    kind: 'prepare', method: 'POST', path: 'x402/cross-chain/pay',
+    inputSchema: obj({ url: str('The x402 URL to pay — it must return a 402 payment challenge.'), from: FROM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['url', 'from']),
+    handler: async (_ctx, i) => {
+      const plan = await planCrossChainPayment(i);
+      if (!plan.feasible) return { ...plan };
+      return { ...plan, execution: toExecutionPackage(plan) };
+    },
+  },
+  {
+    name: 'polypad_agent_chat',
+    title: 'Business agent chat',
+    description: 'Run a business agent chat completion through Polypad: send a system prompt and messages, get the assistant reply. Only allowlisted business API keys can call it — every call is metered as API usage. The model is fixed (gpt-4o-mini) and the caller never sees the OpenAI key. Prompt and reply content is never logged.',
+    kind: 'read', method: 'POST', path: 'agent-chat',
+    requiresAllowlistedKey: true,
+    inputSchema: obj({
+      systemPrompt: str('The system prompt for the business agent, 1 to 12000 characters.'),
+      messages: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            role: { type: 'string', enum: ['user', 'assistant'] },
+            content: { type: 'string' },
+          },
+          required: ['role', 'content'],
+          additionalProperties: false,
+        },
+        description: 'Chat messages, oldest first. 1 to 20 messages; each content 1 to 12000 characters.',
+      },
+      temperature: { type: 'number', minimum: 0, maximum: 1, description: 'Sampling temperature. Default 0.7.' },
+      maxTokens: int('Max reply tokens, 1 to 2000. Default 600.', { minimum: 1, maximum: 2000 }),
+    }, ['systemPrompt', 'messages']),
+    handler: async (_ctx, i) => agentChat(i),
+  },
 ];
 
 export function indexBody(): Json {
@@ -317,7 +407,7 @@ export function indexBody(): Json {
     chain: 'Robinhood Chain',
     custody: 'non-custodial',
     description: 'Browse launches, funds, and NFTs. Prepare buys, sells, NFT purchases, fund launches and investments, and token launches. Every write returns an unsigned transaction, a summary, and a signing link. Polypad never holds or accepts keys.',
-    mcp: { url: `${SITE_ORIGIN}/api/mcp`, transport: 'streamable-http, stateless', auth: 'none', tools: TOOLS.map((t) => t.name) },
+    mcp: { url: `${SITE_ORIGIN}/api/mcp`, transport: 'streamable-http, stateless', auth: 'none', tools: TOOLS.map((t) => t.name), skills: SKILLS.map((s) => s.name), skillsExtension: 'io.modelcontextprotocol/skills' },
     rateLimits: { read: `${LIMITS.rate.read.limit}/min/ip`, prepare: `${LIMITS.rate.prepare.limit}/min/ip and ${LIMITS.rate.perWalletPrepare.limit}/min/wallet`, intent: `${LIMITS.rate.intent.limit}/min/ip` },
     limits: { defaultSlippageBps: LIMITS.defaultSlippageBps, maxSlippageBps: LIMITS.maxSlippageBps, confirmAboveEth: Number(LIMITS.confirmLargeWei / 10n ** 18n), maxActionEth: Number(LIMITS.maxActionWei / 10n ** 18n) },
     headers: { 'x-polypad-client': 'Optional client name, 1 to 64 characters, for traffic measurement.' },
@@ -330,10 +420,25 @@ export function indexBody(): Json {
 
 /** Run a tool with rate limiting, key guard, and error mapping done by the caller. */
 export async function runTool(ctx: Ctx, tool: Tool, input: Json, meta: Meta, limit = true): Promise<Json> {
+  // The /sign page is Polypad's own first-party client: it rebuilds an action
+  // for the wallet the user connected, and the user signs it and pays their
+  // own gas. The action's link was minted by an allowlisted caller, so the
+  // API-key allowlist — which gates the metered API/MCP surface — does not
+  // apply to this signing flow. Scoped to prepare tools only: agent chat
+  // (metered OpenAI, kind 'read') stays gated.
+  const signPagePrepare = meta.client === 'sign-page' && tool.kind === 'prepare';
+  if (tool.requiresAllowlistedKey && !isAgentChatAllowed(meta.keyId) && !signPagePrepare) {
+    // Status-only log: never the key or the key id.
+    console.warn('[agent-chat] key not allowlisted');
+    throw new ApiError(403, 'tool_not_available', 'This tool is only available to allowlisted business API keys.');
+  }
+  if (tool.kind === 'prepare' || tool.name === 'polypad_intent') bodyGuard(input);
+  // A wallet token resolves `from` before the per-wallet limit is counted, so the bound wallet —
+  // not a missing address — is what the limit sees. A bad token or a token/`from` mismatch fails here.
+  if (tool.kind === 'prepare') await applyWalletBinding(input);
   if (limit) {
     const wallet = typeof input.from === 'string' && isAddress(input.from, { strict: false }) ? getAddress(input.from) : null;
     takeLimit(ctx, tool.kind === 'prepare' ? 'prepare' : tool.name === 'polypad_intent' ? 'intent' : 'read', meta, wallet);
   }
-  if (tool.kind === 'prepare' || tool.name === 'polypad_intent') bodyGuard(input);
   return tool.handler(ctx, input, meta);
 }

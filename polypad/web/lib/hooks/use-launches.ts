@@ -3,10 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
 import { formatEther, type PublicClient } from 'viem';
-import { getFactoryAddresses } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
 import type { LaunchToken } from '@/lib/token-types';
-import { BOUGHT, SOLD, fetchLaunchAddresses, fetchLaunchDetails, getLogsFromDeploy, resolveLaunchAddress } from '@/lib/launches-core';
+import { BOUGHT, SOLD, getLogsFromDeploy } from '@/lib/launches-core';
 
 export { DEPLOY_BLOCK, fetchLaunchDetails } from '@/lib/launches-core';
 
@@ -22,49 +21,38 @@ export function useEthPrice() {
   });
 }
 
-/** All launches created through the factory, read live from the chain. `initial` (server snapshot) is shown until the first live read. */
+/** All launches created through the factory, read on the server behind /api/launches (round 7). `initial` (server snapshot) is shown until the first live read. The browser used to read the chain directly (fetchLaunchAddresses + fetchLaunchDetails, including a full log scan for volumes); on a cold load that read fired into the first-load storm and the token pages and the leaderboard sat on skeletons or flashed a false empty state. A 502 means the server snapshot was not ready in time, never "no launches" — it throws so the retry keeps the last good list. */
 export function useLaunches(initial?: LaunchToken[] | null) {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
-  const { data: ethUsd } = useEthPrice();
-  const factories = getFactoryAddresses();
   return useQuery({
-    queryKey: ['launches', factories.join(','), ethUsd ?? 0],
-    enabled: !!client && factories.length > 0,
+    queryKey: ['launches'],
     refetchInterval: 30_000,
     placeholderData: (prev) => prev ?? initial ?? undefined,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     queryFn: async () => {
-      if (!client || factories.length === 0) return [];
-      // Strict: an inconclusive address lookup throws instead of resolving
-      // to [], so a flaky refetch keeps the last good list instead of
-      // blanking the homepage. [] then only means every factory genuinely
-      // reports zero launches.
-      const addrs = await fetchLaunchAddresses(client as PublicClient, factories, true);
-      if (addrs.length === 0) return [];
-      return fetchLaunchDetails(client as PublicClient, addrs, ethUsd ?? 0);
+      const r = await fetch('/api/launches', { signal: AbortSignal.timeout(15_000) });
+      if (!r.ok) throw new Error(`Launch list read failed: ${r.status}`);
+      const j = (await r.json()) as { tokens: LaunchToken[] };
+      return j.tokens ?? [];
     },
   });
 }
 
-/** A single launch by its launch contract address or its token address (any known factory). `initial` (server snapshot) is shown until the first live read. */
+/** A single launch by its launch contract address or its token address (any known factory). Read on the server behind /api/launch (round 7) — see useLaunches. `initial` (server snapshot) is shown until the first live read. A 404 means the address genuinely is not a launch; anything else throws so a flaky refetch keeps the last good data instead of flipping a loaded page to "Token not found". */
 export function useLaunch(address: string, initial?: LaunchToken | null) {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
-  const { data: ethUsd } = useEthPrice();
-  const factories = getFactoryAddresses();
   return useQuery({
-    queryKey: ['launch', address, ethUsd ?? 0],
-    enabled: !!client && factories.length > 0 && /^0x[0-9a-fA-F]{40}$/.test(address),
+    queryKey: ['launch', address.toLowerCase()],
+    enabled: /^0x[0-9a-fA-F]{40}$/.test(address),
     refetchInterval: 15_000,
     placeholderData: (prev) => prev ?? initial ?? undefined,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     queryFn: async () => {
-      if (!client || factories.length === 0) return null;
-      // Strict: an inconclusive lookup (an RPC call failed) throws instead of
-      // resolving null, so a flaky refetch keeps the last good data instead of
-      // flipping a loaded page to "Token not found". Null then only means the
-      // address genuinely is not a launch on any factory.
-      const launch = await resolveLaunchAddress(client as PublicClient, factories, address as `0x${string}`, true);
-      if (!launch) return null;
-      const [t] = await fetchLaunchDetails(client as PublicClient, [launch], ethUsd ?? 0);
-      return t ?? null;
+      const r = await fetch(`/api/launch?address=${address}`, { signal: AbortSignal.timeout(15_000) });
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error(`Launch read failed: ${r.status}`);
+      const j = (await r.json()) as { token: LaunchToken | null };
+      return j.token ?? null;
     },
   });
 }

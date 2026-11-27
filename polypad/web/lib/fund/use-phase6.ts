@@ -7,7 +7,8 @@ import { Erc20MiniABI, FundAllowlistABI, FundVaultV2ABI } from '@/lib/contracts/
 import { robinhoodChain } from '@/lib/chain';
 import { FUND_ALLOWLIST, FUND_WETH } from '@/lib/fund/phase3';
 import { FUND_FACTORY_V2, holdingsBps, type FundAsset, type ProposalView } from '@/lib/fund/phase6';
-import { readSummary, type Phase3Summary } from '@/lib/fund/use-phase3';
+import { fetchFundsListWire, readSummary, type Phase3Summary } from '@/lib/fund/use-phase3';
+import { phase3SummaryFromWire, type FundsListWire } from '@/lib/fund/list-wire';
 
 type Addr = `0x${string}`;
 const ok = <T,>(r: { status: string; result?: unknown } | undefined, f: T): T => (r?.status === 'success' ? (r.result as T) : f);
@@ -25,29 +26,26 @@ export function useV2IsFund(address: string) {
   });
 }
 
-export function useV2Funds() {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
+export function useV2Funds(initialWire?: FundsListWire) {
   return useQuery({
     queryKey: ['p6', 'funds'],
-    enabled: !!client,
     refetchInterval: 30_000,
-    // A slow first-paint chain read must not flash the error state: the
-    // single RPC times out at 10s under concurrent load, so retry with
-    // backoff inside the loading state, and keep the last good list when
-    // a background refetch fails (same pattern as useLaunches).
+    // The list used to read the chain directly from the browser and the
+    // official RPC rejected it in the first-load storm, so the /funds lists
+    // sat on "Loading tokenized funds…" for 20+s (round 4). The read now
+    // runs once on the server behind /api/funds/list (cached 30s); retry
+    // with backoff inside the loading state, and keep the last good list
+    // when a background refetch fails (same pattern as useLaunches). Pass
+    // the server-read list and the section renders with real figures on
+    // first paint instead of the skeleton.
     retry: 5,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     placeholderData: (prev) => prev,
+    initialData: initialWire ? initialWire.v2.map(phase3SummaryFromWire) : undefined,
+    staleTime: initialWire ? 30_000 : undefined,
     queryFn: async (): Promise<Phase3Summary[]> => {
-      if (!client) return [];
-      const count = Number(await client.readContract({ address: FUND_FACTORY_V2, abi: FundFactoryPhase3ABI, functionName: 'allFundsLength' }));
-      if (!count) return [];
-      const addrs = await client.multicall({
-        allowFailure: true,
-        contracts: Array.from({ length: Math.min(count, 200) }, (_, i) => ({ address: FUND_FACTORY_V2, abi: FundFactoryPhase3ABI, functionName: 'allFunds' as const, args: [BigInt(i)] as const })),
-      });
-      const rows = await Promise.all(addrs.map((r, i) => (r.status === 'success' ? readSummary(client, r.result as Addr, i) : Promise.resolve(null))));
-      return rows.filter((r): r is Phase3Summary => r !== null).reverse();
+      const wire = await fetchFundsListWire();
+      return wire.v2.map(phase3SummaryFromWire);
     },
   });
 }

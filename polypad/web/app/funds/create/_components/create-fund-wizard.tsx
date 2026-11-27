@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Upload, X } from 'lucide-react';
@@ -31,12 +31,13 @@ import {
   type FundField,
 } from '@/lib/fund/model';
 import { cn } from '@/lib/utils';
+import { useAllowlistTokens } from '@/lib/fund/use-allowlist';
 import { FundNotice } from '../../_components/fund-notice';
 
 // Only the Phase 2 invest factory is used. The Phase 1 "raise only" factory is never called.
 const INVEST_STEPS = [
   { label: 'Basics', next: 'Next: set the share price and the raise goal.' },
-  { label: 'Raise', next: 'Next: write the fund\'s rules and limits.' },
+  { label: 'Raise', next: 'Next: write the tokenized fund\'s rules and limits.' },
   { label: 'Rules', next: 'Next: choose fees and how many shares you buy before others can join.' },
   { label: 'Fees', next: 'Next: check everything before you sign.' },
   { label: 'Review', next: '' },
@@ -68,6 +69,18 @@ export function CreateFundWizard() {
 
   const result = previewDraft(draft);
   const investFactory = getFundInvestFactoryAddress();
+  const allowlist = useAllowlistTokens();
+  const selectedAssets = useMemo(
+    () => draft.assetsText.split(/[\s,]+/).map((s) => s.trim().toLowerCase()).filter(Boolean),
+    [draft.assetsText],
+  );
+  const toggleAsset = (address: string) => {
+    const lower = address.toLowerCase();
+    const next = selectedAssets.includes(lower)
+      ? selectedAssets.filter((a) => a !== lower)
+      : [...selectedAssets, lower];
+    update('assetsText', next.join('\n'));
+  };
   const steps = INVEST_STEPS;
   const stepFields = INVEST_STEP_FIELDS;
   const stepIssues = result.issues.filter((issue) => stepFields[step]?.includes(issue.field));
@@ -134,7 +147,7 @@ export function CreateFundWizard() {
     const checked = previewDraft(draft);
     if (!checked.params || !publicClient) {
       setReveal(true);
-      toast.error(checked.issues[0]?.message ?? 'Check the fund settings.');
+      toast.error(checked.issues[0]?.message ?? 'Check the tokenized fund settings.');
       return;
     }
     setDeploying(true);
@@ -172,7 +185,7 @@ export function CreateFundWizard() {
             maxDeviationBps: params.maxDeviationBps,
           }],
         });
-      toast.loading('Creating the fund on Robinhood Chain…', { id: tid });
+      toast.loading('Creating the tokenized fund on Robinhood Chain…', { id: tid });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== 'success') throw new Error('Transaction reverted');
       let fund: string | undefined;
@@ -191,7 +204,7 @@ export function CreateFundWizard() {
       }
       await queryClient.invalidateQueries({ queryKey: ['funds'] });
       setCreated({ fund, vault, hash });
-      toast.success('Fund created', {
+      toast.success('Tokenized fund created', {
         id: tid,
         action: { label: 'View tx', onClick: () => window.open(getExplorerTxUrl(hash), '_blank') },
       });
@@ -207,33 +220,33 @@ export function CreateFundWizard() {
     return (
       <div className="mx-auto max-w-[700px] px-5 py-8 sm:py-12">
         <div className="glass-card space-y-4 rounded-xl p-4 sm:p-6">
-          <h1 className="text-[18px] font-semibold">Fund created</h1>
+          <h1 className="text-[18px] font-semibold">Tokenized fund created</h1>
           <p className="text-[13px] leading-relaxed text-white/60">
-            Your fund exists on Robinhood Chain. What happens next:
+            Your tokenized fund exists on Robinhood Chain. What happens next:
           </p>
           <ol className="list-decimal space-y-1 pl-5 text-[13px] leading-relaxed text-white/70">
             <li>Buy your manager shares. Nobody else can join until you do.</li>
-            <li>Share the fund page. Investors pay ETH and receive shares.</li>
+            <li>Share the tokenized fund page. Investors pay ETH and receive shares.</li>
             <li>When the raise ends, you can start investing in the approved tokens. If the goal is not reached in time, investors can get a refund.</li>
           </ol>
           {created.fund && created.vault ? (
             <dl className="space-y-2 text-[13px]">
-              <AddressRow label="Fund (shares contract)" address={created.fund} />
+              <AddressRow label="Tokenized fund (shares contract)" address={created.fund} />
               <AddressRow label="Vault (holds the money)" address={created.vault} />
             </dl>
           ) : (
             <p className="text-[13px] text-white/60">
-              The transaction succeeded. Open it on the explorer if the fund address is not shown here, or find it in the fund list.
+              The transaction succeeded. Open it on the explorer if the fund address is not shown here, or find it in the tokenized fund list.
             </p>
           )}
           <div className="flex flex-col gap-2 sm:flex-row">
             {created.fund && (
               <Button onClick={() => router.push(`/funds/${created.fund}?mint=skin`)}>
-                Step 1: Buy your manager shares (opens the fund page)
+                Step 1: Buy your manager shares (opens the tokenized fund page)
               </Button>
             )}
             <Button variant="secondary" onClick={() => router.push(created.fund ? `/funds/${created.fund}` : '/funds')}>
-              {created.fund ? 'View fund' : 'Back to funds'}
+              {created.fund ? 'View tokenized fund' : 'Back to tokenized funds'}
             </Button>
           </div>
           <a className="inline-block text-[12px] text-polydash-green" href={getExplorerTxUrl(created.hash)} target="_blank" rel="noopener noreferrer">
@@ -254,14 +267,14 @@ export function CreateFundWizard() {
   return (
     <div className="mx-auto max-w-[700px] space-y-5 px-5 py-8 sm:space-y-6 sm:py-12">
       <div className="space-y-2">
-        <Link href="/funds" className="text-[12px] text-white/50 hover:text-white">Funds</Link>
-        <h1 className="text-[22px] font-semibold tracking-tight sm:text-[28px]">Create a fund</h1>
+        <Link href="/funds" className="text-[12px] text-white/50 hover:text-white">Tokenized Funds</Link>
+        <h1 className="text-[22px] font-semibold tracking-tight sm:text-[28px]">Create a tokenized fund</h1>
         <p className="text-[13px] leading-relaxed text-white/60">
-          Five short steps: name your fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the fund with ETH, and the money is held by the fund&apos;s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the fund.
+          Five short steps: name your tokenized fund, set the price and goal, write its rules, choose fees, then review. Investors buy shares of the tokenized fund with ETH, and the money is held by the tokenized fund&apos;s own contract (the vault). You sign one transaction at the end. No ETH is sent when you create the tokenized fund.
         </p>
         {!investFactory && (
           <p className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-[12px] text-yellow-200">
-            Fund creation is not live yet. You can look through the steps, but you cannot create a fund.
+            Tokenized fund creation is not live yet. You can look through the steps, but you cannot create a tokenized fund.
           </p>
         )}
       </div>
@@ -284,10 +297,10 @@ export function CreateFundWizard() {
       <div className="glass-card space-y-4 rounded-xl p-4 sm:p-6">
         {step === 0 && (
           <>
-            <h2 className="text-[15px] font-semibold">Step 1: Name your fund</h2>
+            <h2 className="text-[15px] font-semibold">Step 1: Name your tokenized fund</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Name" error={shown('name')}>
-                <Input value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="Example Fund" className="bg-secondary/50" />
+                <Input value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="Example: My Growth Tokenized Fund" className="bg-secondary/50" />
               </Field>
               <Field label="Ticker" error={shown('symbol')}>
                 <Input value={draft.symbol} onChange={(event) => update('symbol', event.target.value)} placeholder="EX" className="bg-secondary/50" />
@@ -334,7 +347,7 @@ export function CreateFundWizard() {
           <>
             <h2 className="text-[15px] font-semibold">Step 2: Price and goal</h2>
             <p className="text-[12px] leading-relaxed text-white/55">
-              The number of shares is the goal divided by the share price, rounded down. The goal is the most the fund can raise (the cap).
+              The number of shares is the goal divided by the share price, rounded down. The goal is the most the tokenized fund can raise (the cap).
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Price per share (ETH)" error={shown('mintPriceEth') ?? issueFor(result.issues, 'mintPriceEth')}>
@@ -350,11 +363,11 @@ export function CreateFundWizard() {
 
         {step === 2 && (
           <>
-            <h2 className="text-[15px] font-semibold">Step 3: The fund&apos;s rules</h2>
+            <h2 className="text-[15px] font-semibold">Step 3: The tokenized fund&apos;s rules</h2>
             <p className="text-[12px] leading-relaxed text-white/55">
-              Write in plain words what this fund is for and how the money will be used. Investors read this before they join. The rules, the token list and the limits below cannot be changed after the fund is created.
+              Write in plain words what this tokenized fund is for and how the money will be used. Investors read this before they join. The rules, the token list and the limits below cannot be changed after the tokenized fund is created.
             </p>
-            <Field label="Fund rules (the mandate)" error={shown('mandateText')}>
+            <Field label="Tokenized fund rules (the mandate)" error={shown('mandateText')}>
               <textarea
                 value={draft.mandateText}
                 onChange={(event) => update('mandateText', event.target.value)}
@@ -371,8 +384,13 @@ export function CreateFundWizard() {
               <p className="mt-2 break-all font-mono text-[11px] text-polydash-green">{mandateHash ?? 'Write the rules to see the fingerprint.'}</p>
             </div>
             <Field label="Where investors can read the rules (mandate link: ipfs:// or https://)" error={shown('mandateUri')}>
-              <Input value={draft.mandateUri} onChange={(event) => update('mandateUri', event.target.value)} placeholder="ipfs://…" className="bg-secondary/50 font-mono text-[12px]" />
-              <p className="mt-1 text-[11px] text-muted-foreground">Put the same text you wrote above at this link. The vault saves the link next to the fingerprint.</p>
+              <Input value={draft.mandateUri} onChange={(event) => update('mandateUri', event.target.value)} placeholder="https://…" className="bg-secondary/50 font-mono text-[12px]" />
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                A mandate link is a public page with the tokenized fund&apos;s rules — the same text you wrote above. A plain https:// link works, for example a public doc. ipfs:// is an address on IPFS, a public file network — use it only if you already have one.
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                Put the same text you wrote above at this link. The vault saves the link next to the fingerprint, and the rules are locked once the tokenized fund is created — they cannot be changed later.
+              </p>
             </Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={`How long the raise stays open (days, ${MIN_RAISE_DURATION_DAYS}–${MAX_RAISE_DURATION_DAYS})`} error={shown('raiseDurationDays')}>
@@ -380,7 +398,7 @@ export function CreateFundWizard() {
                 <span className="mt-1 block text-[11px] text-muted-foreground">If the goal is not reached by then, investors can get a refund. Default {DEFAULT_RAISE_DURATION_DAYS} days.</span>
               </Field>
               <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Trading limits, as basis points of fund value (100 = 1%)</label>
+                <label className="mb-1 block text-xs text-muted-foreground">Trading limits, as a percent of the tokenized fund&apos;s value (for example, 75% means at most 75% of the fund&apos;s value)</label>
                 <div className="grid grid-cols-3 gap-2">
                   <label className="block text-[11px] text-muted-foreground">
                     Max in one token
@@ -403,16 +421,58 @@ export function CreateFundWizard() {
                 </p>
               </div>
             </div>
-            <Field label="Tokens this fund may buy, one address per line (optional; empty means WETH only)" error={shown('assetsText')}>
-              <textarea
-                value={draft.assetsText}
-                onChange={(event) => update('assetsText', event.target.value)}
-                placeholder={'0x…\n0x…'}
-                rows={3}
-                className="w-full rounded-lg border border-white/10 bg-secondary/50 p-3 font-mono text-[12px] text-white placeholder:text-white/30"
-              />
-              <p className="mt-1 text-[11px] text-muted-foreground">Each token must already be on the approved list of tokens funds may buy (the allowlist) with a working price source. WETH is always allowed and is not listed here.</p>
-            </Field>
+            <div>
+              <span className="mb-1 block text-xs text-muted-foreground">Tokens this tokenized fund may buy — pick from the approved list (optional; empty means WETH only)</span>
+              <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
+                Only tokens on the approved list can be bought. Pick them by name — no addresses to paste. WETH is always allowed and is not listed here.
+              </p>
+              {allowlist.isLoading ? (
+                <p className="flex items-center gap-2 rounded-lg border border-white/10 bg-secondary/30 p-3 text-[12px] text-white/60"><Loader2 className="h-4 w-4 animate-spin" /> Reading the approved list from Robinhood Chain…</p>
+              ) : allowlist.isError || !allowlist.data ? (
+                <div>
+                  <p className="mb-2 text-[12px] text-white/60">The approved list could not be read right now. You can still paste a token&apos;s address (the 0x… code) — find addresses on the <Link href="/terminal" className="text-white underline underline-offset-2">Terminal page</Link>.</p>
+                  <textarea
+                    value={draft.assetsText}
+                    onChange={(event) => update('assetsText', event.target.value)}
+                    placeholder={'0x…\n0x…'}
+                    rows={3}
+                    className="w-full rounded-lg border border-white/10 bg-secondary/50 p-3 font-mono text-[12px] text-white placeholder:text-white/30"
+                  />
+                </div>
+              ) : allowlist.data.length === 0 ? (
+                <p className="rounded-lg border border-white/10 bg-secondary/30 p-3 text-[12px] text-white/60">No tokens are on the approved list yet, so this tokenized fund can only buy WETH for now.</p>
+              ) : (
+                <ul className="max-h-56 space-y-1 overflow-auto rounded-lg border border-white/10 bg-secondary/30 p-2">
+                  {allowlist.data.map((t) => {
+                    const checked = selectedAssets.includes(t.address.toLowerCase());
+                    const waiting = t.status === 'waiting';
+                    return (
+                      <li key={t.address}>
+                        <label className={cn('flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-[13px]', waiting ? 'opacity-60' : 'hover:bg-white/5')}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={waiting}
+                            onChange={() => toggleAsset(t.address)}
+                            className="h-4 w-4 shrink-0 accent-[#00E676]"
+                          />
+                          <span className="min-w-0 flex-1 truncate text-white">
+                            <span className="font-medium">{t.symbol}</span>
+                            {t.name && t.name !== t.symbol && <span className="ml-1.5 text-white/50">{t.name}</span>}
+                          </span>
+                          <span className="shrink-0 font-mono text-[11px] text-white/45">{t.address.slice(0, 6)}…{t.address.slice(-4)}</span>
+                          {waiting && <span className="shrink-0 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] text-amber-100">Waiting — not buyable yet</span>}
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {shown('assetsText') && <span className="mt-1 block text-[12px] text-red-300">{shown('assetsText')}</span>}
+              {selectedAssets.length > 0 && (
+                <p className="mt-1 text-[11px] text-muted-foreground">{selectedAssets.length} token{selectedAssets.length === 1 ? '' : 's'} picked. Each token must already be on the approved list with a working price source.</p>
+              )}
+            </div>
             <p className="text-[12px] leading-relaxed text-white/55">
               If the raise does not reach its goal before the deadline, anyone can mark it failed and holders can get their ETH back. Fees are not refunded.
             </p>
@@ -467,7 +527,7 @@ export function CreateFundWizard() {
           <>
             <h2 className="text-[15px] font-semibold">Step 5: Review and create</h2>
             <dl className="space-y-1 text-sm">
-              <ReviewRow label="Type of fund" value="Invest fund" />
+              <ReviewRow label="Type of tokenized fund" value="Invest tokenized fund" />
               <ReviewRow label="Name" value={result.params.name} />
               <ReviewRow label="Ticker" value={result.params.symbol} />
               <ReviewRow label="Price per share" value={`${formatFundEth(result.params.mintPrice)} ETH`} />
@@ -492,7 +552,7 @@ export function CreateFundWizard() {
               <img src={result.params.imageUri} alt="" className="h-12 w-12 rounded-full object-cover" />
             )}
             <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-[12px] leading-relaxed text-yellow-200">
-              What happens next: you sign one transaction to create the fund. No ETH is sent. Buying your manager shares is a second step on the fund page. After the raise closes, the manager can trade only within the rules, the approved tokens and the limits above, which cannot be changed later. The 0.2% protocol fee and any entry fee are not part of a refund. Unaudited. Not financial advice.
+              What happens next: you sign one transaction to create the tokenized fund. No ETH is sent. Buying your manager shares is a second step on the tokenized fund page. After the raise closes, the manager can trade only within the rules, the approved tokens and the limits above, which cannot be changed later. The 0.2% protocol fee and any entry fee are not part of a refund. Unaudited. Not financial advice.
             </div>
           </>
         )}
@@ -518,7 +578,7 @@ export function CreateFundWizard() {
           ) : (
             <Button onClick={handleCreate} disabled={deploying || !result.params} className="gap-2">
               {deploying && <Loader2 className="h-4 w-4 animate-spin" />}
-              {deploying ? 'Creating…' : 'Create fund (sign 1 transaction, no ETH sent)'}
+              {deploying ? 'Creating…' : 'Create tokenized fund (sign 1 transaction, no ETH sent)'}
             </Button>
           )}
         </div>

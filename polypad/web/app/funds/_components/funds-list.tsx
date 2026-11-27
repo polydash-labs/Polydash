@@ -2,16 +2,23 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Search } from 'lucide-react';
+import { ArrowRight, Coins, Gift, Layers, Loader2, Search, TrendingUp } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { TokenAvatar } from '@/components/token-avatar';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useFunds, type FundSummary } from '@/lib/fund/use-funds';
+import { useV3Funds } from '@/lib/fund/use-v3';
+import { useV2Funds } from '@/lib/fund/use-phase6';
+import { usePhase3Funds } from '@/lib/fund/use-phase3';
+import type { FundsListWire } from '@/lib/fund/list-wire';
+import type { TotalTvl } from '@/lib/total-tvl';
+import { useTotalTvl } from '@/lib/hooks/use-total-tvl';
 import {
   FUND_STATUS_LABEL,
   REFUND_STATUS_LABEL,
   filterFunds,
+  fundStatus,
   fundStatusText,
   formatFundEth,
   ratioPercent,
@@ -19,7 +26,21 @@ import {
   type FundFilter,
   type FundSort,
 } from '@/lib/fund/model';
+import type { Phase3Summary } from '@/lib/fund/use-phase3';
 import { cn } from '@/lib/utils';
+import {
+  CTA_OUTLINE,
+  CTA_PRIMARY,
+  EMERALD_CARD,
+  EMERALD_CARD_STRONG,
+  FlowDiagram,
+  HERO_GLOW,
+  KICKER,
+  SECTION,
+  SectionHead,
+  StatTiles,
+  StepTimeline,
+} from '@/lib/ui/template';
 import { FundNotice } from './fund-notice';
 import { Phase3FundsSection } from './phase3-funds-section';
 import { V2FundsSection } from './v2-funds-section';
@@ -28,8 +49,15 @@ import { V2FundsSection } from './v2-funds-section';
 const FUND_PLACEHOLDER_LOGO = '/polydash-mark-white.png';
 import { V3FundsSection } from './v3-funds-section';
 
+/** The Polyfund — the live raise featured under the hero. */
+const POLYFUND_ADDRESS = '0x7c1d31629ac68aebe83f230edbc7eacfc26285ef';
+/** Fallback raise end (Dec 16, 2026) used only until the live deadline loads. */
+const POLYFUND_RAISE_END = new Date('2026-12-16T22:20:00-08:00').getTime();
+
+const usd0 = (v: number) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
 const FILTERS: { key: FundFilter; label: string; explain: string }[] = [
-  { key: 'all', label: 'All funds', explain: 'Every tokenized fund created on Polypad.' },
+  { key: 'all', label: 'All tokenized funds', explain: 'Every tokenized fund created on Polypad.' },
   { key: 'open', label: FUND_STATUS_LABEL.open, explain: 'Tokenized funds you can join now by buying shares with ETH.' },
   { key: 'waiting', label: FUND_STATUS_LABEL.waiting, explain: 'Nobody else can join until the manager buys their own shares.' },
   { key: 'investing', label: FUND_STATUS_LABEL.investing, explain: 'The raise is over and the manager is buying tokens from the approved list.' },
@@ -43,77 +71,248 @@ const SORTS: { key: FundSort; label: string }[] = [
   { key: 'raised', label: 'Most ETH raised' },
 ];
 
-const HOW_IT_WORKS = [
-  { title: 'Launch your fund', text: 'Pick a strategy, set your performance fee. Your fund is an NFT collection: each share is an equal part of it.' },
-  { title: 'Raise from anyone', text: "People mint shares with ETH. The money sits in your fund's vault — never in your pocket." },
+const HOW_IT_WORKS = [  { title: 'Launch your tokenized fund', text: 'Pick a strategy, set your performance fee. Your tokenized fund is an NFT collection: each share is an equal part of it.' },
+  { title: 'Raise from anyone', text: "People buy shares with ETH. The money sits in your tokenized fund's vault — never in your pocket." },
   { title: 'Invest in public', text: 'Propose every move, wait 2 days while anyone can see it and exit, then execute. Your track record is live on the terminal.' },
 ];
 
-const chip = 'inline-flex h-8 shrink-0 items-center rounded-full px-3.5 text-[12px] font-medium transition-colors sm:text-[13px]';
+/** A V2 / V3 / Phase 3 section fund, normalized to the legacy FundSummary shape the searchable directory renders. Fields the sections don't carry are zeroed: a list row never shows them. */
+function toFundSummary(f: Phase3Summary & { raiseDeadline?: number }): FundSummary {
+  return {
+    address: f.address,
+    index: f.index,
+    name: f.name,
+    symbol: f.symbol,
+    imageUri: f.imageUri,
+    manager: f.manager,
+    vault: f.vault,
+    mintPrice: f.mintPrice,
+    maxSupply: f.maxSupply,
+    totalMinted: f.totalMinted,
+    managerMinted: 0n,
+    publicOpen: f.publicOpen,
+    entryFeeBps: 0,
+    skinRequired: 0n,
+    minSkinBps: 0,
+    raiseCap: f.raiseCap,
+    raised: f.raised,
+    vaultStatus: f.status,
+    raiseDeadline: f.raiseDeadline ?? 0,
+    status: fundStatus(f.status, f.publicOpen),
+    balance: 0n,
+    generation: 2,
+  };
+}
 
-export function FundsList() {
+const chip = 'inline-flex min-h-[44px] shrink-0 items-center rounded-full px-3.5 text-[12px] font-medium transition-colors sm:text-[13px]';
+
+export function FundsList({ initialWire, initialTvl }: { initialWire?: FundsListWire; initialTvl?: TotalTvl }) {
   const { address } = useAccount();
-  const { data, isLoading, isError } = useFunds();
+  const { data, isError, refetch } = useFunds(initialWire);
+  const { data: v3Funds, isError: v3Error } = useV3Funds(initialWire);
+  const { data: v2Funds, isError: v2Error } = useV2Funds(initialWire);
+  const { data: p3Funds, isError: p3Error } = usePhase3Funds(initialWire);
+  const { data: tvl } = useTotalTvl(initialTvl);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FundFilter>('all');
   const [sort, setSort] = useState<FundSort>('newest');
   const activeFilter = FILTERS.find((item) => item.key === filter) ?? FILTERS[0];
 
+  // The searchable directory: every fund from every factory, deduplicated
+  // by address. The search box and status tabs used to filter only the
+  // legacy useFunds() list, which is empty on production, so typing
+  // "Polycat" filtered nothing and the tabs changed nothing — while the
+  // Polyfund and Polycat lived in the V3 / V2 / Phase 3 sections above,
+  // invisible to the search (round 7). V2 / V3 / Phase 3 summaries are
+  // normalized to FundSummary (status from fundStatus: raw vault status
+  // 0/1/2/3 + publicOpen); fields the sections don't carry are zeroed —
+  // a list row never shows them.
+  const allFunds = useMemo(() => {
+    const byAddr = new Map<string, FundSummary>();
+    for (const f of data ?? []) byAddr.set(f.address.toLowerCase(), f);
+    for (const list of [v2Funds, v3Funds, p3Funds]) {
+      for (const f of list ?? []) {
+        const key = f.address.toLowerCase();
+        if (!byAddr.has(key)) byAddr.set(key, toFundSummary(f));
+      }
+    }
+    return [...byAddr.values()];
+  }, [data, v2Funds, v3Funds, p3Funds]);
+
   const visible = useMemo(() => {
-    const filtered = filterFunds(data ?? [], filter, query, address);
+    const filtered = filterFunds(allFunds, filter, query, address);
     return sortFunds(filtered, sort);
-  }, [data, filter, query, address, sort]);
+  }, [allFunds, filter, query, address, sort]);
+
+  // Searching or picking a status tab hides the featured card and the
+  // per-factory sections above, so the directory below is the only list:
+  // searching "Polycat" also hides the Polyfund card, instead of leaving
+  // it visible above a filtered list.
+  const isFiltering = query.trim() !== '' || filter !== 'all';
+
+  // Every factory list has answered (with data or an error). Until then the
+  // directory shows its loading state instead of "no funds yet".
+  const listsSettled =
+    (data !== undefined || isError) &&
+    (v2Funds !== undefined || v2Error) &&
+    (v3Funds !== undefined || v3Error) &&
+    (p3Funds !== undefined || p3Error);
+  const anyListError = isError || v2Error || v3Error || p3Error;
+
+  const showMore = true;
+
+  const polyfund = v3Funds?.find((f) => f.address.toLowerCase() === POLYFUND_ADDRESS);
+  const polyfundDeadlineMs = polyfund && polyfund.raiseDeadline > 0 ? polyfund.raiseDeadline * 1000 : POLYFUND_RAISE_END;
+  const polyfundDaysLeft = Math.max(0, Math.ceil((polyfundDeadlineMs - Date.now()) / 86_400_000));
+
+  const sharesSold = useMemo(() => allFunds.reduce((a, f) => a + Number(f.totalMinted), 0), [allFunds]);
+
+  const statItems = [
+    {
+      value: tvl ? usd0(tvl.totalUsd) : '—',
+      label: 'Total TVL',
+      note: tvl ? `Staking ${usd0(tvl.stakingUsd)} · Fund vaults ${usd0(tvl.vaultsUsd)}` : 'Staked funds plus the tokenized fund vaults, priced on-chain.',
+    },
+    {
+      value: listsSettled ? String(allFunds.length) : '—',
+      label: 'Tokenized funds',
+      note: 'Live on Robinhood Chain.',
+    },
+    {
+      value: listsSettled ? String(sharesSold) : '—',
+      label: 'Shares sold',
+      note: 'NFT shares held across all tokenized funds.',
+    },
+    {
+      value: String(polyfundDaysLeft),
+      label: 'Days left in the Polyfund raise',
+      note: 'Polydash Growth Fund · 0.01 ETH per share · 200 shares.',
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-container px-5 py-8 sm:px-8 sm:py-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="max-w-xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-polydash-green">Tokenized Funds</p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-tight text-white sm:text-[36px]">Start your own on-chain fund.</h1>
-          <p className="mt-2 text-[14px] leading-relaxed text-white/60 sm:text-[15px]">
-            Venture capital used to be a closed room. Now anyone can open a fund, raise from anyone, invest in public, and earn performance fees — with live NAV and a live terminal proving every move.
+    <div className="bg-black text-white">
+      {/* 1 · Hero */}
+      <section className="relative overflow-hidden border-b border-white/10">
+        <div className={HERO_GLOW} />
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
+          <p className={KICKER}>Tokenized Funds · Robinhood Chain</p>
+          <h1 className="mt-4 max-w-3xl text-4xl sm:text-6xl font-bold leading-[1.05] tracking-tight">
+            Start your own on-chain <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-green-500 bg-clip-text text-transparent">tokenized fund</span>.
+          </h1>
+          <p className="mt-5 max-w-2xl text-[16px] sm:text-lg leading-relaxed text-white/70">
+            Venture capital used to be a closed room. Now anyone can open a tokenized fund, raise from anyone, invest in public, and earn performance fees — with a live value per share and a live terminal proving every move.
+          </p>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/60">
+            Not ready to run one? Buy a share in a live Tokenized Fund and earn fees from the trading pool + staking rewards as dividends. Buying a share is called minting — you get an NFT share in your wallet.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/funds/create" className={CTA_PRIMARY}>
+              Create your tokenized fund <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a href="#live-funds" className={CTA_OUTLINE}>
+              Back a live fund
+            </a>
+          </div>
+          <StatTiles items={statItems} />
+          <p className="mt-4 max-w-2xl text-[12px] leading-relaxed text-white/40">
+            Staked funds plus the tokenized fund vaults, priced on-chain. DeFiLlama shows a smaller number — it counts only the fund vaults, not staking, and it can&rsquo;t price POLYDASH yet.
           </p>
         </div>
-        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-          <Link
-            href="/funds/create"
-            className="inline-flex h-9 items-center justify-center rounded-full bg-polydash-green px-4 text-[13px] font-medium text-black transition-colors hover:bg-polydash-green-light"
-          >
-            Create your tokenized fund
-          </Link>
-          <Link href="/terminal" className="text-[13px] text-white/60 transition-colors hover:text-white">
-            Or back a live fund — see the Terminal →
-          </Link>
-        </div>
-      </div>
-
-      <FundNotice className="mt-4 max-w-xl" />
-
-      <section className="mt-10">
-        <h2 className="text-[20px] font-semibold text-white sm:text-[24px]">You run it like a VC. The chain keeps you honest.</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          {HOW_IT_WORKS.map((step, index) => (
-            <div key={step.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-[12px] font-semibold text-polydash-green">Step {index + 1}</p>
-              <h3 className="mt-2 text-[16px] font-semibold text-white">{step.title}</h3>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-white/60">{step.text}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-4 text-[13px] text-white/50">Locked mandate · 2-day public wait · Holders can exit any time · Manager puts in skin first · Live NAV on the Terminal</p>
       </section>
 
-      <V3FundsSection />
+      {/* 2 · Featured — the live Polyfund raise */}
+      {!isFiltering && (polyfund || v3Funds === undefined) && (
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-14 sm:pt-20">
+          <div className={EMERALD_CARD_STRONG}>
+            <p className={KICKER}>Featured — the live raise</p>
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-[18px] font-semibold text-white">Polydash Growth Fund (the Polyfund)</h2>
+                <p className="mt-1 text-[13px] text-white/60">
+                  {polyfund ? `${polyfund.totalMinted.toString()} / ${polyfund.maxSupply.toString()} shares sold` : '1 / 200 shares sold'}
+                  <span className="mx-2 text-white/25">·</span>
+                  {polyfund ? `${formatFundEth(polyfund.mintPrice)} ETH per share` : '0.01 ETH per share'}
+                  <span className="mx-2 text-white/25">·</span>
+                  {polyfundDaysLeft} {polyfundDaysLeft === 1 ? 'day' : 'days'} left
+                </p>
+              </div>
+              <Link href={`/funds/${POLYFUND_ADDRESS}`} className={`${CTA_PRIMARY} shrink-0`}>
+                Buy a share
+              </Link>
+            </div>
+          </div>
+          <FundNotice className="mt-4 max-w-xl" />
+        </section>
+      )}
+      {isFiltering && (
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-14 sm:pt-20">
+          <FundNotice className="max-w-xl" />
+        </div>
+      )}
 
-      <V2FundsSection />
+      {/* 3 · How it works */}
+      <section className={SECTION}>
+        <SectionHead
+          kicker="How it works"
+          title="You run it like a VC. The chain keeps you honest."
+        />
+        <StepTimeline steps={HOW_IT_WORKS.map((s) => ({ title: s.title, body: s.text }))} />
+        <p className="mt-6 text-[13px] text-white/50">Locked rules · 2-day public wait · Holders can exit any time · Manager puts in their own money first · Live value per share on the Terminal</p>
+      </section>
 
-      <Phase3FundsSection />
+      {/* 4 · The LP-dividend flywheel */}
+      <section className="border-y border-white/10 bg-gradient-to-b from-emerald-500/[0.07] to-transparent">
+        <div className={SECTION}>
+          <SectionHead
+            kicker="The LP-dividend flywheel"
+            title="Mint a share. The vault does the work."
+            sub="The Polyfund is an LP-Dividend Tokenized Fund (Strategy #6): your ETH goes into the vault, the vault puts it to work, and the fees and rewards it earns flow back to share holders as dividends."
+          />
+          <FlowDiagram
+            layers={[
+              {
+                title: 'Mint an NFT share',
+                body: 'Buy a share with ETH. You get an NFT share in your wallet — each share is an equal part of the Tokenized Fund.',
+                icon: <Coins className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+              {
+                title: 'The vault splits the ETH',
+                body: 'Half buys POLYDASH. Half pairs into LP. The LP position is staked.',
+                pills: ['Buys POLYDASH', 'Pairs into LP', 'Stakes'],
+                icon: <Layers className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+              {
+                title: 'LP fees + staking rewards flow in',
+                body: 'Trading fees from the pool and rewards from staking land in the vault.',
+                icon: <TrendingUp className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+              {
+                title: 'Dividends flow back to holders',
+                body: 'Fees and rewards are paid out to share holders as dividends. Fees can be small. No guaranteed returns.',
+                emerald: true,
+                icon: <Gift className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+            ]}
+          />
+        </div>
+      </section>
 
-      <p className="mt-10 text-[14px] text-white/60">Not ready to run one? Mint a share in a live Tokenized Fund and earn LP fees + staking rewards as dividends.</p>
+      {/* 5 · Per-factory sections */}
+      {!isFiltering && (
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <V3FundsSection />
+          <V2FundsSection />
+          <Phase3FundsSection />
+        </div>
+      )}
 
-      <h2 className="mt-3 text-[18px] font-semibold text-white">Phase 2 tokenized funds</h2>
+      {/* 6 · Directory */}
+      {showMore && (
+        <section className={SECTION}>
+          <SectionHead kicker="Directory" title="All tokenized funds" />
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-8 flex flex-col gap-3">
         <div className="relative sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
           <Input
@@ -158,7 +357,7 @@ export function FundsList() {
         {/* Loaded funds win over a failed background refetch (placeholderData
             keeps the last good list): the error only appears when there is
             nothing to show. Error text unchanged. */}
-        {(data?.length ?? 0) > 0 ? (
+        {allFunds.length > 0 ? (
           filter === 'mine' && !address ? (
             <div className="py-20 text-center text-white/50">
               <p className="text-lg text-white">Connect a wallet to see your tokenized funds</p>
@@ -178,18 +377,19 @@ export function FundsList() {
               ))}
             </ul>
           )
-        ) : isLoading ? (
+        ) : !listsSettled ? (
           <div className="flex items-center justify-center gap-2 py-20 text-[13px] text-white/50">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading tokenized funds…
           </div>
-        ) : isError ? (
+        ) : anyListError ? (
           <div className="py-20 text-center text-white/50">
             <p className="text-lg">Could not load tokenized funds right now</p>
             <p className="mt-1 text-sm">Check your connection and refresh the page.</p>
+            <button type="button" onClick={() => refetch()} className="mt-4 inline-flex h-11 items-center rounded-full border border-white/15 px-4 text-[13px] font-medium text-white/85 hover:bg-white/[0.06]">Try again</button>
           </div>
         ) : (
           <div className="py-20 text-center text-white/50">
-            <p className="text-lg text-white">No Phase 2 tokenized funds yet</p>
+            <p className="text-lg text-white">No tokenized funds here yet</p>
             <p className="mt-1 text-sm">Create a tokenized fund. You set the share price, goal and deadline, then sign 1 transaction in your wallet (no ETH sent).</p>
             <Link href="/funds/create" className="mt-4 inline-flex h-9 items-center rounded-full bg-polydash-green px-4 text-[13px] font-medium text-black hover:bg-polydash-green-light">
               Create your tokenized fund
@@ -197,6 +397,8 @@ export function FundsList() {
           </div>
         )}
       </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -204,7 +406,7 @@ export function FundsList() {
 function FundRow({ fund }: { fund: FundSummary }) {
   const progress = ratioPercent(fund.raised, fund.raiseCap);
   return (
-    <Link href={`/funds/${fund.address}`} className="glass-card block p-4 transition-colors sm:p-5">
+    <Link href={`/funds/${fund.address}`} className={`${EMERALD_CARD} block transition-colors hover:border-emerald-500/40`}>
       <div className="flex items-start gap-3">
         <TokenAvatar name={fund.name} symbol={fund.symbol} imageUri={fund.imageUri || FUND_PLACEHOLDER_LOGO} className={fund.imageUri ? undefined : 'bg-black ring-1 ring-white/20 [&>img]:object-contain [&>img]:p-2'} />
         <div className="min-w-0 flex-1">

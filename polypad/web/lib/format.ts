@@ -8,6 +8,15 @@ export function formatEth(wei: bigint | undefined | null, decimals = 4): string 
   return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimals });
 }
 
+/** ETH value with enough precision to show small per-share figures exactly (no 0.0001 floor).
+ *  Use this for value-per-share and fund totals, never for general ETH amounts. */
+export function formatNavEth(wei: bigint | null | undefined): string {
+  if (wei == null) return '—';
+  const v = Number(formatEther(wei));
+  if (v === 0) return '0';
+  return v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 8 });
+}
+
 export function formatTokens(wei: bigint | undefined | null, decimals = 18, display = 2): string {
   if (wei == null) return '0';
   const val = Number(formatUnits(wei, decimals));

@@ -40,7 +40,7 @@ export function NftStakeList({ embedded = false }: { embedded?: boolean }) {
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white sm:text-3xl">NFT staking</h1>
-          <p className="mt-2 max-w-xl text-[13px] text-white/65">Stake ERC-721 NFTs in reward pools. Anyone can create a pool for any collection and fund it with a reward token.</p>
+          <p className="mt-2 max-w-xl text-[13px] text-white/65">Stake your individual NFTs — each one has its own number (an ERC-721 token) — in reward pools to earn rewards. Anyone can create a pool for any collection and fund it with a reward token.</p>
         </div>
         <Button asChild className="rounded-full"><Link href="/nfts/stake/create"><Plus className="mr-1 h-4 w-4" strokeWidth={1.75} />Create pool</Link></Button>
       </div>
@@ -61,7 +61,7 @@ export function NftStakeList({ embedded = false }: { embedded?: boolean }) {
           <div className="mt-6 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter pools">
             {FILTERS.map((f) => (
               <button key={f.k} role="tab" aria-selected={filter === f.k} onClick={() => setFilter(f.k)}
-                className={cn('h-8 rounded-full px-3 text-[12px] transition', filter === f.k ? 'bg-white text-black' : 'bg-white/[0.05] text-white/70 hover:bg-white/10')}>
+                className={cn('h-11 min-h-[44px] rounded-full px-3 text-[12px] transition', filter === f.k ? 'bg-white text-black' : 'bg-white/[0.05] text-white/70 hover:bg-white/10')}>
                 {f.label}
               </button>
             ))}

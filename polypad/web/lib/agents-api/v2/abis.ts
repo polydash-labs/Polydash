@@ -115,6 +115,8 @@ export const poolKeyParam = {
 } as const;
 
 export const nftFactoryAbi = parseAbi([
+  'struct CollectionParams { string name; string symbol; string imageUri; string description; string baseURI; uint256 maxSupply; uint256 mintPrice; uint256 floorBps; uint96 royaltyBps; uint256 maxPerWallet; uint256 commitWindow; address payoutWallet; }',
+  'function createCollection(CollectionParams p) returns (address)',
   'function allCollectionsLength() view returns (uint256)',
   'function allCollections(uint256) view returns (address)',
   'function isCollection(address) view returns (bool)',

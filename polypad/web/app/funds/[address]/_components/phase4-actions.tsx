@@ -92,7 +92,7 @@ export function CopyMandate({ fund, tx }: { fund: Phase3Detail; tx: P4Tx }) {
           {!tx.account ? <ConnectHint /> : (
             <>
               <P4Button tx={tx} id="clone" primary label="Copy this mandate (sign 1 transaction)" disabled={touched && !check.params} onClick={submit} />
-              <Hint>Your wallet sends the call straight to the Phase 3 tokenized fund factory. The strategy stays the same as this tokenized fund.</Hint>
+              <Hint>Your wallet sends the call straight to the tokenized fund factory. The strategy stays the same as this tokenized fund.</Hint>
             </>
           )}
         </div>

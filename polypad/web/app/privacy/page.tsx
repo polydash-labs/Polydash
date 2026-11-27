@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import GlossaryBox from '@/components/glossary-box';
 import { LegalPage } from '@/components/legal-page';
 import { CONTACT_EMAIL, trustMetadata } from '@/lib/trust';
 
@@ -16,6 +17,7 @@ const email = (
 
 const sections = [
   { h: 'Public blockchain data', p: 'Wallet addresses, transactions, token launches, trades and staking positions are recorded on Robinhood Chain, a public blockchain. Anyone can see them. Polypad reads this public data to show token pages, portfolios, leaderboards and health scores. We cannot change or delete on-chain data.' },
+  { h: 'Browser extension (Polycube)', p: 'Polycube is our browser extension wallet for Robinhood Chain. Your wallet accounts, settings and preferences are stored locally in your browser. Your private keys and seed phrase never leave your device and are never sent to Polypad or any third party. To show balances and prices and to simulate transactions, the extension sends your public wallet addresses and transaction details to a Robinhood Chain RPC endpoint and to api.rabby.io. The extension runs on the websites you visit so it can offer to connect your wallet; it does not track your browsing, serve ads, or sell personal information.' },
   { h: 'What we do not collect', p: 'We never ask for or store your private keys or seed phrase. Polypad does not hold your funds. We do not ask for your name, email or ID to use the site.' },
   { h: 'Wallet connection', p: 'When you connect a wallet, your public address is shared with the site so it can show your balances and prepare transactions. You sign every transaction in your own wallet. Wallet connections use WalletConnect and your wallet provider, which have their own privacy policies.' },
   { h: 'Information you choose to submit', p: "If you create a token or collection, the name, ticker, description, links and images you upload are stored and shown publicly. If you link a GitHub repository or extra wallet to a token's Build activity, the link and the signed message that proves it are stored and shown publicly." },
@@ -34,8 +36,15 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updated="Oct 31, 2026"
-      intro="Polypad (polypad.family) is a non-custodial interface for launching, trading and staking tokens on Robinhood Chain, operated by Polydash. This policy explains what information the site handles and why."
+      updated="Nov 21, 2026"
+      intro={
+        <>
+          Polypad (polypad.family) is a non-custodial interface for launching, trading and staking tokens on Robinhood Chain, operated by Polydash. This policy explains what information the site handles and why.
+          <span className="mt-4 block">
+            <GlossaryBox />
+          </span>
+        </>
+      }
       sections={sections}
     />
   );

@@ -107,8 +107,13 @@ function histArgs(args: Record<string, unknown>) {
     .filter(([k]) => !/^\d+$/.test(k))
     .slice(0, 4)
     .map(([k, v]) => {
-      const s = String(v);
-      return `${k}: ${/^0x[0-9a-fA-F]{40}$/.test(s) ? shortenAddress(s) : s.length > 22 ? `${s.slice(0, 10)}…${s.slice(-6)}` : s}`;
+      if (v == null) return `${k}: —`;
+      // A struct arg (e.g. the `rules` object on RulesUpdated) String()s to
+      // "[object Object]" (round 7). Render it as JSON instead, capped so a
+      // long struct doesn't blow out the row.
+      const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      if (/^0x[0-9a-fA-F]{40}$/.test(s)) return `${k}: ${shortenAddress(s)}`;
+      return `${k}: ${s.length > 80 ? `${s.slice(0, 77)}…` : s.length > 22 ? `${s.slice(0, 10)}…${s.slice(-6)}` : s}`;
     })
     .join(' · ');
 }

@@ -156,9 +156,11 @@ export function FeeRouting({ symbol, vault, pendingPayoutWallet: pending, feeRou
         <div className="mt-1 rounded-lg border border-white/[0.06] p-3">
           <p className="text-white/75">
             Change pending to <AddrLink a={pending.address} />
-            {now != null && (
+            {now != null && (ready ? (
+              <>Ready to complete <span className="text-white/45">(waiting period ended {new Date(pending.executeAt * 1000).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })})</span></>
+            ) : (
               <>, can be completed in <span className="font-mono">{countdown(pending.executeAt - now)}</span> ({new Date(pending.executeAt * 1000).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })})</>
-            )}
+            ))}
           </p>
           {!pending.isVault && <p className="mt-1 text-[12px] text-white/45">Pending destination is not this token&apos;s treasury vault.</p>}
           {address && (ready || isCreator || isPayout) && (

@@ -74,33 +74,41 @@ export function SliceStaker() {
             {(claims.data?.items ?? []).map((i: any) => (
               <div key={i.token} className="rounded-xl bg-white/[0.03] p-2">
                 <Row label="Token"><TokenLabel token={i.token} symbol={i.symbol} /></Row>
-                <Row label="Cumulative">{fmtToken(i.cumulative)}</Row>
-                <Row label="Claimed">{fmtToken(i.claimed)}</Row>
-                <Row label="Claimable">{fmtToken(i.claimable)}</Row>
+                <Row label="Total you will ever get">{fmtToken(i.cumulative)}</Row>
+                <Row label="Already sent to you">{fmtToken(i.claimed)}</Row>
+                <Row label="Ready to claim now">{fmtToken(i.claimable)}</Row>
               </div>
             ))}
             <p className="text-[12px] text-white/55">{AUTOCLAIM_NOTE}</p>
           </div>
         )}
-        <div className="mt-3"><ConnectOr><TxButton testId="claim-all" onClick={claimAll} busy={pending === 'claim'} disabled={!live || !items.length || !!claims.data?.mismatch}>Claim all</TxButton></ConnectOr></div>
+        <div className="mt-3">
+          <ConnectOr>
+            {items.length ? (
+              <TxButton testId="claim-all" onClick={claimAll} busy={pending === 'claim'} disabled={!live || !!claims.data?.mismatch}>Claim all</TxButton>
+            ) : (
+              <p className="text-[13px] text-white/65">Nothing to claim — weekly auto-claim may send new rewards to your wallet for you.</p>
+            )}
+          </ConnectOr>
+        </div>
       </Card>
 
-      <Card title="Slices" action={<TxButton variant="outline" testId="release-now" onClick={() => send({ key: 'release', address: SLICE_ESCROW_ADDRESS as Addr, abi: 'escrow', functionName: 'releaseMany', args: [releasable], success: 'Released' })} busy={pending === 'release'} disabled={!live || !releasable.length}>Release now</TxButton>}>
+      <Card title="Slices">
         {!slices.length ? <p className="text-[13px] text-white/55">No slices yet.</p> : slices.map((x) => (
           <div key={x.id} className="border-b border-white/5 py-2">
             <Row label="Token"><TokenLabel token={x.token} symbol={x.symbol} /></Row>
             <Row label="Creator"><AddrLink address={x.creator} /></Row>
-            <Row label="Share of supply">{x.bps != null ? pctOf(x.bps) : '-'}</Row>
-            <Row label="Amount">{fmtToken(x.amount)}</Row>
-            <Row label="Period">{fmtUTC(x.start)} to {fmtUTC(x.start + x.duration)}</Row>
-            <Row label="Released so far">{fmtToken(x.released)}</Row>
-            <Row label="Remaining">{fmtToken(BigInt(x.amount) - BigInt(x.released))}</Row>
+            <Row label="Share of the token's total supply set aside for stakers">{x.bps != null ? pctOf(x.bps) : '-'}</Row>
+            <Row label="Total tokens set aside">{fmtToken(x.amount)}</Row>
+            <Row label="Released evenly between">{fmtUTC(x.start)} to {fmtUTC(x.start + x.duration)}</Row>
+            <Row label="Already released">{fmtToken(x.released)}</Row>
+            <Row label="Still held in escrow">{fmtToken(BigInt(x.amount) - BigInt(x.released))}</Row>
             {x.tx && <Row label="Tx"><TxLink hash={x.tx} /></Row>}
           </div>
         ))}
       </Card>
 
-      <Card title="Weekly lists" action={<TxButton variant="outline" testId="activate" onClick={() => send({ key: 'activate', address: SLICE_DISTRIBUTOR_ADDRESS as Addr, abi: 'distributor', functionName: 'activateRoot', success: 'Activated' })} busy={pending === 'activate'} disabled={!live || !st?.pending || now < st.pending.activatableAt}>Activate</TxButton>}>
+      <Card title="Weekly lists">
         {st?.weekly ? (
           <div className="mb-3 space-y-2" data-testid="weekly-epochs">
             <p className="text-[12px] text-white/60">
@@ -118,18 +126,31 @@ export function SliceStaker() {
             ))}
           </div>
         ) : live && st && <p className="mb-3 text-[13px] text-white/55">No weekly list yet</p>}
-        {st?.pending && <Row label={`Pending week ${st.pending.epoch}`}>{now >= st.pending.activatableAt ? 'Review window ended, ready to activate' : `claimable in ${countdown(st.pending.activatableAt - now)} (${fmtPT(st.pending.activatableAt)})`}</Row>}
+        {st?.pending && <Row label="Next week's list">{now >= st.pending.activatableAt ? 'Review window ended, ready to activate' : `claimable in ${countdown(st.pending.activatableAt - now)} (${fmtPT(st.pending.activatableAt)})`}</Row>}
         {!!(st?.lists ?? []).length && <p className="mt-2 text-[12px] font-medium text-white/70">On-chain history</p>}
         {!(st?.lists ?? []).length ? null : (st.lists as any[]).slice().reverse().map((l, i) => (
           <div key={i} className="border-b border-white/5 py-2">
             <Row label={`Week ${l.epoch}`}>{l.event === 'RootActivated' ? 'Activated' : l.event === 'RootVetoed' ? 'Cancelled' : st?.pending && String(st.pending.root).toLowerCase() === String(l.root).toLowerCase() && now < st.pending.activatableAt ? `Pending, ${countdown(st.pending.activatableAt - now)} left` : 'Proposed'}</Row>
-            <Row label="Root">{String(l.root).slice(0, 18)}</Row>
-            {l.dataHash && <Row label="Data hash">{String(l.dataHash).slice(0, 18)}</Row>}
+            <Row label="List code (proves this exact list)">{String(l.root).slice(0, 18)}</Row>
+            {l.dataHash && <Row label="Data fingerprint">{String(l.dataHash).slice(0, 18)}</Row>}
             <Row label="Data"><a className="underline" href={`${SLICE_EPOCH_DATA_URL}epoch_${l.epoch}.json`} target="_blank" rel="noopener noreferrer">epoch_{l.epoch}.json</a></Row>
             <Row label="Tx"><TxLink hash={l.tx} /></Row>
           </div>
         ))}
       </Card>
+
+      <details className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 sm:px-5">
+        <summary className="cursor-pointer text-[13px] font-medium text-white">
+          Help run Polypad (optional — costs you a network fee, you get nothing back)
+        </summary>
+        <p className="pt-2 text-[12px] text-white/55">These buttons move the weekly slice forward for everyone. The caller pays the network fee and receives nothing back.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <ConnectOr>
+            <TxButton variant="outline" testId="release-now" onClick={() => send({ key: 'release', address: SLICE_ESCROW_ADDRESS as Addr, abi: 'escrow', functionName: 'releaseMany', args: [releasable], success: 'Released' })} busy={pending === 'release'} disabled={!live || !releasable.length}>Release now</TxButton>
+            <TxButton variant="outline" testId="activate" onClick={() => send({ key: 'activate', address: SLICE_DISTRIBUTOR_ADDRESS as Addr, abi: 'distributor', functionName: 'activateRoot', success: 'Activated' })} busy={pending === 'activate'} disabled={!live || !st?.pending || now < st.pending.activatableAt}>Activate</TxButton>
+          </ConnectOr>
+        </div>
+      </details>
 
       <Card title="Contracts"><SliceContracts /></Card>
 

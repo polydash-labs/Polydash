@@ -1,20 +1,8 @@
 // Fiat on-ramp config and links. Front end only, no contracts.
-
-/**
- * MoonPay publishable key. PLACEHOLDER until the live pk_live_ key arrives:
- * set NEXT_PUBLIC_MOONPAY_API_KEY in .env and redeploy. No flow code changes needed.
- */
-export const MOONPAY_PLACEHOLDER_KEY = 'YOUR_MOONPAY_PUBLISHABLE_KEY';
-export const MOONPAY_API_KEY = process.env.NEXT_PUBLIC_MOONPAY_API_KEY || MOONPAY_PLACEHOLDER_KEY;
-export const moonpayKeyIsPlaceholder = () => !MOONPAY_API_KEY.startsWith('pk_');
-
-/** MoonPay currency codes (MoonPay Supported currencies docs). */
-export const MOONPAY_ETH_BASE = 'eth_base'; // ETH on Base, then bridge with Relay
-export const MOONPAY_USDG_ROBINHOOD = 'usdg_robinhood'; // USDG on Robinhood Chain, then swap to ETH
-export type MoonpayCode = typeof MOONPAY_ETH_BASE | typeof MOONPAY_USDG_ROBINHOOD;
-
-/** MoonPay consumer buy flow. Plain link: apiKey/walletAddress params need a partner key and signing. */
-export const MOONPAY_BUY_URL = 'https://buy.moonpay.com/';
+//
+// Relay is the only buy-ETH path. MoonPay was removed (Nov 2026): the
+// widget, the publishable-key config and the after-purchase flow are gone.
+// Do not re-add a MoonPay path without a fresh decision.
 
 export const SITE_URL = 'https://polypad.family';
 export const ROBINHOOD_CHAIN_ID = 4663;
@@ -40,10 +28,4 @@ export function relayBridgeUrl(wallet?: string | null, amount?: string | number 
   const a = amount == null ? '' : String(amount).trim();
   if (a && Number(a) > 0) p.set('amount', a);
   return `https://relay.link/bridge/robinhood?${p.toString()}`;
-}
-
-/** Where MoonPay sends the user back: the same page on polypad.family. */
-export function moonpayRedirectUrl(): string {
-  if (typeof window === 'undefined') return SITE_URL;
-  return `${SITE_URL}${window.location.pathname}`;
 }

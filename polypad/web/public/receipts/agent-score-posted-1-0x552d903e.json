@@ -1,0 +1,74 @@
+{
+  "receiptFormat": "polypad.agent-receipt/1",
+  "receiptId": "agent-score-posted-1-block-119995982",
+  "chain": {
+    "id": 4663,
+    "name": "Robinhood Chain"
+  },
+  "action": {
+    "type": "agent-score-posted",
+    "description": "Credit score posted for registered agent Quant Trader (agent 1)."
+  },
+  "intent": {
+    "authorizedBy": "0xF18E5EbDe39247405Fe694b49Cf283571872eAfD",
+    "authorization": "Standing authorization: only the registered updater may post scores to AgentScore. This score was posted by that updater, computed from on-chain activity.",
+    "bounds": "The posted score must equal the contract weightedScore of the five posted components (each 0–1000; score 300–850); the inputs hash binds the calculation.",
+    "authorizationHash": "0x29b34768d55b35791ac4803576a2539a9bed01ade3e42029d56200bef9271086",
+    "authorizationHashKind": "inputs-hash",
+    "authorizedAtIso": "2026-11-21T16:06:58.000Z",
+    "source": "AgentScore.updater() + AgentScore.getScore(agentId).inputsHash"
+  },
+  "identity": {
+    "agentId": 1,
+    "name": "Quant Trader",
+    "wallet": "0x825E0D093D584b3dc0E28AFC1Bebf39a95B693Da",
+    "agentAccount": "0x0000000000000000000000000000000000000000",
+    "stakePolydash": "1000000000000000000000",
+    "registeredAt": "1795154005",
+    "registeredAtIso": "2026-11-20T05:53:25.000Z",
+    "active": true,
+    "registry": "0x514e352A12F3DB3d4cA649dD328776390e1725eF"
+  },
+  "authority": {
+    "rule": "Only the registered updater may call AgentScore.updateScore. The updater is set by the contract owner and readable on-chain.",
+    "updater": "0xF18E5EbDe39247405Fe694b49Cf283571872eAfD",
+    "contract": "0x1F7ebaAf16aEAa2F519D2Cc69B6091f908C6C92b",
+    "source": "AgentScore.updater()"
+  },
+  "approval": {
+    "rule": "The posted score must equal the contract weightedScore of the five posted components (each 0-1000; score 300-850), enforced by AgentScore.updateScore.",
+    "components": {
+      "performance": 0,
+      "history": 5,
+      "activity": 0,
+      "stake": 1000,
+      "conduct": 500
+    },
+    "weightedScore": 424,
+    "inputsHash": "0x29b34768d55b35791ac4803576a2539a9bed01ade3e42029d56200bef9271086",
+    "source": "AgentScore.weightedScore(components) + AgentScore.getScore(agentId).inputsHash"
+  },
+  "settlement": {
+    "transactionHash": "0x552d903ee31b61a5cb19ca4d278708edb4c1263b729292516ecdb3bb4a19ad2f",
+    "blockNumber": "119995982",
+    "blockTimestamp": "1795277218",
+    "blockTimestampIso": "2026-11-21T16:06:58.000Z",
+    "from": "0xf18e5ebde39247405fe694b49cf283571872eafd",
+    "to": "0x1f7ebaaf16aeaa2f519d2cc69b6091f908c6c92b",
+    "status": 1,
+    "score": 424,
+    "band": 0,
+    "bandName": "New",
+    "updatedAt": "1795277218",
+    "updatedAtIso": "2026-11-21T16:06:58.000Z",
+    "event": "ScoreUpdated",
+    "explorerUrl": "https://robinhoodchain.blockscout.com/tx/0x552d903ee31b61a5cb19ca4d278708edb4c1263b729292516ecdb3bb4a19ad2f"
+  },
+  "evidence": {
+    "registryUrl": "https://robinhoodchain.blockscout.com/address/0x514e352A12F3DB3d4cA649dD328776390e1725eF",
+    "scoreContractUrl": "https://robinhoodchain.blockscout.com/address/0x1F7ebaAf16aEAa2F519D2Cc69B6091f908C6C92b",
+    "agentWalletUrl": "https://robinhoodchain.blockscout.com/address/0x825E0D093D584b3dc0E28AFC1Bebf39a95B693Da",
+    "updaterUrl": "https://robinhoodchain.blockscout.com/address/0xF18E5EbDe39247405Fe694b49Cf283571872eAfD"
+  },
+  "disclaimer": "This receipt records what happened on-chain. It is not a guarantee, reimbursement, or insurance promise."
+}

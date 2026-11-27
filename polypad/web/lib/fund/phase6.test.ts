@@ -8,7 +8,9 @@ import {
   TEMPLATE2,
   growthLines,
   isGrowthTemplate,
+  isMomentumTemplate,
   matchesGrowthStrategy,
+  momentumLines,
   allowlistLabel,
   capOf,
   checkThesisUri,
@@ -20,14 +22,27 @@ import {
   phase6TxError,
   templateTitle,
   trackRecord,
+  yieldLines,
   type ProposalView,
 } from './phase6';
+import { FUND_FACTORY_V3 } from './phase7';
 
 test('template 2 uses the V2 factory, others the Phase 3 factory', () => {
   assert.equal(factoryForTemplate(2), FUND_FACTORY_V2);
   assert.equal(factoryForTemplate(1), FUND_FACTORY_PHASE3);
   assert.equal(templateTitle(2), 'Polydash Growth Tokenized Fund');
   assert.equal(templateTitle(1), 'Strategy #1');
+});
+
+test('strategies 10 and 11 route to their factories and carry names', () => {
+  assert.equal(factoryForTemplate(10), FUND_FACTORY_V3);
+  assert.equal(factoryForTemplate(11), FUND_FACTORY_V2);
+  assert.equal(templateTitle(10), 'Polydash Yield Tokenized Fund');
+  assert.equal(templateTitle(11), 'Polydash Momentum Tokenized Fund');
+  assert.equal(isMomentumTemplate(11), true);
+  assert.equal(isMomentumTemplate(10), false);
+  assert.ok(yieldLines().join(' ').includes('compounded'));
+  assert.ok(momentumLines().join(' ').includes('2-day wait'));
 });
 
 test('growth fee choice maps fees to templates on the V2 factory', () => {

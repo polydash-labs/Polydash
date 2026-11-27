@@ -41,17 +41,38 @@ export function readAttribution(data: Hex): { codes: string[] } | null {
 
 // ---------------------------------------------------------------- signing link
 
-export type SignAction = 'buy' | 'sell' | 'nft-buy' | 'nft-mint' | 'fund-create' | 'fund-mint' | 'fund-redeem' | 'token-launch';
+export type SignAction = 'buy' | 'sell' | 'nft-buy' | 'nft-mint' | 'nft-create' | 'fund-create' | 'fund-mint' | 'fund-redeem' | 'token-launch';
 
 export type SignParams = Record<string, string | number | bigint | boolean | undefined>;
+
+/**
+ * A return link is only ever an https:// URL the agent supplies (its own callback or confirmation
+ * page, up to 2048 characters). The /sign page shows it as a button the user taps after the
+ * transaction confirms — it never redirects on its own. Anything else is dropped, never echoed.
+ */
+export function validReturnUrl(v: unknown): string | null {
+  if (typeof v !== 'string') return null;
+  const s = v.trim();
+  if (s.length === 0 || s.length > 2048) return null;
+  if (/\s/.test(s)) return null;
+  let u: URL;
+  try {
+    u = new URL(s);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== 'https:' || !u.hostname) return null;
+  return s;
+}
 
 /**
  * The link carries the intent (action and parameters), never calldata. The /sign page rebuilds the
  * transaction from those parameters through this same API with the connected wallet as `from`, shows
  * the summary, and asks the wallet to sign. The checksum `h` lets a person compare what the chat showed
- * with what the page built.
+ * with what the page built. The optional `r` param is the agent's return link: after the transaction
+ * confirms, the page shows a button back to it, with `?tx=<hash>&status=confirmed` added.
  */
-export function signingUrl(action: SignAction, params: SignParams, meta: Pick<Meta, 'ref' | 'client'>, checksum: string): string {
+export function signingUrl(action: SignAction, params: SignParams, meta: Pick<Meta, 'ref' | 'client'>, checksum: string, returnUrl?: string | null): string {
   const url = new URL('/sign', siteOrigin());
   url.searchParams.set('v', '1');
   url.searchParams.set('a', action);
@@ -61,6 +82,8 @@ export function signingUrl(action: SignAction, params: SignParams, meta: Pick<Me
   }
   url.searchParams.set('ref', meta.ref);
   if (meta.client) url.searchParams.set('c', meta.client);
+  const ret = validReturnUrl(returnUrl);
+  if (ret) url.searchParams.set('r', ret);
   url.searchParams.set('h', checksum);
   return url.toString();
 }
@@ -198,6 +221,8 @@ export type PreparedInput = {
   steps: StepInput[];
   summary: PreparedSummary;
   warnings?: string[];
+  /** Optional https:// link back to the agent's flow, carried into the signing link as `r`. */
+  returnUrl?: string | null;
   /** Extra contract addresses (a launch, a fund) the steps may target. */
   allowTargets?: readonly Addr[];
   /** Whether the main (last) step carries the attribution suffix. Default true. */
@@ -262,7 +287,8 @@ export async function finishPrepared(ctx: Ctx, input: PreparedInput): Promise<Re
 
   const main = steps[steps.length - 1];
   const checksum = checksumOf({ to: main.to, data: out[out.length - 1].data, value: main.value });
-  const url = signingUrl(input.action, { ...input.signParams, f: from }, meta, checksum);
+  const returnUrl = validReturnUrl(input.returnUrl);
+  const url = signingUrl(input.action, { ...input.signParams, f: from }, meta, checksum, returnUrl);
   ctx.sink.record({ at: ctx.now(), action: input.action, ref: meta.ref, client: meta.client, from, ok: true, txHash32: checksum });
 
   return {
@@ -277,8 +303,9 @@ export async function finishPrepared(ctx: Ctx, input: PreparedInput): Promise<Re
     signing: {
       url,
       checksum,
+      returnUrl,
       instructions:
-        'Show the summary, then share the link. The page rebuilds this action, shows the same summary, and the user signs in their own wallet. Nothing is sent until they confirm.',
+        'Show the summary, then share the link. The page rebuilds this action, shows the same summary, and the user signs in their own wallet. Nothing is sent until they confirm. After the transaction confirms, the page checks its status (polypad_get_tx_status) and, when a returnUrl was passed, shows a link back to it with ?tx=<hash>&status=confirmed added.',
       expiresInSeconds: LIMITS.deadlineSeconds,
     },
     attribution: input.attribute === false ? null : { ref: meta.ref, codes: [ATTRIBUTION_CODES[0], meta.ref], standard: 'ERC-8021 schema 0 calldata suffix on the main transaction' },

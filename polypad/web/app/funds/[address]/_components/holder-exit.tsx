@@ -288,7 +288,7 @@ export function HolderExit({ fund, account }: { fund: HolderExitFund; account?: 
                 {acting === 'exit' && <Loader2 className="h-4 w-4 animate-spin" />}
                 {selectedIds.length > 0 ? `Take my part out (return ${selectedIds.length} share${selectedIds.length === 1 ? '' : 's'}, sign 1 transaction)` : 'Pick shares to take your part out'}
               </Button>
-              {estimate !== null && <p className="text-[12px] text-white/50">About {formatFundEth(estimate)} ETH at today&apos;s fund value per share (NAV, net asset value).</p>}
+              {estimate !== null && <p className="text-[12px] text-white/50">About {formatFundEth(estimate)} ETH at today&apos;s value per share.</p>}
               {estimate === null && !invest.navKnown && (
                 <p className="text-[12px] text-yellow-200/90">Fund value is unknown right now: a price source could not be read. Figures shown are not a price. Taking your part out still pays your share of the vault; the estimate is left blank.</p>
               )}

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Check, Loader2, Upload, X } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Clock, Loader2, Rocket, Settings, TrendingUp, Upload, X } from 'lucide-react';
 import { useWriteContract, useSwitchChain, usePublicClient } from 'wagmi';
 import { parseEther, decodeEventLog, zeroAddress } from 'viem';
 import { PolydashFactoryABI } from '@/lib/contracts/abis';
@@ -17,6 +17,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { applyAgentMark } from '@/lib/agent-mark';
+import { FlowDiagram, KICKER, SUB } from '@/lib/ui/template';
 
 interface FormData {
   name: string;
@@ -185,7 +186,45 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
   };
 
   return (
-    <div className="mx-auto max-w-[700px] px-5 py-8 sm:py-12 space-y-5 sm:space-y-6">
+    <div className="bg-black text-white">
+      <div className="mx-auto max-w-[700px] px-5 py-8 sm:py-12 space-y-5 sm:space-y-6">
+      <div>
+        <p className={KICKER}>Create a token · Robinhood Chain</p>
+        <h1 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-white">Launch your token</h1>
+        <p className={SUB}>Set name, ticker, logo and creator fee, with an optional commitment window before trading opens.</p>
+      </div>
+
+      {/* How launching works — the flow diagram */}
+      <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/15 via-emerald-500/[0.05] to-transparent p-5">
+        <p className={KICKER}>How launching works</p>
+        <h2 className="mt-3 text-xl font-bold tracking-tight text-white">From details to trading, in four moves.</h2>
+        <FlowDiagram
+          layers={[
+            {
+              title: 'Set the details',
+              body: 'Name, ticker, logo, and creator fee — plus a description and links.',
+              icon: <Settings className="mx-auto h-6 w-6 text-emerald-400" />,
+            },
+            {
+              title: 'Pick a commitment window (optional)',
+              body: 'Launch now, or let people commit ETH for 24 hours, 3 days, or 7 days before trading opens.',
+              icon: <Clock className="mx-auto h-6 w-6 text-emerald-400" />,
+              emerald: true,
+            },
+            {
+              title: 'Launch',
+              body: 'Sign the launch transaction in your wallet. Your dev buy runs first.',
+              icon: <Rocket className="mx-auto h-6 w-6 text-emerald-400" />,
+            },
+            {
+              title: 'Trading opens',
+              body: 'When the window ends, anyone can start the launch from the token page: commitments buy in order, tokens go straight to committers’ wallets.',
+              icon: <TrendingUp className="mx-auto h-6 w-6 text-emerald-400" />,
+            },
+          ]}
+        />
+      </div>
+
       <ContractsBanner />
 
       {/* Step indicators */}
@@ -194,24 +233,24 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
           return (
             <div key={i} className="flex items-center gap-1.5 sm:gap-2">
               <div className={cn(
-                'flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors whitespace-nowrap',
-                i === step ? 'bg-primary/10 text-primary' :
-                i < step ? 'bg-primary/5 text-primary/60' : 'bg-secondary text-muted-foreground'
+                'flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-medium transition-colors whitespace-nowrap border',
+                i === step ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300' :
+                i < step ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300/70' : 'border-white/10 bg-white/[0.04] text-white/50'
               )}>
                 {i < step ? <Check className="h-3 w-3" /> : <span className="font-mono">{i + 1}</span>}
                 <span>{s.label}</span>
               </div>
-              {i < STEPS.length - 1 && <div className="w-3 sm:w-8 h-px bg-border" />}
+              {i < STEPS.length - 1 && <div className="w-3 sm:w-8 h-px bg-white/15" />}
             </div>
           );
         })}
       </div>
 
-      <div className="glass-card rounded-xl p-4 sm:p-6">
+      <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-4 sm:p-6">
         {/* Step 0: Token Info */}
         {step === 0 && (
           <div className="space-y-4">
-            <h2 className="font-semibold text-[15px]">Token information</h2>
+            <h2 className="text-lg font-bold tracking-tight text-white">Token information</h2>
             {agentLaunch && (
               <p className="text-[12px] text-white/60">
                 Opened with <span className="font-mono">?agent=1</span>. The launch stores the agent mark in its links, and the token page shows an Agent-launched badge. You still sign the transaction in your wallet.
@@ -296,7 +335,7 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
         {/* Step 1: Parameters */}
         {step === 1 && (
           <div className="space-y-5">
-            <h2 className="font-semibold text-[15px]">Launch parameters</h2>
+            <h2 className="text-lg font-bold tracking-tight text-white">Launch parameters</h2>
             <div>
               <label className="text-xs text-muted-foreground mb-2 block">Commitment window</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -308,8 +347,8 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
                     className={cn(
                       'h-9 rounded-full border text-[12px] sm:text-[13px] font-medium transition-colors',
                       form.launchDelay === w.value
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-white/10 bg-secondary/40 text-muted-foreground hover:text-foreground'
+                        ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                        : 'border-white/10 bg-white/[0.04] text-white/50 hover:text-white'
                     )}
                   >
                     {w.label}
@@ -351,7 +390,7 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
                 {form.launchDelay > 0 && ' With a commitment window, it is held by the launch contract and executed first when trading opens.'}
               </p>
             </div>
-            <div className="bg-secondary/30 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-xs text-white/60 space-y-1">
               <p><span className="text-foreground font-medium">Total supply:</span> 1,000,000,000 tokens</p>
               <p><span className="text-foreground font-medium">Graduation:</span> Automatic when bonding curve fills. Liquidity moves to Uniswap V4.</p>
             </div>
@@ -369,7 +408,7 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
         {/* Step 2: Review */}
         {step === 2 && (
           <div className="space-y-5">
-            <h2 className="font-semibold text-[15px]">Review & deploy</h2>
+            <h2 className="text-lg font-bold tracking-tight text-white">Review & deploy</h2>
             <div className="space-y-2 text-sm">
               {[
                 ['Name', form?.name],
@@ -417,6 +456,7 @@ export function CreateWizard({ agentLaunch = false }: { agentLaunch?: boolean })
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

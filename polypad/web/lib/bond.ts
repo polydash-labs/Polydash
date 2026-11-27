@@ -87,7 +87,9 @@ export const LaunchCreatorABI = parseAbi(['function creator() view returns (addr
 
 export function fmtDate(sec: number): string {
   if (!sec) return '—';
-  return new Date(sec * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  // UTC, matching lib/vesting fmtDate and the security report's day(): the
+  // same timestamp must not render a day earlier in US timezones (round 7).
+  return new Date(sec * 1000).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric' });
 }
 export const days = (sec: number | bigint) => Math.round(Number(sec) / DAY);
 export function timeLeft(endSec: number, nowSec: number): string {

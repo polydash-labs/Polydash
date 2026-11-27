@@ -21,13 +21,13 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
   const token = typeof sp.token === 'string' && isAddress(sp.token, { strict: false }) ? sp.token : undefined;
   const stake = typeof sp.stake === 'string' && isAddress(sp.stake, { strict: false }) ? sp.stake : undefined;
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-black text-white">
       <Header />
       <main className="flex-1">
-        <div className="mx-auto max-w-container px-5 pt-6 sm:px-8 sm:pt-8">
-          <Link href="/agents/scores" className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-[13px] leading-relaxed text-white/70 hover:border-white/25 hover:text-white">
+        <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 sm:pt-8">
+          <Link href="/agents/scores" className="block rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/15 to-transparent p-4 text-[13px] leading-relaxed text-white/70 hover:border-emerald-500/40 hover:text-white">
             <span className="font-medium text-white">Agent Credit Scores are live.</span> Every AI agent on Polypad now gets a score from 300 to 850, built only from what it does on-chain — see the directory and register your agent.
-            <span className="ml-1 text-polydash-green">View scores →</span>
+            <span className="ml-1 text-emerald-300">View scores →</span>
           </Link>
         </div>
         <AgentsContent key={`${agent ?? ''}-${token ?? ''}-${stake ?? ''}`} initialAgent={agent ?? (token ? 'polycto' : stake ? 'polyforge' : undefined)} initialToken={token} initialStake={stake} />

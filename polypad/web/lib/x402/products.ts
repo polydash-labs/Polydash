@@ -4,12 +4,26 @@
 // the CTO product answers 503 and the facilitator never settles, so the
 // agent is not charged for a report that could not be built.
 
+import { createPublicClient, http, type PublicClient } from 'viem';
+import { robinhoodChain } from '@/lib/chain';
 import { getLaunchSnapshot } from '@/lib/launches-server';
 import { ensureCto, getCachedReport, snapshotFor } from '@/lib/cto/chain';
 import { defaultCtx } from '@/lib/agents-api/v2/core';
 import { findFund } from '@/lib/agents-api/v2/funds';
 import { getEthUsd } from '@/lib/eth-price';
+import {
+  getPlatformTokenFacts,
+  isPlatformToken,
+  platformTokenReport,
+} from '@/lib/platform-token';
 import { X402_PRODUCTS } from './constants';
+
+const x402Client = createPublicClient({
+  chain: robinhoodChain,
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'https://rpc.mainnet.chain.robinhood.com', {
+    timeout: 8_000,
+  }),
+}) as PublicClient;
 
 export type ProductBuild = { data: unknown } | { error: string; status: number };
 
@@ -22,30 +36,45 @@ function timeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
 
 async function buildTokenReport(address: string): Promise<ProductBuild> {
   const token = await timeout(getLaunchSnapshot(address, 3_000), 5_000, 'token lookup');
-  if (!token) return { error: 'Token not found.', status: 404 };
-  return {
-    data: {
-      product: 'token-report',
-      tokenAddress: token.tokenAddress,
-      launchAddress: token.launchAddress,
-      name: token.name,
-      symbol: token.symbol,
-      creator: token.creator,
-      description: token.description,
-      imageUri: token.imageUri,
-      phase: token.phase,
-      graduated: token.graduated,
-      curveProgress: token.curveProgress,
-      priceEth: token.priceEth,
-      marketCapUsd: token.marketCapUsd,
-      volumeUsd: token.volumeUsd,
-      ethRaised: token.ethRaised,
-      totalSupply: token.totalSupply,
-      createdAt: token.createdAt,
-      chain: 'Robinhood Chain',
-      chainId: 4663,
-    },
-  };
+  if (token) {
+    return {
+      data: {
+        product: 'token-report',
+        tokenAddress: token.tokenAddress,
+        launchAddress: token.launchAddress,
+        name: token.name,
+        symbol: token.symbol,
+        creator: token.creator,
+        description: token.description,
+        imageUri: token.imageUri,
+        phase: token.phase,
+        graduated: token.graduated,
+        curveProgress: token.curveProgress,
+        priceEth: token.priceEth,
+        marketCapUsd: token.marketCapUsd,
+        volumeUsd: token.volumeUsd,
+        ethRaised: token.ethRaised,
+        totalSupply: token.totalSupply,
+        createdAt: token.createdAt,
+        chain: 'Robinhood Chain',
+        chainId: 4663,
+      },
+    };
+  }
+  // POLYDASH is not a launch, so the launch lookup never knows it — but
+  // it is the platform token, and agents ask for it by address and symbol
+  // more than any launch. Answer from on-chain ERC-20 facts + Dexscreener
+  // instead of 404ing after the agent paid.
+  if (isPlatformToken(address)) {
+    try {
+      const facts = await timeout(getPlatformTokenFacts(x402Client, address), 4_000, 'platform token lookup');
+      if (!facts) return { error: 'The token could not be read right now. Please try again shortly.', status: 503 };
+      return { data: platformTokenReport(facts) };
+    } catch {
+      return { error: 'The token could not be read right now. Please try again shortly.', status: 503 };
+    }
+  }
+  return { error: 'Token not found.', status: 404 };
 }
 
 async function buildCtoReport(launch: string): Promise<ProductBuild> {
@@ -83,9 +112,9 @@ async function buildFundNav(fund: string): Promise<ProductBuild> {
       manager: found.manager,
       strategyId: found.templateId,
       factory: found.factoryLabel,
-      mintPriceWei: found.mintPrice?.toString() ?? null,
+      mintPriceWei: found.mintPriceWei.toString(),
       maxSupply: found.maxSupply,
-      totalMinted: found.totalMinted,
+      totalMinted: found.minted,
       navPerShareWei: navWei?.toString() ?? null,
       navPerShareEth: navWei != null ? Number(navWei) / 1e18 : null,
       navPerShareUsd: navWei != null && ethUsd > 0 ? (Number(navWei) / 1e18) * ethUsd : null,

@@ -28,6 +28,7 @@ export function P3Label({ label, tip }: { label: string; tip: string }) {
   );
 }
 
+/** The contract's source code is verified on Sourcify — the link opens the verified source, not just the address. */
 export function ContractLink({ label, address }: { label: string; address: string }) {
   return (
     <a
@@ -36,14 +37,31 @@ export function ContractLink({ label, address }: { label: string; address: strin
       rel="noopener noreferrer"
       className="inline-flex items-center gap-1 rounded-full border border-white/15 px-3 py-1 text-[11px] text-white/70 hover:bg-white/5 hover:text-white"
     >
-      View contract: {label} <ExternalLink className="h-3 w-3" />
+      Verified source code (Sourcify): {label} <ExternalLink className="h-3 w-3" />
     </a>
+  );
+}
+
+/** Plain-language chain note for the mint card, with a manual add-chain fallback. */
+export function ChainSwitchNote({ className }: { className?: string }) {
+  return (
+    <div className={cn('space-y-1 text-[13px] leading-relaxed text-white/60', className)}>
+      <p>Polypad runs on Robinhood Chain. Your wallet will ask you to switch to it — that&rsquo;s free and takes one tap.</p>
+      <details>
+        <summary className="cursor-pointer text-[13px] font-medium text-white/80">Add Robinhood Chain manually</summary>
+        <p className="mt-1">
+          If your wallet cannot switch by itself, add the chain by hand in your wallet&rsquo;s network settings — chain ID{' '}
+          <span className="font-mono text-white/85">4663</span>, RPC{' '}
+          <span className="break-all font-mono text-white/85">https://rpc.mainnet.chain.robinhood.com</span> — then come back and connect.
+        </p>
+      </details>
+    </div>
   );
 }
 
 export function P3Note({ className }: { className?: string }) {
   return (
-    <p className={cn('text-[12px] leading-relaxed text-white/45', className)}>
+    <p className={cn('text-[13px] leading-relaxed text-white/60', className)}>
       <span className="text-white/75">{P3_NOTE}</span> You could lose some or all of the ETH you put in. Only put in what you can afford to lose.
     </p>
   );

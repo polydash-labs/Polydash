@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { FundFactoryPhase3ABI, FundNFTPhase3ABI, FundVaultPhase3ABI, StrategyTemplateABI } from '@/lib/contracts/fund-phase3-abi';
 import { getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
+import type { FundDetailWire } from '@/lib/fund/detail-server';
+import { phase3SummaryFromWire, navLogFromWire, type FundKind, type FundsListWire, type NavLogWire } from '@/lib/fund/list-wire';
 import {
   FUND_FACTORY_PHASE3,
   PHASE3_DEPLOY_BLOCK,
@@ -111,29 +113,75 @@ export async function readSummary(client: PublicClient, address: Addr, index: nu
   };
 }
 
-export function usePhase3Funds() {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
+export function usePhase3Funds(initialWire?: FundsListWire) {
   return useQuery({
     queryKey: ['p3-funds'],
-    enabled: !!client,
     refetchInterval: 20_000,
     // A slow first-paint chain read must not flash the error state: the
-    // single RPC times out at 10s under concurrent load, so retry with
-    // backoff inside the loading state, and keep the last good list when
-    // a background refetch fails (same pattern as useV3Funds).
+    // lists used to read the chain directly from the browser (allFundsLength
+    // + allFunds + two multicalls per fund) and the official RPC rejected
+    // them in the first-load storm, so the /funds lists sat on "Loading
+    // tokenized funds…" for 20+s (round 4). The read now runs once on the
+    // server behind /api/funds/list (cached 30s) and the browser makes one
+    // cheap request; retry with backoff inside the loading state, and keep
+    // the last good list when a background refetch fails. Pass the
+    // server-read list and the section renders with real figures on first
+    // paint instead of the skeleton.
     retry: 5,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     placeholderData: (prev) => prev,
+    initialData: initialWire ? initialWire.phase3.map(phase3SummaryFromWire) : undefined,
+    staleTime: initialWire ? 30_000 : undefined,
     queryFn: async (): Promise<Phase3Summary[]> => {
-      if (!client) return [];
-      const count = Number(await client.readContract({ address: FUND_FACTORY_PHASE3, abi: FundFactoryPhase3ABI, functionName: 'allFundsLength' }));
-      if (!count) return [];
-      const addrs = await client.multicall({
-        allowFailure: true,
-        contracts: Array.from({ length: count }, (_, i) => ({ address: FUND_FACTORY_PHASE3, abi: FundFactoryPhase3ABI, functionName: 'allFunds' as const, args: [BigInt(i)] as const })),
-      });
-      const rows = await Promise.all(addrs.map((r, i) => (r.status === 'success' ? readSummary(client, r.result as Addr, i) : Promise.resolve(null))));
-      return rows.filter((r): r is Phase3Summary => r !== null).reverse();
+      const wire = await fetchFundsListWire();
+      return wire.phase3.map(phase3SummaryFromWire);
+    },
+  });
+}
+
+/** One cheap request for all four fund lists (shared by the list hooks). */
+const FUNDS_LIST_TIMEOUT_MS = 15_000;
+export async function fetchFundsListWire(): Promise<FundsListWire> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), FUNDS_LIST_TIMEOUT_MS);
+  try {
+    const r = await fetch('/api/funds/list', { signal: ctrl.signal });
+    if (!r.ok) throw new Error(`Could not read the tokenized funds: ${r.status}`);
+    return (await r.json()) as FundsListWire;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * Which page a fund address belongs to, from /api/fund/kind (one
+ * server-side multicall across the three factories). The detail-page
+ * switch used to run these three checks from the browser; when they all
+ * errored in the first-load storm it fell through to the legacy page,
+ * which can never load a V3 fund — that was the Polyfund first-load
+ * failure (round 4). The kind never changes for an address, so the result
+ * is cached forever; an error keeps retrying inside the loading state and
+ * the switch must never fall through on it.
+ */
+export function useFundKind(address: string) {
+  const valid = /^0x[0-9a-fA-F]{40}$/.test(address);
+  return useQuery({
+    queryKey: ['fund-kind', address.toLowerCase()],
+    enabled: valid,
+    staleTime: Infinity,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    placeholderData: (prev) => prev,
+    queryFn: async (): Promise<FundKind> => {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), FUNDS_LIST_TIMEOUT_MS);
+      try {
+        const r = await fetch(`/api/fund/kind?address=${address}`, { signal: ctrl.signal });
+        if (!r.ok) throw new Error(`Could not read this tokenized fund: ${r.status}`);
+        return ((await r.json()) as { kind: FundKind }).kind;
+      } finally {
+        clearTimeout(t);
+      }
     },
   });
 }
@@ -187,24 +235,80 @@ export type Phase3Detail = Phase3Summary & {
   lastNavCheckpoint: number;
   checkpointInterval: number;
   vaultEth: bigint;
-  navLog: NavPoint[];
-  navLogError: boolean;
   rounds: { id: number; perUnit: bigint; pot: bigint }[];
   myIds: bigint[];
   myClaimable: bigint;
   myUnclaimedIds: bigint[];
 };
 
-const NFT_DETAIL = [
-  'name', 'symbol', 'imageUri', 'manager', 'vault', 'mintPrice', 'maxSupply', 'totalMinted', 'publicOpen',
-  'totalBurned', 'outstanding', 'managerMinted', 'entryFeeBps', 'protocolFeeBps', 'minSkinBps', 'skinRequired', 'skinUnlockTime',
-] as const;
-const VAULT_DETAIL = [
-  'raised', 'raiseCap', 'status', 'templateId', 'raiseDeadline', 'mandateHash', 'mandateUri', 'hwmFeeBps', 'hwmPerNft',
-  'peakNavPerNft', 'maxDrawdownBps', 'maxPositionBps', 'maxTradeBps', 'maxDeviationBps', 'navPerNft', 'nav', 'spendableEth',
-  'distributionReserved', 'distRound', 'claimablePerformanceFee', 'performanceFeeAccrued', 'claimableEntryFee', 'payoutWallet',
-  'lastNavCheckpoint', 'NAV_CHECKPOINT_INTERVAL',
-] as const;
+/** Rehydrate the /api/fund/detail payload: decimal strings back to bigints. */
+function fundDetailFromWire(w: FundDetailWire): Omit<Phase3Detail, 'myIds' | 'myClaimable' | 'myUnclaimedIds'> {
+  const b = (s: string) => BigInt(s);
+  const bn = (s: string | null) => (s === null ? null : BigInt(s));
+  return {
+    address: w.address,
+    index: 0,
+    name: w.name,
+    symbol: w.symbol,
+    imageUri: w.imageUri,
+    manager: w.manager,
+    vault: w.vault,
+    mintPrice: b(w.mintPrice),
+    maxSupply: b(w.maxSupply),
+    totalMinted: b(w.totalMinted),
+    publicOpen: w.publicOpen,
+    totalBurned: b(w.totalBurned),
+    outstanding: b(w.outstanding),
+    managerMinted: b(w.managerMinted),
+    entryFeeBps: w.entryFeeBps,
+    protocolFeeBps: w.protocolFeeBps,
+    minSkinBps: w.minSkinBps,
+    skinRequired: b(w.skinRequired),
+    skinUnlockTime: w.skinUnlockTime,
+    raised: b(w.raised),
+    raiseCap: b(w.raiseCap),
+    status: w.status,
+    templateId: w.templateId,
+    raiseDeadline: w.raiseDeadline,
+    mandateHash: w.mandateHash,
+    mandateUri: w.mandateUri,
+    hwmFeeBps: w.hwmFeeBps,
+    hwmPerNft: b(w.hwmPerNft),
+    peakNavPerNft: b(w.peakNavPerNft),
+    maxDrawdownBps: w.maxDrawdownBps,
+    maxPositionBps: w.maxPositionBps,
+    maxTradeBps: w.maxTradeBps,
+    maxDeviationBps: w.maxDeviationBps,
+    navPerNft: bn(w.navPerNft),
+    nav: bn(w.nav),
+    spendableEth: b(w.spendableEth),
+    distributionReserved: b(w.distributionReserved),
+    distRound: w.distRound,
+    claimablePerformanceFee: b(w.claimablePerformanceFee),
+    performanceFeeAccrued: b(w.performanceFeeAccrued),
+    claimableEntryFee: b(w.claimableEntryFee),
+    payoutWallet: w.payoutWallet,
+    lastNavCheckpoint: w.lastNavCheckpoint,
+    checkpointInterval: w.checkpointInterval,
+    vaultEth: b(w.vaultEth),
+    rounds: w.rounds.map((r) => ({ id: r.id, perUnit: b(r.perUnit), pot: b(r.pot) })),
+  };
+}
+
+/** One cheap request for the core detail; 404 means "not a fund" (no retry). */
+const FUND_DETAIL_TIMEOUT_MS = 15_000;
+async function fetchFundDetailWire(address: string): Promise<FundDetailWire | null> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), FUND_DETAIL_TIMEOUT_MS);
+  try {
+    const r = await fetch(`/api/fund/detail?address=${address}`, { signal: ctrl.signal });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`Could not read this tokenized fund: ${r.status}`);
+    return (await r.json()) as FundDetailWire;
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 export async function chunkedLogs<T>(client: PublicClient, fetch: (from: bigint, to: bigint) => Promise<T[]>): Promise<T[]> {
   const head = await client.getBlockNumber();
@@ -214,25 +318,6 @@ export async function chunkedLogs<T>(client: PublicClient, fetch: (from: bigint,
     out.push(...(await fetch(from, to)));
   }
   return out;
-}
-
-async function readNavLog(client: PublicClient, vault: Addr): Promise<NavPoint[]> {
-  const logs = await chunkedLogs(client, (fromBlock, toBlock) =>
-    client.getContractEvents({ address: vault, abi: FundVaultPhase3ABI, eventName: 'NavTape', fromBlock, toBlock }));
-  return logs
-    .map((l) => {
-      const a = l.args as { timestamp?: bigint; nav?: bigint; navPerNft?: bigint; hwmPerNft?: bigint; drawdownBps?: bigint };
-      return {
-        timestamp: Number(a.timestamp ?? 0n),
-        nav: a.nav ?? 0n,
-        navPerNft: a.navPerNft ?? 0n,
-        hwmPerNft: a.hwmPerNft ?? 0n,
-        drawdownBps: Number(a.drawdownBps ?? 0n),
-        tx: l.transactionHash ?? '',
-      };
-    })
-    .sort((x, y) => x.timestamp - y.timestamp)
-    .slice(-300);
 }
 
 async function readMyIds(client: PublicClient, nft: Addr, account: Addr): Promise<bigint[]> {
@@ -254,28 +339,33 @@ export function usePhase3Fund(address: string, account?: Addr, enabled = true) {
     queryKey: ['p3-fund', address.toLowerCase(), account ?? ''],
     enabled: !!client && valid && enabled,
     refetchInterval: 20_000,
+    // A slow first-paint read must not flash the error state ("Could not load
+    // this tokenized fund right now"): retry with backoff inside the loading
+    // state, and keep the last good fund when a background refetch fails
+    // (same pattern as usePhase3Funds). The read itself is one cheap request
+    // to /api/fund/detail — the browser no longer fires the multicalls.
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    placeholderData: (prev) => prev,
     queryFn: async (): Promise<Phase3Detail | null> => {
       if (!client) return null;
+      // The core read comes from /api/fund/detail: one cheap request, the
+      // server does the NFT + vault multicalls (cached 30s). The browser
+      // used to fire all 43 contract calls into the first-load storm and the
+      // RPC rejected them often enough that the first visit failed outright
+      // after ~35s of retries. The NAV log is no longer awaited here either
+      // (see useNavLog) — it only feeds the Value history card.
+      const wire = await fetchFundDetailWire(address);
+      if (!wire) return null;
       const fund = address as Addr;
-      const n = await client.multicall({ allowFailure: true, contracts: NFT_DETAIL.map((functionName) => ({ address: fund, abi: FundNFTPhase3ABI, functionName })) });
-      const vault = pick<Addr | undefined>(n[4], undefined);
-      const manager = pick<Addr | undefined>(n[3], undefined);
-      if (!vault || !manager || vault === ZERO) return null;
-      const v = await client.multicall({ allowFailure: true, contracts: VAULT_DETAIL.map((functionName) => ({ address: vault, abi: FundVaultPhase3ABI, functionName })) });
-      const distRound = Number(pick(v[18], 0n));
-      const roundIds = Array.from({ length: Math.min(distRound, 200) }, (_, i) => i + 1);
-      const [vaultEth, navLogRes, roundRes, myIds] = await Promise.all([
-        client.getBalance({ address: vault }).catch(() => 0n),
-        readNavLog(client, vault).then((log) => ({ log, error: false })).catch((e) => { console.error('NAV log read failed', e); return { log: [] as NavPoint[], error: true }; }),
-        roundIds.length
-          ? client.multicall({ allowFailure: true, contracts: roundIds.map((r) => ({ address: vault, abi: FundVaultPhase3ABI, functionName: 'rounds' as const, args: [BigInt(r)] as const })) })
-          : Promise.resolve([]),
-        account ? readMyIds(client, fund, account).catch((e) => { console.error('Share lookup failed', e); return [] as bigint[]; }) : Promise.resolve([] as bigint[]),
-      ]);
-      const rounds = roundIds.map((id, i) => {
-        const r = pick<readonly [bigint, bigint] | null>(roundRes[i] as Row, null);
-        return { id, perUnit: r?.[0] ?? 0n, pot: r?.[1] ?? 0n };
-      });
+      const core = fundDetailFromWire(wire);
+      const vault = core.vault;
+      const rounds = core.rounds;
+      // The holder's own shares: connected wallet only, best effort — a slow
+      // or failed scan returns [] and the claim UI stays hidden.
+      const myIds = account
+        ? await readMyIds(client, fund, account).catch((e) => { console.error('Share lookup failed', e); return [] as bigint[]; })
+        : [];
       let myClaimable = 0n;
       let myUnclaimedIds: bigint[] = [];
       const ids = myIds.slice(0, 100);
@@ -289,61 +379,42 @@ export function usePhase3Fund(address: string, account?: Addr, enabled = true) {
         myClaimable = claimableTotal(active.map((r) => r.perUnit), claimed);
         myUnclaimedIds = ids.filter((_, ii) => claimed.some((row) => !row[ii]));
       }
-      const optBig = (row: Row | undefined) => (row?.status === 'success' ? (row.result as bigint) : null);
-      const payout = pick<Addr | null>(v[22], null);
-      return {
-        address: fund,
-        index: 0,
-        name: pick(n[0], '') || 'Tokenized Fund',
-        symbol: pick(n[1], ''),
-        imageUri: pick(n[2], ''),
-        manager,
-        vault,
-        mintPrice: pick(n[5], 0n),
-        maxSupply: pick(n[6], 0n),
-        totalMinted: pick(n[7], 0n),
-        publicOpen: pick(n[8], false),
-        totalBurned: pick(n[9], 0n),
-        outstanding: pick(n[10], 0n),
-        managerMinted: pick(n[11], 0n),
-        entryFeeBps: Number(pick(n[12], 0n)),
-        protocolFeeBps: Number(pick(n[13], 0n)),
-        minSkinBps: Number(pick(n[14], 0n)),
-        skinRequired: pick(n[15], 0n),
-        skinUnlockTime: Number(pick(n[16], 0n)),
-        raised: pick(v[0], 0n),
-        raiseCap: pick(v[1], 0n),
-        status: Number(pick(v[2], 0)),
-        templateId: Number(pick(v[3], 0n)),
-        raiseDeadline: Number(pick(v[4], 0n)),
-        mandateHash: pick(v[5], '0x' as Addr),
-        mandateUri: pick(v[6], ''),
-        hwmFeeBps: Number(pick(v[7], 0n)),
-        hwmPerNft: pick(v[8], 0n),
-        peakNavPerNft: pick(v[9], 0n),
-        maxDrawdownBps: Number(pick(v[10], 0n)),
-        maxPositionBps: Number(pick(v[11], 0n)),
-        maxTradeBps: Number(pick(v[12], 0n)),
-        maxDeviationBps: Number(pick(v[13], 0n)),
-        navPerNft: optBig(v[14]),
-        nav: optBig(v[15]),
-        spendableEth: pick(v[16], 0n),
-        distributionReserved: pick(v[17], 0n),
-        distRound,
-        claimablePerformanceFee: pick(v[19], 0n),
-        performanceFeeAccrued: pick(v[20], 0n),
-        claimableEntryFee: pick(v[21], 0n),
-        payoutWallet: payout && payout !== ZERO ? payout : null,
-        lastNavCheckpoint: Number(pick(v[23], 0n)),
-        checkpointInterval: Number(pick(v[24], 3600n)),
-        vaultEth,
-        navLog: navLogRes.log,
-        navLogError: navLogRes.error,
-        rounds,
-        myIds,
-        myClaimable,
-        myUnclaimedIds,
-      };
+      return { ...core, myIds, myClaimable, myUnclaimedIds };
+    },
+  });
+}
+
+/**
+ * The Value history (NAV log) as its own query: it only feeds the card at
+ * the bottom of the detail page, so a slow chain scan of it must never hold
+ * up the paint — it used to be awaited inside usePhase3Fund. The scan now
+ * runs on the server behind /api/fund/nav-log (round 5): the browser used
+ * to walk ~10M blocks of logs straight into the first-load storm and the
+ * card sat on "Could not read the value history right now" permanently.
+ * It never throws: a failed read reports { error: true } and the card says
+ * so. An empty log is a real answer (no value recorded yet).
+ */
+const NAV_LOG_TIMEOUT_MS = 15_000;
+export function useNavLog(vault: Addr | undefined) {
+  return useQuery({
+    queryKey: ['p3-navlog', vault ?? ''],
+    enabled: !!vault,
+    staleTime: 60_000,
+    retry: 2,
+    queryFn: async (): Promise<{ log: NavPoint[]; error: boolean }> => {
+      if (!vault) return { log: [], error: false };
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), NAV_LOG_TIMEOUT_MS);
+      try {
+        const r = await fetch(`/api/fund/nav-log?vault=${vault}`, { signal: ctrl.signal });
+        if (!r.ok) throw new Error(`Value history read failed: ${r.status}`);
+        return { log: navLogFromWire((await r.json()) as NavLogWire), error: false };
+      } catch (e) {
+        console.error('NAV log read failed', e);
+        return { log: [] as NavPoint[], error: true };
+      } finally {
+        clearTimeout(t);
+      }
     },
   });
 }
