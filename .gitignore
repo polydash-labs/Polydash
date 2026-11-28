@@ -25,7 +25,7 @@ htmlcov/
 *.py[cod]
 *.egg-info/
 dist/
-build/
+/build/
 
 # Web
 polypad/web/.next/
