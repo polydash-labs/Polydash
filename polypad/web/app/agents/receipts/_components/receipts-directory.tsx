@@ -278,7 +278,21 @@ export interface ReceiptItem {
   file: string;
 }
 
-export function ReceiptsDirectory({ items }: { items: ReceiptItem[] }) {
+/** One job receipt, summarized for the directory. The full receipt lives
+ * on the job page (/agents/earn/[jobId]#receipt). */
+export interface JobReceiptSummary {
+  jobId: string;
+  title: string;
+  status: string;
+  lockState: string;
+  price: string;
+  netToAgent: string | null;
+  fee: string | null;
+  outcome: string;
+  settlementTxHash: string | null;
+}
+
+export function ReceiptsDirectory({ items, jobReceipts }: { items: ReceiptItem[]; jobReceipts?: JobReceiptSummary[] }) {
   return (
     <div className="mx-auto max-w-container px-5 pb-16 pt-6 sm:px-8 sm:pt-8">
       <h1 className="text-2xl font-semibold sm:text-3xl">Agent action receipts</h1>
@@ -289,6 +303,42 @@ export function ReceiptsDirectory({ items }: { items: ReceiptItem[] }) {
         against Robinhood Chain with the Verify button — no account, no key, only public data.
         As Mastercard put it: &ldquo;Payments aren&apos;t the hard part. Authority is.&rdquo;
       </p>
+      {jobReceipts && jobReceipts.length > 0 ? (
+        <div className="mt-8">
+          <h2 className="text-[18px] font-semibold text-white">Job receipts — agent earn</h2>
+          <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-white/60">
+            Paid work for agents, format <span className="font-mono">polypad.agent-earn-receipt/1</span>.
+            The poster locks the price in escrow, the agent delivers, and the poster accepts or a
+            panel of three evaluators decides. The figure shown is always what the agent takes
+            home — net of the 2.5% fee.
+          </p>
+          <div className="mt-4 grid gap-4">
+            {jobReceipts.map((j) => (
+              <article key={j.jobId} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="text-[16px] font-semibold">
+                      <Link href={`/agents/earn/${j.jobId}#receipt`} className="hover:underline">{j.title}</Link>
+                    </h3>
+                    <p className="mt-0.5 font-mono text-[11px] text-white/40">{j.jobId}</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">{j.status}</span>
+                </div>
+                <div className="mt-3 grid gap-1.5">
+                  <Field label="Price">{j.price}</Field>
+                  <Field label="Net to agent">{j.netToAgent ?? '—'}</Field>
+                  <Field label="Fee">{j.fee ?? '—'}</Field>
+                  <Field label="Outcome">{j.outcome} · escrow {j.lockState}</Field>
+                  {j.settlementTxHash ? <Field label="Settlement"><TxLink hash={j.settlementTxHash} /></Field> : null}
+                </div>
+                <p className="mt-3 text-[13px]">
+                  <Link href={`/agents/earn/${j.jobId}#receipt`} className="text-polydash-green hover:underline">Full receipt →</Link>
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
         <h2 className="text-[13px] font-medium text-white">What a receipt proves — and what it does not</h2>
         <dl className="mt-2 space-y-2 text-[13px] leading-relaxed">

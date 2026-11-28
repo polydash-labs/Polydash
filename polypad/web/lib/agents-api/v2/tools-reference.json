@@ -3,7 +3,7 @@
     "by": "scripts/generate-tool-reference.ts",
     "source": "lib/agents-api/v2/tools.ts",
     "note": "Do not edit by hand. Edit the tool definitions (or the sample/error maps in the script) and re-run: npx tsx scripts/generate-tool-reference.ts",
-    "toolCount": 25
+    "toolCount": 27
   },
   "errors": [
     {
@@ -77,6 +77,16 @@
       "meaning": "Wrong HTTP method for the endpoint (GET vs POST)."
     },
     {
+      "code": "aggregator_no_quote",
+      "status": 409,
+      "meaning": "The venue you named could not quote this pair. Pick another route, or leave aggregator out to take the best."
+    },
+    {
+      "code": "aggregator_not_configured",
+      "status": 409,
+      "meaning": "That venue needs an API key the server does not have yet (Bitget Wallet). The other venues still work."
+    },
+    {
       "code": "ambiguous_collection",
       "status": 409,
       "meaning": "More than one collection matches. Use the collection address."
@@ -120,6 +130,11 @@
       "code": "no_shares",
       "status": 409,
       "meaning": "The wallet holds no shares of that tokenized fund."
+    },
+    {
+      "code": "no_swap_route",
+      "status": 409,
+      "meaning": "No aggregator could quote this pair right now. The pair may have no liquid route on Robinhood Chain, or the quote services are briefly down."
     },
     {
       "code": "not_holder",
@@ -187,6 +202,11 @@
       "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
     },
     {
+      "code": "swap_build_failed",
+      "status": 422,
+      "meaning": "The venue quoted but could not build the transaction. Try again or pick another route."
+    },
+    {
       "code": "quota",
       "status": 429,
       "meaning": "The chat service is out of credits. Try again later."
@@ -220,6 +240,11 @@
       "code": "agent_chat_unavailable",
       "status": 503,
       "meaning": "Agent chat is not configured yet, or the chat service did not answer."
+    },
+    {
+      "code": "aggregator_unavailable",
+      "status": 503,
+      "meaning": "The venue did not answer, or rate-limited this server. Try again shortly."
     },
     {
       "code": "rpc_unavailable",
@@ -655,6 +680,75 @@
       ]
     },
     {
+      "name": "polypad_quote_swap",
+      "title": "Compare swap routes across aggregators",
+      "description": "Compares one swap across KyberSwap, Velora, Bitget Wallet, and Uniswap on Robinhood Chain and returns the best route, with each venue's expected output. Quote only — it never signs or moves anything; polypad_prepare_swap turns the best route into an unsigned transaction inside the agent wallet limits. A venue that cannot quote reports why instead of failing the call.",
+      "group": "Trade",
+      "kind": "read",
+      "method": "GET",
+      "path": "quote-swap",
+      "inputs": [
+        {
+          "field": "tokenIn",
+          "type": "string",
+          "required": true,
+          "description": "Token to sell: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH)."
+        },
+        {
+          "field": "tokenOut",
+          "type": "string",
+          "required": true,
+          "description": "Token to buy: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH)."
+        },
+        {
+          "field": "amountIn",
+          "type": "string",
+          "required": true,
+          "description": "Amount to sell, in the token's smallest units as a decimal string (e.g. 1000000000000000000 = 1 WETH)."
+        },
+        {
+          "field": "slippageBps",
+          "type": "integer",
+          "required": false,
+          "description": "Slippage limit in basis points. Default 100, maximum 1000."
+        }
+      ],
+      "exampleArgs": {
+        "tokenIn": "example",
+        "tokenOut": "example",
+        "amountIn": "example"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/quote-swap?tokenIn=example&tokenOut=example&amountIn=example\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_quote_swap\",\"arguments\":{\"tokenIn\":\"example\",\"tokenOut\":\"example\",\"amountIn\":\"example\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
       "name": "polypad_prepare_buy",
       "title": "Prepare a buy",
       "description": "Prepares a buy of a launch token with ETH. Simulates it on-chain before returning. Returns the unsigned transaction (to, data, value, chainId 4663, gas estimate), a plain summary, and a one-tap signing link. Show the summary before the link. Never signs.",
@@ -926,6 +1020,173 @@
           "code": "not_tradable",
           "status": 409,
           "meaning": "The token is in a phase that cannot be traded right now."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_swap",
+      "title": "Prepare a swap across aggregators",
+      "description": "Prepares a swap of any token for any token on Robinhood Chain through the best route across Velora, KyberSwap, Bitget Wallet, and Uniswap — or the venue you name. Re-quotes fresh, builds the unsigned transaction from that venue, adds the exact-amount approval step if needed, and simulates step 1 on-chain. Returns unsigned transactions, a summary, and a signing link. Never signs.",
+      "group": "Trade",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/swap",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "tokenIn",
+          "type": "string",
+          "required": true,
+          "description": "Token to sell: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH)."
+        },
+        {
+          "field": "tokenOut",
+          "type": "string",
+          "required": true,
+          "description": "Token to buy: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH)."
+        },
+        {
+          "field": "amountIn",
+          "type": "string",
+          "required": true,
+          "description": "Amount to sell, in the token's smallest units as a decimal string (e.g. 1000000000000000000 = 1 WETH)."
+        },
+        {
+          "field": "slippageBps",
+          "type": "integer",
+          "required": false,
+          "description": "Slippage limit in basis points. Default 100, maximum 1000."
+        },
+        {
+          "field": "aggregator",
+          "type": "string",
+          "required": false,
+          "description": "Which venue to execute through. Omit it to take the best quote.",
+          "enum": [
+            "velora",
+            "kyberswap",
+            "bitget",
+            "uniswap"
+          ]
+        },
+        {
+          "field": "confirmLarge",
+          "type": "boolean",
+          "required": false,
+          "description": "Set true only after the user confirmed an amount above 1 ETH."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "tokenIn": "example",
+        "tokenOut": "example",
+        "amountIn": "example"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/swap\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\",\"tokenIn\":\"example\",\"tokenOut\":\"example\",\"amountIn\":\"example\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_swap\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\",\"tokenIn\":\"example\",\"tokenOut\":\"example\",\"amountIn\":\"example\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "no_swap_route",
+          "status": 409,
+          "meaning": "No aggregator could quote this pair right now. The pair may have no liquid route on Robinhood Chain, or the quote services are briefly down."
+        },
+        {
+          "code": "aggregator_no_quote",
+          "status": 409,
+          "meaning": "The venue you named could not quote this pair. Pick another route, or leave aggregator out to take the best."
+        },
+        {
+          "code": "aggregator_not_configured",
+          "status": 409,
+          "meaning": "That venue needs an API key the server does not have yet (Bitget Wallet). The other venues still work."
+        },
+        {
+          "code": "aggregator_unavailable",
+          "status": 503,
+          "meaning": "The venue did not answer, or rate-limited this server. Try again shortly."
+        },
+        {
+          "code": "swap_build_failed",
+          "status": 422,
+          "meaning": "The venue quoted but could not build the transaction. Try again or pick another route."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "insufficient_balance",
+          "status": 409,
+          "meaning": "The wallet holds less than the amount requested."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
         },
         {
           "code": "payload_too_large",

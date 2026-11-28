@@ -8,6 +8,7 @@ export const metadata: Metadata = pageMetadata({
   title: 'API Usage | Polypad',
   description: 'See what your Pro API key has been used for: calls per day, calls by tool, reads vs prepares, and how close you are to your per-minute limits.',
   path: '/agents/usage',
+  noindex: true,
 });
 
 export default function AgentUsagePage() {

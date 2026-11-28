@@ -1,1 +1,27 @@
-{"$schema":"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json","_meta":{"io.modelcontextprotocol.registry/publisher-provided":{"chain":"Robinhood Chain (4663)","skills":5,"tool":"mcp-publisher","tools":25}},"description":"Launch tokens and funds on Robinhood Chain. 25 tools, 5 skills. You sign everything.","name":"family.polypad/polypad","remotes":[{"type":"streamable-http","url":"https://polypad.family/api/mcp"}],"repository":{"id":"polydash-labs/Polydash","source":"github","url":"https://github.com/polydash-labs/Polydash"},"title":"Polypad","version":"2.2.0","websiteUrl":"https://polypad.family"}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "chain": "Robinhood Chain (4663)",
+      "skills": 5,
+      "tool": "mcp-publisher",
+      "tools": 27
+    }
+  },
+  "description": "Launch tokens and funds on Robinhood Chain. 27 tools, 5 skills. You sign everything.",
+  "name": "family.polypad/polypad",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://polypad.family/api/mcp"
+    }
+  ],
+  "repository": {
+    "id": "polydash-labs/Polydash",
+    "source": "github",
+    "url": "https://github.com/polydash-labs/Polydash"
+  },
+  "title": "Polypad",
+  "version": "2.2.2",
+  "websiteUrl": "https://polypad.family"
+}

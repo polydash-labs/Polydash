@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { DeployVesting } from './_components/deploy-vesting';
 
 export const metadata: Metadata = {
-  title: 'Deploy vesting factory | Polypad',
+  title: 'Deploy vesting factory',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

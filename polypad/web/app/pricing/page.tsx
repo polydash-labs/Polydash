@@ -70,7 +70,7 @@ export default function PricingPage() {
               Scale when you need to.
             </h1>
             <p className="mt-5 max-w-2xl text-[16px] sm:text-lg leading-relaxed text-white/70">
-              Start free. No signup. No API key. No approval. The Polypad MCP is 25 tools that let an agent trade,
+              Start free. No signup. No API key. No approval. The Polypad MCP is 27 tools that let an agent trade,
               launch tokens, join Tokenized Funds, and buy NFTs on Robinhood Chain — the agent signs everything in its
               own wallet, and Polypad never holds a private key.
             </p>
@@ -85,7 +85,7 @@ export default function PricingPage() {
             <StatTiles
               items={[
                 { value: '$0', label: 'Free tier', note: 'Forever — no signup, no key' },
-                { value: '25', label: 'MCP tools', note: 'All of them, on the free tier' },
+                { value: '27', label: 'MCP tools', note: 'All of them, on the free tier' },
                 { value: '10×', label: 'Pro limits', note: 'Pro is $0 while growing' },
                 { value: '$0.01', label: 'Pay-per-call', note: 'Per report — no subscription' },
               ]}
@@ -104,7 +104,7 @@ export default function PricingPage() {
             layers={[
               {
                 title: 'Start free — $0, forever',
-                body: 'All 25 tools, no key, no signup. Reads 120/min · prepares 30/min · prepares per wallet 12/min · intent 40/min.',
+                body: 'All 27 tools, no key, no signup. Reads 120/min · prepares 30/min · prepares per wallet 12/min · intent 40/min.',
                 icon: <Zap className="mx-auto h-6 w-6 text-emerald-400" />,
                 pills: ['No signup', 'No API key', 'No approval'],
               },
@@ -143,7 +143,7 @@ export default function PricingPage() {
                 <p className="mt-1 text-[13.5px] text-white/55">The MCP as it is today.</p>
                 <ul className="mt-4 space-y-2.5">
                   <li className="flex gap-2 text-[13.5px] leading-relaxed text-white/70">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> All 25 tools, no key, no signup.
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> All 27 tools, no key, no signup.
                   </li>
                   <li className="flex gap-2 text-[13.5px] leading-relaxed text-white/70">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />

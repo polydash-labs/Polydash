@@ -117,7 +117,7 @@ try {
   check('initialize advertises resources capability', caps?.resources !== undefined, JSON.stringify(caps)?.slice(0, 200));
   check('initialize advertises skills extension', caps?.extensions?.['io.modelcontextprotocol/skills']?.directoryRead === true, JSON.stringify(caps?.extensions)?.slice(0, 200));
   const tools = await sdkClient.listTools();
-  check('SDK tools/list returns 25 tools', tools.tools.length === 25, `got ${tools.tools.length}`);
+  check('SDK tools/list returns 27 tools', tools.tools.length === 27, `got ${tools.tools.length}`);
   // Best-effort: a real SDK client calling a custom skills method.
   try {
     const { z } = await import('zod');
@@ -148,7 +148,7 @@ console.log('-- tools/list --');
 let toolNames = new Set();
 {
   const r = await rpc('tools/list', {});
-  check('tools/list returns 25 tools', r.tools.length === 25, `got ${r.tools.length}`);
+  check('tools/list returns 27 tools', r.tools.length === 27, `got ${r.tools.length}`);
   toolNames = new Set(r.tools.map((t) => t.name));
   check('tools/list includes polypad_prepare_token_launch', toolNames.has('polypad_prepare_token_launch'));
   check('tools/list includes polypad_get_fund', toolNames.has('polypad_get_fund'));

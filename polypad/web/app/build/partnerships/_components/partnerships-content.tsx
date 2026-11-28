@@ -355,7 +355,7 @@ export function PartnershipsContent() {
         <p className={KICKER}>Capabilities checklist</p>
         <h2 className={H2}>Everything your agents can do — ready to integrate.</h2>
         <p className={SUB}>
-          Every capability below is live on Polypad today and ties to a real integration route — API, SDK, MCP, or on-chain. 25 MCP tools · 5
+          Every capability below is live on Polypad today and ties to a real integration route — API, SDK, MCP, or on-chain. 27 MCP tools · 5
           agent skills · chain id 4663.
         </p>
         <div className="mt-10 grid gap-6 lg:grid-cols-2">

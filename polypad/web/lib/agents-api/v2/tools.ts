@@ -16,6 +16,8 @@ import { ethToWei, parseIntent } from './intent';
 import { whatCanIDo } from './onboard';
 import { portfolioOf } from './portfolio';
 import { prepareBuy, prepareSell, quoteTrade } from './trade';
+import { prepareSwap } from './prepare-swap';
+import { quoteSwap } from './swap-quotes';
 import { txStatus } from './status';
 import { planCrossChainPayment, toExecutionPackage } from '../../x402/cross-chain';
 import { applyWalletBinding, resolveWalletToken } from './wallet-token';
@@ -179,6 +181,19 @@ export const TOOLS: Tool[] = [
     handler: async (ctx, i) => quoteTrade(ctx, ethOrWei(i, 'amount', 'amountEth', 'amount')),
   },
   {
+    name: 'polypad_quote_swap',
+    title: 'Compare swap routes across aggregators',
+    description: 'Compares one swap across KyberSwap, Velora, Bitget Wallet, and Uniswap on Robinhood Chain and returns the best route, with each venue\'s expected output. Quote only — it never signs or moves anything; polypad_prepare_swap turns the best route into an unsigned transaction inside the agent wallet limits. A venue that cannot quote reports why instead of failing the call.',
+    kind: 'read', method: 'GET', path: 'quote-swap',
+    inputSchema: obj({
+      tokenIn: str('Token to sell: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH).'),
+      tokenOut: str('Token to buy: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH).'),
+      amountIn: str('Amount to sell, in the token\'s smallest units as a decimal string (e.g. 1000000000000000000 = 1 WETH).'),
+      slippageBps: SLIP,
+    }, ['tokenIn', 'tokenOut', 'amountIn']),
+    handler: async (ctx, i) => quoteSwap(ctx, i),
+  },
+  {
     name: 'polypad_prepare_buy',
     title: 'Prepare a buy',
     description: 'Prepares a buy of a launch token with ETH. Simulates it on-chain before returning. Returns the unsigned transaction (to, data, value, chainId 4663, gas estimate), a plain summary, and a one-tap signing link. Show the summary before the link. Never signs.',
@@ -193,6 +208,22 @@ export const TOOLS: Tool[] = [
     kind: 'prepare', method: 'POST', path: 'prepare/sell',
     inputSchema: obj({ token: str('Symbol, name, token address, or launch address.'), from: FROM, amount: str('Token base units (18 decimals) as a decimal string.'), percentOfBalance: int('Percent of the wallet balance, 1 to 100. Use instead of amount.', { minimum: 1, maximum: 100 }), slippageBps: SLIP, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['token', 'from']),
     handler: async (ctx, i, m) => prepareSell(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_swap',
+    title: 'Prepare a swap across aggregators',
+    description: 'Prepares a swap of any token for any token on Robinhood Chain through the best route across Velora, KyberSwap, Bitget Wallet, and Uniswap — or the venue you name. Re-quotes fresh, builds the unsigned transaction from that venue, adds the exact-amount approval step if needed, and simulates step 1 on-chain. Returns unsigned transactions, a summary, and a signing link. Never signs.',
+    kind: 'prepare', method: 'POST', path: 'prepare/swap',
+    inputSchema: obj({
+      from: FROM,
+      tokenIn: str('Token to sell: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH).'),
+      tokenOut: str('Token to buy: a token address on Robinhood Chain, or a symbol (ETH, WETH, USDG, POLYDASH).'),
+      amountIn: str('Amount to sell, in the token\'s smallest units as a decimal string (e.g. 1000000000000000000 = 1 WETH).'),
+      slippageBps: SLIP,
+      aggregator: str('Which venue to execute through. Omit it to take the best quote.', { enum: ['velora', 'kyberswap', 'bitget', 'uniswap'] }),
+      confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN,
+    }, ['from', 'tokenIn', 'tokenOut', 'amountIn']),
+    handler: async (ctx, i, m) => prepareSwap(ctx, i, m),
   },
   {
     name: 'polypad_list_nfts',

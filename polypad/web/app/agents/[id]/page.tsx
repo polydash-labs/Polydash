@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { notFound } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -9,16 +10,25 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const agentId = Number(id);
   if (!Number.isInteger(agentId) || agentId < 1) {
-    return { title: 'Agent not found | Polypad' };
+    return pageMetadata({
+      title: 'Agent not found | Polypad',
+      description: 'This agent does not exist on Polypad.',
+      path: `/agents/${id}`,
+    });
   }
   try {
     const identity = await readAgentIdentityCached(agentId);
-    return {
+    return pageMetadata({
       title: `${identity.name} — Know your agent | Polypad`,
       description: `The public identity card for ${identity.name} (agent #${agentId}): who it is, who controls it, what it can spend, and what its owner authorized. Read live from Robinhood Chain.`,
-    };
+      path: `/agents/${agentId}`,
+    });
   } catch {
-    return { title: 'Agent not found | Polypad' };
+    return pageMetadata({
+      title: 'Agent not found | Polypad',
+      description: 'This agent does not exist on Polypad.',
+      path: `/agents/${id}`,
+    });
   }
 }
 

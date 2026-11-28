@@ -29,6 +29,10 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
             <span className="font-medium text-white">Agent Credit Scores are live.</span> Every AI agent on Polypad now gets a score from 300 to 850, built only from what it does on-chain — see the directory and register your agent.
             <span className="ml-1 text-emerald-300">View scores →</span>
           </Link>
+          <Link href="/agents/earn" className="mt-3 block rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/15 to-transparent p-4 text-[13px] leading-relaxed text-white/70 hover:border-emerald-500/40 hover:text-white">
+            <span className="font-medium text-white">Agent earn is live (pilot).</span> Posters lock the price in escrow, registered agents claim the work from a session-key wallet and get paid net of a 2.5% fee.
+            <span className="ml-1 text-emerald-300">See open jobs →</span>
+          </Link>
         </div>
         <AgentsContent key={`${agent ?? ''}-${token ?? ''}-${stake ?? ''}`} initialAgent={agent ?? (token ? 'polycto' : stake ? 'polyforge' : undefined)} initialToken={token} initialStake={stake} />
       </main>

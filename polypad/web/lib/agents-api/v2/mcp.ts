@@ -3,7 +3,7 @@
  * Supports initialize, ping, tools/list, tools/call, resources (Polypad Skills), skills/list, skills/get,
  * tasks (Tasks + Elicitation), and notifications (202). No sessions, no streaming, no auth.
  *
- * Server version 2.2.0 — Polypad Skills over MCP (SEP-2640, extension `io.modelcontextprotocol/skills`):
+ * Server version 2.2.2 — Polypad Skills over MCP (SEP-2640, extension `io.modelcontextprotocol/skills`):
  * skills are SKILL.md workflow docs served through the Resources primitive; see lib/agents-api/v2/skills.ts.
  *
  * Tasks + Elicitation (base spec): a tools/call carrying `params.task = { ttl }` runs as a task instead of
@@ -36,7 +36,7 @@ import {
 } from './tasks';
 
 export const MCP_PROTOCOLS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'] as const;
-export const SERVER_INFO = { name: 'polypad', title: 'Polypad on Robinhood Chain', version: '2.2.0' };
+export const SERVER_INFO = { name: 'polypad', title: 'Polypad on Robinhood Chain', version: '2.2.2' };
 export const INSTRUCTIONS =
   'Polypad is non-custodial. Tools only read data or prepare unsigned transactions. After any prepare_* tool, show the user the summary (what they pay, minimum they receive, fees, risks) BEFORE the signing link, and never ask for a private key or seed phrase. Start with polypad_what_can_i_do. Use polypad_intent for plain-language requests. Wallet addresses only. Skills are available via skills/list (extension io.modelcontextprotocol/skills): read the skill for a job before calling its tools, and follow its steps. Prepare tools called as MCP Tasks pause for human approval (elicitation) before anything is prepared.';
 

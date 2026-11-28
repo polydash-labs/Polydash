@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { BuybackSettings } from './_components/buyback-settings';
 
 export const metadata: Metadata = {
-  title: 'Buyback settings | Polypad',
+  title: 'Buyback settings',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

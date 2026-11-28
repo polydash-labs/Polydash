@@ -46,7 +46,7 @@ export default function RulesPage() {
           <strong>Pro — 10x the free limits, $0 while growing.</strong> With a free API key from{' '}
           <a href="/agents/accounts" className="text-[#00E676] hover:underline">/agents/accounts</a>:
           reads 1,200 per minute, prepares 300 per minute, prepares per wallet 120 per minute,
-          intent 400 per minute. Same 25 tools, same 25 ETH cap per action. A key only identifies
+          intent 400 per minute. Same 27 tools, same 25 ETH cap per action. A key only identifies
           your calls — it never moves money. See <a href="/pricing" className="text-[#00E676] hover:underline">Pricing</a>.
         </p>
       </TrustSection>

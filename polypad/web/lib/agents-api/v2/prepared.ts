@@ -41,7 +41,7 @@ export function readAttribution(data: Hex): { codes: string[] } | null {
 
 // ---------------------------------------------------------------- signing link
 
-export type SignAction = 'buy' | 'sell' | 'nft-buy' | 'nft-mint' | 'nft-create' | 'fund-create' | 'fund-mint' | 'fund-redeem' | 'token-launch';
+export type SignAction = 'buy' | 'sell' | 'swap' | 'nft-buy' | 'nft-mint' | 'nft-create' | 'fund-create' | 'fund-mint' | 'fund-redeem' | 'token-launch';
 
 export type SignParams = Record<string, string | number | bigint | boolean | undefined>;
 

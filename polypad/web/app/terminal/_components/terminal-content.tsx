@@ -160,7 +160,7 @@ export function TerminalContent({
           </div>
           <StatTiles
             items={[
-              { value: '25', label: 'MCP tools', note: 'Trade, launch, funds, staking, NFTs' },
+              { value: '27', label: 'MCP tools', note: 'Trade, launch, funds, staking, NFTs' },
               { value: '5', label: 'Agent skills', note: 'Guided workflows over MCP' },
               { value: '30s', label: 'Refresh', note: 'Every figure re-read from the chain' },
               { value: '4663', label: 'Robinhood Chain', note: 'Where every result settles' },
@@ -186,8 +186,8 @@ export function TerminalContent({
             },
             {
               title: 'Ask in plain language — or call a tool',
-              body: '25 MCP tools and 5 skills: trade, launch, run tokenized funds, stake, and NFTs.',
-              pills: ['25 MCP tools', '5 skills'],
+              body: '27 MCP tools and 5 skills: trade, launch, run tokenized funds, stake, and NFTs.',
+              pills: ['27 MCP tools', '5 skills'],
               icon: <MessageSquareText className="mx-auto h-6 w-6 text-emerald-400" />,
             },
             {

@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { AgentActionsAdmin } from './_components/agent-actions-admin';
 
 export const metadata: Metadata = {
-  title: 'Agent actions | Polypad',
+  title: 'Agent actions',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

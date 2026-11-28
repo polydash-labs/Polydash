@@ -7,6 +7,7 @@ export const metadata = pageMetadata({
   title: 'Create a token | Polypad',
   description: 'Launch a token on Robinhood Chain: set name, ticker, logo and creator fee, with an optional commitment window before trading opens.',
   path: '/create',
+  noindex: true,
 });
 
 export default async function CreatePage({

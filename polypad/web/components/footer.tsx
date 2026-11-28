@@ -66,6 +66,16 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="border-t border-white/10 bg-[#0A0A0A] text-white">
@@ -80,15 +90,33 @@ export function Footer() {
               Launch, trade and stake tokens, and create tokenized funds, on Robinhood Chain.
             </p>
             <a
-              href="https://x.com/Polydash_"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-[13px] text-white/80 transition-colors hover:border-white/25 hover:text-white"
-              aria-label="Polypad on X (@Polydash_)"
+              href="mailto:Polyteam@dasheco.xyz"
+              className="mt-2 block text-[13px] text-white/65 transition-colors hover:text-white"
             >
-              <XIcon className="h-3.5 w-3.5" />
-              @Polydash_
+              Polyteam@dasheco.xyz
             </a>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <a
+                href="https://x.com/Polydash_"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-[13px] text-white/80 transition-colors hover:border-white/25 hover:text-white"
+                aria-label="Polypad on X (@Polydash_)"
+              >
+                <XIcon className="h-3.5 w-3.5" />
+                @Polydash_
+              </a>
+              <a
+                href="https://www.instagram.com/polydash_/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-[13px] text-white/80 transition-colors hover:border-white/25 hover:text-white"
+                aria-label="Polypad on Instagram (@polydash_)"
+              >
+                <InstagramIcon className="h-3.5 w-3.5" />
+                @polydash_
+              </a>
+            </div>
           </div>
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>

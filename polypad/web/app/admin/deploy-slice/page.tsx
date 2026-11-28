@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { DeploySlice } from './_components/deploy-slice';
 
 export const metadata: Metadata = {
-  title: 'Deploy airdrop slice contracts | Polypad',
+  title: 'Deploy airdrop slice contracts',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

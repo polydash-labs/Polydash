@@ -22,7 +22,7 @@
  * plain summary, and a signing link; the spend only happens when the human
  * signs in their own wallet.
  *
- * No staking skill: there is no staking tool in the 25-tool registry, so a
+ * No staking skill: there is no staking tool in the 27-tool registry, so a
  * "stake POLYDASH" skill would have no tool sequence to name. It stays out
  * until a prepare_stake tool exists.
  */

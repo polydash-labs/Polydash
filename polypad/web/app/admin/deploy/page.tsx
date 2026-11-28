@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { DeployBuyback } from './_components/deploy-buyback';
 
 export const metadata: Metadata = {
-  title: 'Deploy POLYDASH Rewards Pool and buyback vault | Polypad',
+  title: 'Deploy POLYDASH Rewards Pool and buyback vault',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

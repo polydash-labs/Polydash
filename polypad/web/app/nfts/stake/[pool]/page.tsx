@@ -9,6 +9,7 @@ export async function generateMetadata({ params }: { params: Promise<{ pool: str
     title: 'NFT staking pool | Polypad',
     description: 'Stake NFTs in this reward pool on Robinhood Chain. New contract. Security-scanned with Bevor. Not a formal audit. Not financial advice.',
     path: `/nfts/stake/${pool}`,
+    noindex: true,
   });
 }
 

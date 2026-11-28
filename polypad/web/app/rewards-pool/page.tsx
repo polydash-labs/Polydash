@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { RewardsPool } from './_components/rewards-pool';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'POLYDASH Rewards Pool | Polypad',
   description: "Stake POLYDASH. The stakers' share of buybacks is streamed to this pool over 30 days.",
-};
+  path: '/rewards-pool',
+});
 
 export default function RewardsPoolPage() {
   return (

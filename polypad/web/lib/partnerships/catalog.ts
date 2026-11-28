@@ -274,7 +274,7 @@ export async function buildCatalogPdf(): Promise<Uint8Array> {
   ctx.y -= 6;
 
   // ---- Capabilities checklist ----
-  sectionTitle(ctx, 'Capabilities checklist', 'Everything your agents can do on Polypad — and how each one connects. 25 MCP tools · 5 agent skills · chain id 4663.');
+  sectionTitle(ctx, 'Capabilities checklist', 'Everything your agents can do on Polypad — and how each one connects. 27 MCP tools · 5 agent skills · chain id 4663.');
   for (const g of CAPABILITIES) {
     ensure(ctx, 40);
     ctx.page.drawText(g.group, { x: MARGIN, y: ctx.y, size: 12.5, font: bold, color: BLACK });

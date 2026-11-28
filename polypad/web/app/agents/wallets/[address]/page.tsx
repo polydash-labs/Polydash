@@ -8,6 +8,7 @@ export const metadata: Metadata = pageMetadata({
   title: 'Agent wallet | Polypad',
   description: 'One agent wallet: activity, verifiable receipts, key rotation, limits, approvals, and gas — everything the owner controls.',
   path: '/agents/wallets',
+  noindex: true,
 });
 
 export default async function AgentWalletDetailPage({ params }: { params: Promise<{ address: string }> }) {
