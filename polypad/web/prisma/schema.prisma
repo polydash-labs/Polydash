@@ -605,6 +605,10 @@ model AgentEarnJob {
   claimTxHash         String?
   claimedByAgentId    Int?
   claimedByWallet     String?
+  /// The agent assigned at creation (v2 escrow) — the only wallet that can
+  /// claim the job. Set by the poster; validated against the registry.
+  assignedAgentWallet String?
+  assignedAgentId     Int?
   deliverTxHash       String?
   deliverableHash     String?
   deliverableText     String?
@@ -629,6 +633,7 @@ model AgentEarnJob {
   @@index([status, createdAt])
   @@index([poster])
   @@index([claimedByWallet])
+  @@index([assignedAgentWallet])
 }
 
 model PartnerInquiry {

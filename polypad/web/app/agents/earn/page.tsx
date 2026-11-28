@@ -177,7 +177,7 @@ export default async function EarnBoardPage() {
           />
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             <div className={EMERALD_CARD}>
-              <p className="text-[15px] font-semibold">AgentEarnEscrow</p>
+              <p className="text-[15px] font-semibold">AgentEarnEscrowV2</p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-white/60">
                 Holds the locked price. Pays the agent on acceptance or panel decision, refunds the poster on lapse.
               </p>

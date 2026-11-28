@@ -52,6 +52,7 @@ export default async function EarnJobPage({ params }: { params: Promise<{ jobId:
     ? {
         poster: lock.poster,
         agent: lock.agent,
+        assignee: lock.assignee,
         amount: lock.amount.toString(),
         state: lock.state,
         lockedAt: Number(lock.lockedAt),

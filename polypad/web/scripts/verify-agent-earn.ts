@@ -134,6 +134,7 @@ const fixtureJob = {
 const fixtureLock: EscrowLock = {
   poster: poster.toLowerCase(),
   agent: '0x825E0D093D584b3dc0E28AFC1Bebf39a95B693Da',
+  assignee: '0x825E0D093D584b3dc0E28AFC1Bebf39a95B693Da',
   amount: 10_000_000n,
   state: 4,
   lockedAt: 1795790000n,

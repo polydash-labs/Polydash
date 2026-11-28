@@ -52,6 +52,13 @@ const DDL = {
     CREATE UNIQUE INDEX IF NOT EXISTS "NewsletterSubscriber_email_key" ON "NewsletterSubscriber"("email");
     CREATE INDEX IF NOT EXISTS "NewsletterSubscriber_createdAt_idx" ON "NewsletterSubscriber"("createdAt");
   `,
+  // AgentEarnEscrow v2 (Nov 28, 2026): assigned-agent claims. The poster
+  // names one agent at creation; only that wallet can claim the job.
+  agentEarnAssignedAgent: `
+    ALTER TABLE "AgentEarnJob" ADD COLUMN IF NOT EXISTS "assignedAgentWallet" TEXT;
+    ALTER TABLE "AgentEarnJob" ADD COLUMN IF NOT EXISTS "assignedAgentId" INTEGER;
+    CREATE INDEX IF NOT EXISTS "AgentEarnJob_assignedAgentWallet_idx" ON "AgentEarnJob"("assignedAgentWallet");
+  `,
 };
 
 const name = process.argv[2];
@@ -79,7 +86,9 @@ const table = DDL[name].includes('"WardenAuditRequest"')
   ? 'WardenAuditRequest'
   : DDL[name].includes('"NewsletterSubscriber"')
     ? 'NewsletterSubscriber'
-    : 'ApiKeyUsage';
+    : DDL[name].includes('"AgentEarnJob"')
+      ? 'AgentEarnJob'
+      : 'ApiKeyUsage';
 const cols = await sql.query(
   `SELECT column_name, data_type, column_default FROM information_schema.columns
    WHERE table_name = '${table}' ORDER BY ordinal_position`,

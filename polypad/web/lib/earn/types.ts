@@ -22,6 +22,9 @@ export interface JobJson {
   claimTxHash: string | null;
   claimedByAgentId: number | null;
   claimedByWallet: string | null;
+  /** The agent assigned at creation (v2) — the only wallet that can claim. */
+  assignedAgentWallet: string | null;
+  assignedAgentId: number | null;
   deliverTxHash: string | null;
   deliverableHash: string | null;
   deliverableText: string | null;
@@ -46,6 +49,8 @@ export interface JobJson {
 export interface LockJson {
   poster: string;
   agent: string;
+  /** The agent assigned at lock time — the only address that can claim. */
+  assignee: string;
   /** Locked amount in USDG smallest units, as a decimal string. */
   amount: string;
   state: number;

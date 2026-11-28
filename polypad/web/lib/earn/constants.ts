@@ -3,8 +3,12 @@
 // Sourcify-verified (exact_match). These are real addresses, never
 // placeholders. Do not change them without a redeploy + a new review.
 
-/** AgentEarnEscrow — deployed Nov 27, 2026, Sourcify exact_match. */
-export const AGENT_EARN_ESCROW_ADDRESS = '0xb0A3fE7240a0b1a10177651FE985c3FDbB9dda7c' as const;
+/** AgentEarnEscrowV2 — deployed Nov 28, 2026, Sourcify exact_match.
+ * v2: assigned-agent claims (poster names the agent at lock; only that
+ * address can claim). Replaces v1 0xb0A3fE7240a0b1a10177651FE985c3FDbB9dda7c,
+ * whose permissionless claim() let any address claim a job and submit a
+ * fake delivery. v1 holds 0 USDG and is unused. */
+export const AGENT_EARN_ESCROW_ADDRESS = '0x4fce4b5f7f3ce323861883a2449b172ca792918b' as const;
 /** Panel executor — 2-of-3 Safe proxy (singleton v1.3.0), deployed Nov 27, 2026. */
 export const AGENT_EARN_PANEL_EXECUTOR = '0xB33F146d25C85F9E1ECaf0E82691CB1335fF521d' as const;
 /** Settlement token: USDG (6 decimals). */
