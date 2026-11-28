@@ -41,7 +41,7 @@ export function readAttribution(data: Hex): { codes: string[] } | null {
 
 // ---------------------------------------------------------------- signing link
 
-export type SignAction = 'buy' | 'sell' | 'swap' | 'nft-buy' | 'nft-mint' | 'nft-create' | 'fund-create' | 'fund-mint' | 'fund-redeem' | 'token-launch';
+export type SignAction = 'buy' | 'sell' | 'swap' | 'nft-buy' | 'nft-mint' | 'nft-create' | 'fund-create' | 'fund-mint' | 'fund-redeem' | 'token-launch' | 'longbow-supply' | 'longbow-borrow' | 'longbow-repay' | 'longbow-add-collateral' | 'longbow-withdraw-collateral' | 'longbow-close' | 'longbow-multiply' | 'longbow-stake-bow' | 'longbow-claim-rebate';
 
 export type SignParams = Record<string, string | number | bigint | boolean | undefined>;
 

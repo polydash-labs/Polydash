@@ -48,6 +48,13 @@ export const ADDR = {
   permit2: a('0x000000000022D473030F116dDEE9F6B43aC78BA3'),
   /** Fee wallet. The API never builds a transaction from it and never signs with it. */
   feeWallet: a('0x9a21c75aC263cC43125E70200636f6397f8776d0'),
+  /** Longbow lending on Morpho Blue (Robinhood Chain). Verified on-chain Nov 28, 2026. */
+  morpho: a('0x9D53d5E3bd5E8d4Cbfa6DB1ca238AEA02E651010'),
+  bundler3: a('0x6478e9393d4C5bB4d53ee881d1DE78786A0344a6'),
+  usdg: a('0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168'),
+  bowToken: a('0x451b42a15100c340ca12f7c66de06fac5ea2d751'),
+  bowStaking: a('0xeba502e1177f5fad9432c2deb273569d8381e01a'),
+  rebateDistributor: a('0x23e99d72e24dc538c955b9bade710d2ce3a7fca4'),
 } as const;
 
 export const POOL_TICK_SPACING = 200;

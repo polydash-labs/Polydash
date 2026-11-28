@@ -254,8 +254,8 @@ async function buildBitget(tokenIn: SwapToken, tokenOut: SwapToken, amountIn: bi
 
 const ACTIONS = '0x060c0f' as const; // SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL
 
-/** Same Universal Router encoding as encodeV4Swap in trade.ts, for any pool. */
-function encodeGenericV4Swap(pool: UniswapPoolProbe, amountIn: bigint, minOut: bigint, deadline: bigint): Hex {
+/** Same Universal Router encoding as encodeV4Swap in trade.ts, for any pool. Exported for the Longbow multiply bundle, which calls the router from inside a Bundler3 multicall. */
+export function encodeGenericV4Swap(pool: UniswapPoolProbe, amountIn: bigint, minOut: bigint, deadline: bigint): Hex {
   const poolKey = {
     currency0: pool.currency0,
     currency1: pool.currency1,

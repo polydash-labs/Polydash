@@ -2,7 +2,7 @@
  * Parses a /sign link. The link carries intent only (an action and its parameters), never calldata.
  * Every value is validated again by the API; this only rejects links that are clearly malformed.
  */
-export const SIGN_ACTIONS = ['buy', 'sell', 'swap', 'nft-buy', 'nft-mint', 'nft-create', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
+export const SIGN_ACTIONS = ['buy', 'sell', 'swap', 'nft-buy', 'nft-mint', 'nft-create', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch', 'longbow-supply', 'longbow-borrow', 'longbow-repay', 'longbow-add-collateral', 'longbow-withdraw-collateral', 'longbow-close', 'longbow-multiply', 'longbow-stake-bow', 'longbow-claim-rebate'] as const;
 export type SignAction = (typeof SIGN_ACTIONS)[number];
 
 const COMMON = ['v', 'a', 'f', 'ref', 'c', 'h', 'r'];
@@ -17,6 +17,15 @@ const PARAMS: Record<SignAction, string[]> = {
   'fund-mint': ['fund', 'q'],
   'fund-redeem': ['fund', 'ids'],
   'token-launch': ['p'],
+  'longbow-supply': ['v', 'amt'],
+  'longbow-borrow': ['m', 'amt', 'col'],
+  'longbow-repay': ['m', 'amt', 'all'],
+  'longbow-add-collateral': ['m', 'amt'],
+  'longbow-withdraw-collateral': ['m', 'amt', 'all'],
+  'longbow-close': ['m'],
+  'longbow-multiply': ['m', 'amt', 'col', 'sl'],
+  'longbow-stake-bow': ['amt'],
+  'longbow-claim-rebate': ['ep'],
 };
 
 export type ParsedLink =
@@ -319,6 +328,101 @@ export function parseSignLink(sp: URLSearchParams): ParsedLink {
         }
       }
       Object.assign(body, obj);
+      break;
+    }
+    case 'longbow-supply': {
+      // path stays 'longbow-supply' -> POST /api/agents/v2/prepare/longbow-supply.
+      const v = get('v');
+      if (!v || !/^[A-Za-z0-9_-]{1,32}$/.test(v)) return bad('v');
+      const amt = get('amt');
+      if (!amt || !UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+      Object.assign(body, { vault: v, amount: amt });
+      break;
+    }
+    case 'longbow-borrow': {
+      const m = get('m');
+      if (!m || !/^[A-Za-z0-9_-]{1,32}$/.test(m)) return bad('m');
+      const amt = get('amt');
+      if (!amt || !UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+      const col = get('col');
+      if (col !== undefined) {
+        if (!UINT.test(col) || BigInt(col) === 0n) return bad('col');
+        body.collateralAmount = col;
+      }
+      Object.assign(body, { market: m, amount: amt });
+      break;
+    }
+    case 'longbow-repay': {
+      const m = get('m');
+      if (!m || !/^[A-Za-z0-9_-]{1,32}$/.test(m)) return bad('m');
+      const amt = get('amt');
+      const all = get('all');
+      if ((amt === undefined) === (all === undefined)) return bad('amt or all (exactly one)');
+      if (amt !== undefined) {
+        if (!UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+        body.amount = amt;
+      } else {
+        if (all !== '1') return bad('all');
+        body.all = true;
+      }
+      body.market = m;
+      break;
+    }
+    case 'longbow-add-collateral': {
+      const m = get('m');
+      if (!m || !/^[A-Za-z0-9_-]{1,32}$/.test(m)) return bad('m');
+      const amt = get('amt');
+      if (!amt || !UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+      Object.assign(body, { market: m, amount: amt });
+      break;
+    }
+    case 'longbow-withdraw-collateral': {
+      const m = get('m');
+      if (!m || !/^[A-Za-z0-9_-]{1,32}$/.test(m)) return bad('m');
+      const amt = get('amt');
+      const all = get('all');
+      if ((amt === undefined) === (all === undefined)) return bad('amt or all (exactly one)');
+      if (amt !== undefined) {
+        if (!UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+        body.amount = amt;
+      } else {
+        if (all !== '1') return bad('all');
+        body.all = true;
+      }
+      body.market = m;
+      break;
+    }
+    case 'longbow-close': {
+      const m = get('m');
+      if (!m || !/^[A-Za-z0-9_-]{1,32}$/.test(m)) return bad('m');
+      body.market = m;
+      break;
+    }
+    case 'longbow-multiply': {
+      const m = get('m');
+      if (!m || !/^[A-Za-z0-9_-]{1,32}$/.test(m)) return bad('m');
+      const amt = get('amt');
+      if (!amt || !UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+      const col = get('col');
+      if (col !== undefined) {
+        if (!UINT.test(col) || BigInt(col) === 0n) return bad('col');
+        body.collateralAmount = col;
+      }
+      const sl = slip();
+      if (sl === null) return bad('sl');
+      Object.assign(body, { market: m, amount: amt }, sl !== undefined ? { slippageBps: sl } : {});
+      break;
+    }
+    case 'longbow-stake-bow': {
+      const amt = get('amt');
+      if (!amt || !UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+      body.amount = amt;
+      break;
+    }
+    case 'longbow-claim-rebate': {
+      const ep = intIn(get('ep') ?? '', 1, 1_000_000);
+      if (ep === null) return bad('ep');
+      body.epoch = ep;
       break;
     }
   }

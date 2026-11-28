@@ -22,6 +22,12 @@ import { txStatus } from './status';
 import { planCrossChainPayment, toExecutionPackage } from '../../x402/cross-chain';
 import { applyWalletBinding, resolveWalletToken } from './wallet-token';
 import { agentChat } from './agent-chat';
+import {
+  getLongbowMarket, getLongbowPosition, isLongbowPrepareTool, listLongbowMarkets, listLongbowVaults,
+  longbowPrepareEnabled, planLongbowMultiply, prepareLongbowAddCollateral, prepareLongbowBorrow,
+  prepareLongbowClaimRebate, prepareLongbowClose, prepareLongbowMultiply, prepareLongbowRepay,
+  prepareLongbowStakeBow, prepareLongbowSupply, prepareLongbowWithdrawCollateral,
+} from './longbow';
 import { SKILLS } from './skills';
 
 /** Key ids allowed to call the business agent-chat tool, from AGENT_CHAT_KEY_IDS (comma-separated). Empty = nobody. These are key *ids*, not key material. */
@@ -427,9 +433,140 @@ export const TOOLS: Tool[] = [
     }, ['systemPrompt', 'messages']),
     handler: async (_ctx, i) => agentChat(i),
   },
+  {
+    name: 'polypad_longbow_markets',
+    title: 'Longbow lending markets',
+    description: 'Longbow lending markets on Robinhood Chain (Morpho Blue): collateral, loan token, price, LLTV, oracle, borrow and supply APR, utilization, and whether the market is live. Read-only; Longbow settles on Morpho Blue and its own contracts are not published as audited.',
+    kind: 'read', method: 'GET', path: 'longbow/markets',
+    inputSchema: obj({
+      category: str('Filter by category: Stocks, Memes, RWA, Crypto, or Stables.'),
+      oracleType: str('Filter by oracle: chainlink, twap, or api3.', { enum: ['chainlink', 'twap', 'api3'] }),
+      liveOnly: bool('Only markets that are live and enabled. Default true.'),
+      limit: int('How many to return, 1 to 100. Default 50.', { minimum: 1, maximum: 100 }),
+    }),
+    handler: async (ctx, i) => listLongbowMarkets(ctx, i),
+  },
+  {
+    name: 'polypad_longbow_market',
+    title: 'Longbow market details',
+    description: 'One Longbow market: price, LLTV, oracle, rates, utilization, and its on-chain Morpho totals, plus whether it passes the prepare screen (Chainlink-priced, LLTV within the limit). Read-only.',
+    kind: 'read', method: 'GET', path: 'longbow/market',
+    inputSchema: obj({ market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.') }, ['market']),
+    handler: async (ctx, i) => getLongbowMarket(ctx, i),
+  },
+  {
+    name: 'polypad_longbow_position',
+    title: 'Longbow position',
+    description: 'A wallet\u2019s position in one Longbow market: collateral posted, debt, supply and borrow shares, health factor, and liquidation price. Read-only. The health factor uses Longbow\u2019s price and Morpho\u2019s stored totals, which are stale since the market\u2019s last interaction.',
+    kind: 'read', method: 'GET', path: 'longbow/position',
+    inputSchema: obj({ market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.'), address: str('Wallet address (0x...).') }, ['market', 'address']),
+    handler: async (ctx, i) => getLongbowPosition(ctx, i),
+  },
+  {
+    name: 'polypad_longbow_vaults',
+    title: 'Longbow vaults',
+    description: 'Longbow\u2019s three ERC-4626 vaults (Core, Frontier, ETH): asset, TVL, APY, risk, performance fee, and the markets each one supplies. Read-only. APY is a reading, not a promise.',
+    kind: 'read', method: 'GET', path: 'longbow/vaults',
+    inputSchema: obj({}),
+    handler: async (ctx) => listLongbowVaults(ctx, {}),
+  },
+  {
+    name: 'polypad_longbow_plan_multiply',
+    title: 'Plan a Longbow multiply',
+    description: 'Leverage analysis for a Longbow multiply: borrow USDG against WETH collateral, swap it for more WETH on Uniswap V4, post it as collateral — one atomic bundle, no flash loan. Returns whether it is feasible at the 1.15 health-factor floor, the maximum borrow, the swap quote, the resulting health factor, liquidation price, and leverage. Read-only; the prepare tool is gated until the legal review is complete.',
+    kind: 'read', method: 'GET', path: 'longbow/plan-multiply',
+    inputSchema: obj({
+      market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId. Multiply needs a WETH-collateral market.'),
+      collateralAmountEth: str('New WETH collateral to post, as a decimal such as 0.1. Omit it to borrow against collateral already posted.'),
+      collateralAmount: str('Same in WETH base units (18 decimals). Use instead of collateralAmountEth.'),
+      borrowAmountUsdg: str('USDG to borrow, as a decimal such as 100.'),
+      amount: str('Same in USDG base units (6 decimals). Use instead of borrowAmountUsdg.'),
+      address: str('Wallet address, to include its existing collateral and debt in the plan.'),
+      slippageBps: SLIP,
+    }, ['market']),
+    handler: async (ctx, i) => planLongbowMultiply(ctx, i),
+  },
+  {
+    name: 'polypad_prepare_longbow_supply',
+    title: 'Prepare a Longbow vault deposit',
+    description: 'Prepares depositing USDG (Core / Frontier vault) or WETH (ETH vault) into a Longbow ERC-4626 vault. Adds the exact-amount approval step if needed, simulates step 1, and returns unsigned transactions, a summary, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-supply',
+    inputSchema: obj({ from: FROM, vault: str('Vault key: core, frontier, or eth (or the vault address).'), amountUsdg: str('USDG to supply, as a decimal such as 100. USDG vaults only.'), amountEth: str('WETH to supply, as a decimal such as 0.1. ETH vault only.'), amount: str('Same in base units (6 decimals for USDG, 18 for WETH). Use instead of amountUsdg / amountEth.'), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'vault']),
+    handler: async (ctx, i, m) => prepareLongbowSupply(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_borrow',
+    title: 'Prepare a Longbow borrow',
+    description: 'Prepares borrowing USDG against collateral in a Longbow market, optionally posting new collateral in the same action. Refuses when the market fails the screen (Chainlink-priced, LLTV within the limit) or the resulting health factor would fall below 1.15. Returns unsigned transactions, the resulting health factor and liquidation price, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-borrow',
+    inputSchema: obj({ from: FROM, market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.'), amountUsdg: str('USDG to borrow, as a decimal such as 100.'), amount: str('Same in USDG base units (6 decimals). Use instead of amountUsdg.'), collateralAmountEth: str('New WETH collateral to post, as a decimal such as 0.1. WETH-collateral markets only.'), collateralAmount: str('New collateral in base units. Use instead of collateralAmountEth.'), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'market']),
+    handler: async (ctx, i, m) => prepareLongbowBorrow(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_repay',
+    title: 'Prepare a Longbow repayment',
+    description: 'Prepares repaying USDG debt in a Longbow market, in part or in full (all: true burns the borrow shares, so it stays correct as interest accrues). Returns unsigned transactions, the debt left after, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-repay',
+    inputSchema: obj({ from: FROM, market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.'), amountUsdg: str('USDG to repay, as a decimal such as 100.'), amount: str('Same in USDG base units (6 decimals). Use instead of amountUsdg.'), all: bool('Repay the whole debt. Use instead of an amount.'), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'market']),
+    handler: async (ctx, i, m) => prepareLongbowRepay(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_add_collateral',
+    title: 'Prepare adding Longbow collateral',
+    description: 'Prepares posting more collateral in a Longbow market. Adds the exact-amount approval step if needed, simulates step 1, and returns unsigned transactions, the health factor after, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-add-collateral',
+    inputSchema: obj({ from: FROM, market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.'), amountEth: str('Collateral to post, as a decimal such as 0.1. WETH-collateral markets only.'), amount: str('Same in base units. Use instead of amountEth.'), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'market']),
+    handler: async (ctx, i, m) => prepareLongbowAddCollateral(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_withdraw_collateral',
+    title: 'Prepare withdrawing Longbow collateral',
+    description: 'Prepares withdrawing collateral from a Longbow market, in part or in full (all: true). Refuses when the health factor after would fall below 1.15. Returns the unsigned transaction, the health factor after, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-withdraw-collateral',
+    inputSchema: obj({ from: FROM, market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.'), amountEth: str('Collateral to withdraw, as a decimal such as 0.1. WETH-collateral markets only.'), amount: str('Same in base units. Use instead of amountEth.'), all: bool('Withdraw all posted collateral. Use instead of an amount.'), ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'market']),
+    handler: async (ctx, i, m) => prepareLongbowWithdrawCollateral(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_close',
+    title: 'Prepare closing a Longbow position',
+    description: 'Prepares closing a Longbow position: repays the whole debt (by burning the borrow shares) and withdraws all posted collateral. Returns unsigned transactions and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-close',
+    inputSchema: obj({ from: FROM, market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId.'), ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'market']),
+    handler: async (ctx, i, m) => prepareLongbowClose(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_multiply',
+    title: 'Prepare a Longbow multiply',
+    description: 'Prepares a Longbow multiply in one atomic Bundler3 bundle: borrow USDG against WETH collateral, swap it for more WETH on Uniswap V4, post the WETH as more collateral. No flash loan — the borrow is sized so the position stays above the 1.15 health-factor floor before the swap. WETH-collateral markets only. Returns unsigned transactions, the resulting health factor, liquidation price, and leverage, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-multiply',
+    inputSchema: obj({ from: FROM, market: str('Market key (ETH, NVDA, SPY), symbol, name, or marketId. WETH-collateral markets only.'), borrowAmountUsdg: str('USDG to borrow, as a decimal such as 100.'), amount: str('Same in USDG base units (6 decimals). Use instead of borrowAmountUsdg.'), collateralAmountEth: str('New WETH collateral to post, as a decimal such as 0.1. Omit it to borrow against collateral already posted.'), collateralAmount: str('Same in WETH base units (18 decimals). Use instead of collateralAmountEth.'), slippageBps: SLIP, confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'market']),
+    handler: async (ctx, i, m) => prepareLongbowMultiply(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_stake_bow',
+    title: 'Prepare staking BOW',
+    description: 'Prepares staking BOW in Longbow\u2019s staking contract to earn USDG (borrower interest and a share of BOW trading fees, streamed per second). No lock, no cooldown. Adds the exact-amount approval step if needed, simulates step 1, and returns unsigned transactions, a summary, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-stake-bow',
+    inputSchema: obj({ from: FROM, amountBow: str('BOW to stake, as a decimal such as 100.'), amount: str('Same in BOW base units (18 decimals). Use instead of amountBow.'), confirmLarge: CONFIRM, ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from']),
+    handler: async (ctx, i, m) => prepareLongbowStakeBow(ctx, i, m),
+  },
+  {
+    name: 'polypad_prepare_longbow_claim_rebate',
+    title: 'Prepare claiming a Longbow borrow rebate',
+    description: 'Claims a Longbow borrow rebate for one epoch from the Merkle distributor. Currently refuses: the distributor is verified on-chain, but the exact claim function and the per-epoch Merkle proof source are not, so no claim transaction can be built correctly yet. Claim from Longbow\u2019s staking page until this tool is completed. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.',
+    kind: 'prepare', method: 'POST', path: 'prepare/longbow-claim-rebate',
+    inputSchema: obj({ from: FROM, epoch: int('The rebate epoch to claim.', { minimum: 1 }), ref: REF, returnUrl: RETURN_URL, walletToken: WALLET_TOKEN }, ['from', 'epoch']),
+    handler: async (ctx, i, m) => prepareLongbowClaimRebate(ctx, i, m),
+  },
 ];
 
+/** Tools visible in the index and in tools/list. Phase 2 Longbow prepares stay hidden until LONGBOW_PREPARE_ENABLED is on. The registry itself (and tools_v2.json) always lists all of them. */
+function visibleTools(): Tool[] {
+  return longbowPrepareEnabled() ? TOOLS : TOOLS.filter((t) => !isLongbowPrepareTool(t.name));
+}
+
 export function indexBody(): Json {
+  const shown = visibleTools();
   return {
     ok: true,
     name: 'Polypad agent API',
@@ -438,11 +575,11 @@ export function indexBody(): Json {
     chain: 'Robinhood Chain',
     custody: 'non-custodial',
     description: 'Browse launches, funds, and NFTs. Prepare buys, sells, NFT purchases, fund launches and investments, and token launches. Every write returns an unsigned transaction, a summary, and a signing link. Polypad never holds or accepts keys.',
-    mcp: { url: `${SITE_ORIGIN}/api/mcp`, transport: 'streamable-http, stateless', auth: 'none', tools: TOOLS.map((t) => t.name), skills: SKILLS.map((s) => s.name), skillsExtension: 'io.modelcontextprotocol/skills' },
+    mcp: { url: `${SITE_ORIGIN}/api/mcp`, transport: 'streamable-http, stateless', auth: 'none', tools: shown.map((t) => t.name), skills: SKILLS.map((s) => s.name), skillsExtension: 'io.modelcontextprotocol/skills' },
     rateLimits: { read: `${LIMITS.rate.read.limit}/min/ip`, prepare: `${LIMITS.rate.prepare.limit}/min/ip and ${LIMITS.rate.perWalletPrepare.limit}/min/wallet`, intent: `${LIMITS.rate.intent.limit}/min/ip` },
     limits: { defaultSlippageBps: LIMITS.defaultSlippageBps, maxSlippageBps: LIMITS.maxSlippageBps, confirmAboveEth: Number(LIMITS.confirmLargeWei / 10n ** 18n), maxActionEth: Number(LIMITS.maxActionWei / 10n ** 18n) },
     headers: { 'x-polypad-client': 'Optional client name, 1 to 64 characters, for traffic measurement.' },
-    endpoints: TOOLS.map((t) => ({ tool: t.name, method: t.method, path: `/api/agents/v2/${t.path}`, kind: t.kind, summary: t.title })),
+    endpoints: shown.map((t) => ({ tool: t.name, method: t.method, path: `/api/agents/v2/${t.path}`, kind: t.kind, summary: t.title })),
     v1: '/api/agents/v1',
     factories: { launch: ADDR.launchFactories[0].factory, fundsPhase6: ADDR.fundFactories[0].factory },
     disclaimer: WORDING.notAudited,
@@ -462,6 +599,12 @@ export async function runTool(ctx: Ctx, tool: Tool, input: Json, meta: Meta, lim
     // Status-only log: never the key or the key id.
     console.warn('[agent-chat] key not allowlisted');
     throw new ApiError(403, 'tool_not_available', 'This tool is only available to allowlisted business API keys.');
+  }
+  // Longbow Phase 2 prepares are built but gated: they refuse (MCP, REST,
+  // and nested intent calls all go through here) until the legal memo clears
+  // LONGBOW_PREPARE_ENABLED. The read tools are unaffected.
+  if (isLongbowPrepareTool(tool.name) && !longbowPrepareEnabled()) {
+    throw new ApiError(409, 'longbow_prepare_disabled', 'Longbow prepare tools are built but not enabled yet. They stay off until the legal review is complete (LONGBOW_PREPARE_ENABLED). The Longbow read tools work now.');
   }
   if (tool.kind === 'prepare' || tool.name === 'polypad_intent') bodyGuard(input);
   // A wallet token resolves `from` before the per-wallet limit is counted, so the bound wallet —

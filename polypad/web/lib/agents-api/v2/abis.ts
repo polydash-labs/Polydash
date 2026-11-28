@@ -55,6 +55,8 @@ export const erc20Abi = parseAbi([
   'function balanceOf(address) view returns (uint256)',
   'function allowance(address owner, address spender) view returns (uint256)',
   'function approve(address spender, uint256 value) returns (bool)',
+  'function transfer(address to, uint256 value) returns (bool)',
+  'function transferFrom(address from, address to, uint256 value) returns (bool)',
   'function imageUri() view returns (string)',
   'function description() view returns (string)',
   'function socialLinks() view returns (string[])',
@@ -257,3 +259,59 @@ export const stakingFactoryAbi = parseAbi([
 ]);
 export const vestingFactoryAbi = parseAbi(['function totalLockedForToken(address token) view returns (uint256)']);
 export const bondFactoryAbi = parseAbi(['function bondsByToken(address token) view returns (address[])']);
+
+/**
+ * Morpho Blue on Robinhood Chain (0x9D53…). MarketParams is the tuple
+ * (loanToken, collateralToken, oracle, irm, lltv). Selectors verified
+ * against Longbow's own bundles: supplyCollateral 0x238d6579, borrow 0x50d8cd4b.
+ * Share conversion follows Morpho's SharesMathLib (VIRTUAL_SHARES 1e6, VIRTUAL_ASSETS 1).
+ */
+export const morphoAbi = parseAbi([
+  'function supply((address,address,address,address,uint256) marketParams, uint256 assets, uint256 shares, address onBehalf, bytes data) returns (uint256, uint256)',
+  'function supplyCollateral((address,address,address,address,uint256) marketParams, uint256 assets, address onBehalf, bytes data)',
+  'function borrow((address,address,address,address,uint256) marketParams, uint256 assets, uint256 shares, address onBehalf, address receiver) returns (uint256, uint256)',
+  'function repay((address,address,address,address,uint256) marketParams, uint256 assets, uint256 shares, address onBehalf, bytes data) returns (uint256, uint256)',
+  'function withdraw((address,address,address,address,uint256) marketParams, uint256 assets, uint256 shares, address onBehalf, address receiver) returns (uint256, uint256)',
+  'function withdrawCollateral((address,address,address,address,uint256) marketParams, uint256 assets, address onBehalf, address receiver)',
+  'function market(bytes32 id) view returns (uint128 totalSupplyAssets, uint128 totalSupplyShares, uint128 totalBorrowAssets, uint128 totalBorrowShares, uint128 lastUpdate, uint128 fee)',
+  'function position(bytes32 id, address user) view returns (uint256 supplyShares, uint128 borrowShares, uint128 collateral)',
+  'function idToMarketParams(bytes32 id) view returns (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv)',
+  'function setAuthorization(address authorized, bool newAuthorization) returns (bool)',
+  'function isAuthorized(address authorizer, address authorized) view returns (bool)',
+  'function flashLoan(address token, uint256 assets, bytes data)',
+]);
+
+/** ERC-4626 vaults (Longbow Core / Frontier / ETH are MetaMorpho vaults). deposit selector 0x6e553f65 verified against Longbow's own bundle. */
+export const erc4626Abi = parseAbi([
+  'function asset() view returns (address)',
+  'function decimals() view returns (uint8)',
+  'function totalAssets() view returns (uint256)',
+  'function totalSupply() view returns (uint256)',
+  'function balanceOf(address) view returns (uint256)',
+  'function convertToShares(uint256 assets) view returns (uint256)',
+  'function convertToAssets(uint256 shares) view returns (uint256)',
+  'function deposit(uint256 assets, address receiver) returns (uint256)',
+  'function redeem(uint256 shares, address receiver, address owner) returns (uint256)',
+]);
+
+/**
+ * Morpho Bundler3 (generic multicall). Deployed at 0x6478… on 4663, verified
+ * on-chain: its dispatch table carries multicall 0x374f435d, initiator
+ * 0x5c39fcc1, reenter 0x803a7fba. Each Call is (to, data, value, skipRevert,
+ * callbackHash); callbackHash is 0 when no reentrance is required.
+ */
+export const bundler3Abi = parseAbi([
+  'function multicall((address,bytes,uint256,bool,bytes32)[] bundle) payable',
+  'function reenter((address,bytes,uint256,bool,bytes32)[] bundle) payable',
+  'function initiator() view returns (address)',
+]);
+
+/** BOW staking (StakingRewards 0xeba5…). stake(uint256) selector 0xa694fc3a verified against Longbow's own bundle. */
+export const bowStakingAbi = parseAbi(['function stake(uint256 amount)']);
+
+/** Longbow borrow-rebate Merkle distributor 0x23e9…. hasClaimed / publisher / owner selectors verified on-chain. The claim function itself is not yet verified, so claim_rebate refuses until it is. */
+export const rebateDistributorAbi = parseAbi([
+  'function hasClaimed(uint256 epoch, address account) view returns (bool)',
+  'function publisher() view returns (address)',
+  'function owner() view returns (address)',
+]);
