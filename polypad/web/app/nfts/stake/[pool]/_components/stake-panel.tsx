@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { usePublicClient } from 'wagmi';
 import { type Abi } from 'viem';
@@ -42,12 +42,23 @@ export function StakePanel({ p, user, state, now, ended }: { p: StakingPool; use
   const [pickStaked, setPickStaked] = useState<Set<string>>(new Set());
   const [confirmEmergency, setConfirmEmergency] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
+  const autoPickedOnce = useRef(false);
+  const userTouchedPick = useRef(false);
 
   const walletIds = useMemo(() => {
     const m = new Map<string, bigint>();
     [...(owned.data?.ids ?? []), ...manual].forEach((id) => m.set(id.toString(), id));
     return Array.from(m.values()).sort((a, b) => (a < b ? -1 : 1));
   }, [owned.data, manual]);
+  // Owned NFTs are already known, so select them by default — tap to unpick
+  // any you want to keep. Only done once, so a manual unpick is respected.
+  useEffect(() => {
+    if (autoPickedOnce.current || userTouchedPick.current) return;
+    const ids = owned.data?.ids ?? [];
+    if (!ids.length) return;
+    autoPickedOnce.current = true;
+    setPick(new Set(ids.map((i) => i.toString())));
+  }, [owned.data]);
   const staked = state?.ids ?? [];
   const age = state ? Math.max(0, now - state.fetchedAt) : 0;
   const boosted = p.tierBps.length > 1;
@@ -194,20 +205,22 @@ export function StakePanel({ p, user, state, now, ended }: { p: StakingPool; use
                 className="h-9 flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 font-mono text-[13px] text-white outline-none placeholder:text-white/35 focus:border-polydash-green/50" />
               <Button size="sm" variant="outline" className="rounded-full" onClick={addManual}>Add</Button>
             </div>
+            <p className="text-[11px] text-white/55">Only needed if your NFTs don&apos;t show up above — paste the number printed on each NFT, separated by commas.</p>
             {manualMsg && <p className="text-[11px] text-white/60">{manualMsg}</p>}
           </div>
         )}
         {walletIds.length > 0 && (
           <>
             <div className="flex flex-wrap gap-2">
-              {walletIds.map((id) => <Chip key={id.toString()} id={id} selected={pick.has(id.toString())} onClick={() => setPick(toggle(pick, id.toString()))} />)}
+              {walletIds.map((id) => <Chip key={id.toString()} id={id} selected={pick.has(id.toString())} onClick={() => { userTouchedPick.current = true; setPick(toggle(pick, id.toString())); }} />)}
             </div>
-            <button type="button" className="text-[12px] text-white/60 hover:text-white" onClick={() => setPick(pick.size === walletIds.length ? new Set() : new Set(walletIds.map((i) => i.toString())))}>
+            <button type="button" className="text-[12px] text-white/60 hover:text-white" onClick={() => { userTouchedPick.current = true; setPick(pick.size === walletIds.length ? new Set() : new Set(walletIds.map((i) => i.toString()))); }}>
               {pick.size === walletIds.length ? 'Clear selection' : 'Select all'}
             </button>
           </>
         )}
         {!owned.isLoading && !walletIds.length && !owned.data?.tooLarge && !owned.isError && <p className="text-[12px] text-white/55">No NFTs from this collection found in your wallet.</p>}
+        <p className="rounded-xl bg-amber-400/[0.07] px-3 py-2 text-[12px] leading-relaxed text-amber-200/90 ring-1 ring-amber-400/25">{STAKED_LOCK_NOTE}</p>
         <div className="flex flex-wrap gap-2">
           {!state?.approved ? (
             <Button size="sm" className="rounded-full" disabled={busy || ended} onClick={approve}>{pending === 'approveAll' && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}Approve collection</Button>
@@ -216,9 +229,13 @@ export function StakePanel({ p, user, state, now, ended }: { p: StakingPool; use
             {pending === 'stake' && <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />}Stake{selected.length ? ` ${Math.min(selected.length, MAX_BATCH)}` : ''}
           </Button>
         </div>
+        {!state?.approved && (
+          <p className="text-[12px] leading-relaxed text-white/55">
+            Step 1 of 2: you approve this page to move NFTs from this collection. Step 2: you stake the ones you pick. Approving alone moves nothing.
+          </p>
+        )}
         {selected.length > MAX_BATCH && <p className="text-[11px] text-amber-300">Up to {MAX_BATCH} NFTs per transaction. The first {MAX_BATCH} will be staked.</p>}
         {ended && <p className="text-[11px] text-white/55">This pool has ended. Staking is closed; you can still withdraw and claim.</p>}
-        <p className="text-[11px] text-white/55">{STAKED_LOCK_NOTE}</p>
       </div>
 
       <AlertDialog open={confirmWithdraw} onOpenChange={setConfirmWithdraw}>

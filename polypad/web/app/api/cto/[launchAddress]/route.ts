@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma, withTimeout } from '@/lib/db';
 import { ensureCto, getCachedReport, isExternalRow, snapshotFor, syncCto } from '@/lib/cto/chain';
 import { listPromises } from '@/lib/promises/summary';
 import { evaluateLaunchPromises } from '@/lib/promises/evaluate';
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 /** Hard ceiling for the whole handler — Vercel Hobby kills the function at 10s, so answer before then. */
 const HANDLER_TIMEOUT_MS = 9_000;
 /** How long to wait for a first report build inside one request. */
-const REPORT_WAIT_MS = 7_000;
+const REPORT_WAIT_MS = 6_000;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ launchAddress: string }> }) {
   const { launchAddress } = await params;
@@ -53,15 +53,17 @@ async function buildCtoResponse(launchAddress: string) {
       .finally(() => scanLaunchXray(row.launchAddress).catch((e) => console.error('xray scan failed', e?.message)))
       .finally(() => refreshBuild(row).catch(() => null))
       .finally(() => auditLaunch(row.launchAddress, row.tokenAddress));
-    // Cached report returns instantly (refreshed in the background); the first build waits at most ~7s.
+    // Cached report returns instantly (refreshed in the background); the first build waits at most ~6s.
     const { report, refreshing } = await getCachedReport(row, REPORT_WAIT_MS);
+    // Extras are best-effort and DB-backed: each is raced so a suspended
+    // database degrades to empty extras instead of stalling the response.
     const [snapshots, alerts, profile, promises, xray, build] = await Promise.all([
-      report ? snapshotFor(row, report) : Promise.resolve(null),
-      prisma.cTOAlert.findMany({ where: { launchAddress: row.launchAddress }, orderBy: { createdAt: 'desc' }, take: 30 }),
-      prisma.cTOProfile.findUnique({ where: { launchAddress: row.launchAddress } }),
-      listPromises(row.launchAddress, row.symbol, report?.graduation?.event?.timestamp ?? null).catch(() => []),
-      getXray(row.launchAddress),
-      getBuildView(row.launchAddress).catch(() => null),
+      report ? withTimeout(snapshotFor(row, report), 1_500) : Promise.resolve(null),
+      withTimeout(prisma.cTOAlert.findMany({ where: { launchAddress: row.launchAddress }, orderBy: { createdAt: 'desc' }, take: 30 })).then((r) => r ?? []),
+      withTimeout(prisma.cTOProfile.findUnique({ where: { launchAddress: row.launchAddress } })),
+      withTimeout(listPromises(row.launchAddress, row.symbol, report?.graduation?.event?.timestamp ?? null), 1_500).then((r) => r ?? []),
+      withTimeout(getXray(row.launchAddress), 1_500),
+      withTimeout(getBuildView(row.launchAddress), 1_500),
     ]);
     return NextResponse.json({
       report,

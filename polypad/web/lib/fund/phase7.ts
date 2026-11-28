@@ -7,6 +7,11 @@ export const V3_TEMPLATE_IDS = [6, 7, 8, 9] as const;
 export function isLpTemplate(id: number | null | undefined): boolean {
   return id != null && (V3_TEMPLATE_IDS as readonly number[]).includes(id);
 }
+/** Strategy #10 (Polydash Yield) runs on the V3 factory — it needs the liquidity + stake facets. It is NOT an LP-Dividend template: no fee variants, no LP opt-ins. */
+export const YIELD_TEMPLATE_IDS = [10] as const;
+export function isYieldTemplate(id: number | null | undefined): boolean {
+  return id != null && (YIELD_TEMPLATE_IDS as readonly number[]).includes(id);
+}
 /** LP-Dividend performance-fee choice: same strategy, one strategy id per fee. 5% (Strategy #6) is the default. */
 export const LP_FEE_OPTIONS = [
   { feeBps: 0, templateId: 7 },

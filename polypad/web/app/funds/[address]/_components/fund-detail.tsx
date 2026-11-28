@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { formatEther } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from 'wagmi';
+import { useAccount, useBalance, usePublicClient, useSwitchChain, useWriteContract } from 'wagmi';
+import { useEthPrice } from '@/lib/hooks/use-launches';
 import { toast } from 'sonner';
 import { TokenAvatar } from '@/components/token-avatar';
 import { Button } from '@/components/ui/button';
@@ -25,7 +27,11 @@ import {
 import { useFund } from '@/lib/fund/use-funds';
 import { shortenAddress } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { BuyEthButton } from '@/components/onramp/buy-eth';
+import { OnrampInline } from '@/components/onramp/buy-eth';
+import { ChainSwitchNote } from '../../_components/phase3-ui';
+import { SafeDate } from '@/components/safe-format';
+import BeginnerStart from '@/components/beginner-start';
+import GlossaryBox from '@/components/glossary-box';
 import { FundNotice } from '../../_components/fund-notice';
 import { FundTerminal } from './fund-terminal';
 import { HolderExit } from './holder-exit';
@@ -37,7 +43,9 @@ const FUND_PLACEHOLDER_LOGO = '/polydash-mark-white.png';
 
 export function FundDetail({ address, focusMint }: { address: string; focusMint?: boolean }) {
   const { address: account, isConnected, chainId } = useAccount();
-  const { data: fund, isLoading, isError } = useFund(address, account);
+  const { data: fund, isLoading, isError, refetch } = useFund(address, account);
+  const { data: ethBalance } = useBalance({ address: account, chainId: robinhoodChain.id });
+  const ethUsd = useEthPrice().data;
   const { writeContractAsync } = useWriteContract();
   const { switchChainAsync } = useSwitchChain();
   const publicClient = usePublicClient({ chainId: robinhoodChain.id });
@@ -64,17 +72,23 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
   }, [focusMint, fund]);
 
   if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
-    return <Missing title="That is not a fund address" />;
+    return <Missing title="That is not a tokenized fund address" />;
   }
   if (isLoading) {
     return (
       <div className="mx-auto flex max-w-container items-center justify-center gap-2 px-5 py-20 text-[13px] text-white/50">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading fund…
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading tokenized fund…
       </div>
     );
   }
-  if (isError) return <Missing title="Could not load this fund right now" />;
-  if (!fund) return <Missing title="No Polypad fund was found at this address" />;
+  if (isError) {
+    return (
+      <Missing title="Could not load this tokenized fund right now">
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-3">Try again</Button>
+      </Missing>
+    );
+  }
+  if (!fund) return <Missing title="No Polypad tokenized fund was found at this address" />;
 
   const progress = ratioPercent(fund.raised, fund.raiseCap);
   const dust = fund.mintPrice > 0n ? fund.raiseCap % fund.mintPrice : 0n;
@@ -86,6 +100,10 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
       ? `Only ${remaining.toString()} shares are left.`
       : undefined;
   const quote = qty > 0n ? quoteMint(fund.mintPrice, qty, BigInt(fund.entryFeeBps)) : null;
+  const usd = (wei: bigint) => (ethUsd ? ` (≈ $${(Number(formatEther(wei)) * ethUsd).toFixed(2)})` : '');
+  /** Extra ETH kept aside for the network fee (gas) when checking the wallet balance before a mint. */
+  const GAS_RESERVE_WEI = 1_000_000_000_000_000n; // 0.001 ETH
+  const shortfall = quote && ethBalance && ethBalance.value < quote.cost + GAS_RESERVE_WEI ? quote.cost + GAS_RESERVE_WEI - ethBalance.value : 0n;
   const closed = fund.status === 'closed' || remaining === 0n;
   const blocked = fund.status === 'waiting' && !isManager;
   const statusText = fundStatusText(fund.status, fund.vaultStatus);
@@ -156,7 +174,7 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
         </div>
       </div>
 
-      <BuyEthButton />
+      <BeginnerStart compact />
 
       <div className={cn('rounded-2xl p-4 text-[13px] leading-relaxed', statusText.refund ? 'border border-polydash-green/40 bg-polydash-green/10 text-white/85' : 'bg-white/[0.03] text-white/65')}>
         <p className="font-medium text-white">{statusText.label}</p>
@@ -164,15 +182,15 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
       </div>
 
       <p className="max-w-2xl text-[13px] leading-relaxed text-white/60">
-        Each share is an equal part of the fund. {fund.invest
-          ? 'The manager can only buy tokens from the approved list of tokens the fund may buy (the allowlist). Fund value per share (NAV, net asset value) uses live price sources and is left blank when a price cannot be read.'
+        Each share is an equal part of the tokenized fund. {fund.invest
+          ? 'The manager can only buy tokens from the approved list of tokens the fund may buy (the allowlist). Value per share uses live price sources and is left blank when a price cannot be read.'
           : 'Your shares are your claim on the ETH held in the vault.'}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label="Raised" value={`${formatFundEth(fund.raised)} ETH`} hint={`of ${formatFundEth(fund.raiseCap)} ETH`} />
         <Stat label="Shares sold" value={`${fund.totalMinted.toString()} / ${fund.maxSupply.toString()}`} hint="shares" />
-        <Stat label="Price per share" value={`${formatFundEth(fund.mintPrice)} ETH`} hint={`Entry fee ${bpsLabel(fund.entryFeeBps)}`} />
+        <Stat label="Price per share" value={`${formatFundEth(fund.mintPrice)} ETH${usd(fund.mintPrice)}`} hint={`Entry fee ${bpsLabel(fund.entryFeeBps)}`} />
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
@@ -181,6 +199,11 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
           <span className="font-mono">{progress.toFixed(progress >= 10 ? 1 : 2)}%</span>
         </div>
         <Progress value={progress} className="h-2 bg-white/10" />
+        {fund.raiseDeadline > 0 && (
+          <p className="mt-2 text-[12px] text-white/55">
+            Raise ends <SafeDate date={fund.raiseDeadline * 1000} options={{ dateStyle: 'medium' }} localize /> (your local time).
+          </p>
+        )}
         {dust > 0n && (
           <p className="mt-3 text-[12px] leading-relaxed text-white/50">
             The goal does not divide into whole shares. At most {formatFundEth(effective)} ETH can be collected across {fund.maxSupply.toString()} shares. {formatFundEth(dust)} ETH of the goal cannot buy another share.
@@ -189,8 +212,10 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
       </div>
 
       <section id="mint" className="scroll-mt-20 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-        <h2 className="text-[15px] font-semibold">Join this fund</h2>
-        <ol className="mt-2 list-decimal space-y-1 pl-5 text-[12px] leading-relaxed text-white/60">
+        <h2 className="text-[15px] font-semibold">Join this tokenized fund</h2>
+        <p className="mt-1 text-[13px] leading-relaxed text-white/60">Buying a share is called minting — you get an NFT share in your wallet.</p>
+        <ChainSwitchNote className="mt-3" />
+        <ol className="mt-3 list-decimal space-y-1 pl-5 text-[13px] leading-relaxed text-white/60">
           <li>Choose how many shares you want. Next: you see the exact cost in ETH.</li>
           <li>Check the cost and fees. Next: press the button to pay.</li>
           <li>Confirm in your wallet. Next: the shares arrive in your wallet and count toward the raise.</li>
@@ -211,35 +236,42 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
 
         {!closed && !blocked && (
           <div className="mt-4 space-y-3">
+            <OnrampInline />
             <label className="block text-xs text-muted-foreground">
               Step 1: How many shares do you want?
               <Input value={qtyText} onChange={(event) => setQtyText(event.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" className="mt-1 max-w-[160px] bg-secondary/50 font-mono" />
             </label>
-            {qtyError && qtyText !== '' && <p className="text-[12px] text-red-300">{qtyError}</p>}
+            {qtyError && qtyText !== '' && <p className="text-[13px] text-red-300">{qtyError}</p>}
             {quote && !qtyError && (
-              <div className="space-y-1 text-[12px] text-white/60">
-                <p>You pay {formatFundEth(quote.cost)} ETH.</p>
+              <div className="space-y-1 text-[13px] text-white/60">
+                <p>You pay {formatFundEth(quote.cost)} ETH{usd(quote.cost)}.</p>
                 <p>Protocol fee (0.2%): {formatFundEth(quote.protocolFee)} ETH.</p>
                 {fund.entryFeeBps > 0 && <p>Entry fee ({bpsLabel(fund.entryFeeBps)}): {formatFundEth(quote.entryFee)} ETH.</p>}
                 <p>Stays in the vault: {formatFundEth(quote.staysInVault)} ETH.</p>
+                <p>Plus a small network fee (gas), paid separately — usually a few cents. You need a little extra ETH beyond the share price.</p>
                 <p>
                   If the raise fails, you can get {formatFundEth(quote.failedRaiseRefund)} ETH of this payment back.
                   The protocol fee and the entry fee are not returned.
                 </p>
               </div>
             )}
+            {shortfall > 0n && <p className="text-[13px] text-white/75">You need {formatFundEth(shortfall)} more ETH — buy ETH first in Step 0 above.</p>}
             {!isConnected ? (
               <ConnectButton.Custom>
-                {({ openConnectModal }) => <Button onClick={openConnectModal}>Connect wallet</Button>}
+                {({ openConnectModal }) => <Button onClick={openConnectModal}>Connect wallet to buy shares</Button>}
               </ConnectButton.Custom>
             ) : (
-              <Button onClick={handleMint} disabled={minting || !!qtyError} className="gap-2">
-                {minting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isManager && fund.status === 'waiting' ? 'Buy your manager shares' : 'Buy shares'}{quote && !qtyError ? `: pay ${formatFundEth(quote.cost)} ETH (sign 1 transaction)` : ''}
-              </Button>
+              <>
+                <Button onClick={handleMint} disabled={minting || !!qtyError || shortfall > 0n} className="w-full bg-white text-black hover:bg-white/90">
+                  {minting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Buy shares
+                </Button>
+                <p className="text-[13px] text-white/60">Signing just approves this action in your wallet. It doesn&rsquo;t give Polypad access to your funds.</p>
+                <p className="text-[13px] text-white/60">Unaudited — you could lose some or all of your ETH.</p>
+              </>
             )}
             {isConnected && chainId !== robinhoodChain.id && (
-              <p className="text-[12px] text-white/45">Your wallet will be asked to switch to Robinhood Chain.</p>
+              <p className="text-[13px] text-white/60">Your wallet will be asked to switch to Robinhood Chain.</p>
             )}
           </div>
         )}
@@ -252,6 +284,8 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
         )}
       </section>
 
+      <GlossaryBox />
+
       <FundTerminal
         status={fund.status}
         navPerNft={fund.navPerNft}
@@ -263,9 +297,9 @@ export function FundDetail({ address, focusMint }: { address: string; focusMint?
       <HolderExit fund={fund} account={account} />
       <ManagerDesk vault={fund.vault} status={fund.status} isManager={isManager} invest={fund.invest} />
 
-      <div className="space-y-1 text-[12px] text-white/50">
+      <div className="space-y-1 text-[13px] text-white/60">
         <p>
-          Fund (shares contract){' '}
+          Tokenized fund (shares contract){' '}
           <a className="font-mono text-polydash-green" href={getExplorerAddressUrl(fund.address)} target="_blank" rel="noopener noreferrer">{fund.address}</a>
         </p>
         <p>
@@ -288,11 +322,12 @@ function Stat({ label, value, hint }: { label: string; value: string; hint: stri
   );
 }
 
-function Missing({ title }: { title: string }) {
+function Missing({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-container px-5 py-20 text-center">
       <p className="text-white/70">{title}</p>
-      <Link href="/funds" className="mt-3 inline-block text-[13px] text-polydash-green">Back to funds</Link>
+      {children}
+      <div><Link href="/funds" className="mt-3 inline-block text-[13px] text-polydash-green">Back to tokenized funds</Link></div>
     </div>
   );
 }

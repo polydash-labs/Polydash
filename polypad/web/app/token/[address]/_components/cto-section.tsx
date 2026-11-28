@@ -77,9 +77,18 @@ export function CtoSection({ token, external = false }: { token: LaunchToken; ex
     },
     refetchInterval: (query) => {
       const d = query.state.data;
-      if (!d?.pending) return 60_000;
-      // A build stuck for 30s+ polls slowly instead of every 3s — it is not going to finish on its own.
-      return stuckRef.current ? 60_000 : 3_000;
+      if (!d) return 3_000;
+      if (d.pending) {
+        // A build stuck for 30s+ polls slowly instead of every 3s — it is not going to finish on its own.
+        return stuckRef.current ? 60_000 : 3_000;
+      }
+      // A report that failed to build (500/503 — usually the database waking
+      // up) is polled every 15s instead of sitting on the failure panel for
+      // a minute (round 7: the scan caught exactly that state on POLYCAT and
+      // POLYDASH, while the route returned 200 with real data minutes later).
+      // Once built, the refetch becomes the normal 60s tick.
+      if (!d.report) return 15_000;
+      return 60_000;
     },
     staleTime: 30_000,
   });

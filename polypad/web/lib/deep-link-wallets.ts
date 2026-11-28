@@ -1,4 +1,5 @@
 import type { Wallet } from '@rainbow-me/rainbowkit';
+import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 import { metaMaskWallet, coinbaseWallet, trustWallet } from '@rainbow-me/rainbowkit/wallets';
 import { createConnector } from 'wagmi';
 import { injected } from 'wagmi/connectors';
@@ -53,6 +54,59 @@ function deepLinkWallet(opts: {
   };
 }
 
+function hasPolycube(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof (window as Window & { polycube?: unknown }).polycube !== 'undefined'
+  );
+}
+
+/**
+ * Polycube — Polypad's own browser extension (Rabby fork). The extension
+ * announces itself over EIP-6963 as Polycube (rdns family.polypad.polycube,
+ * Polydash logo icon) via the patched @rabby-wallet/page-provider, so when it
+ * is installed RainbowKit shows the EIP-6963 entry and this entry is deduped
+ * away. When it is not installed, this entry shows with the Chrome Web Store
+ * download link. The connector is a fallback for the not-discovered case; the
+ * EIP-6963 path is what connects when installed.
+ */
+export function buildPolycube(): Wallet {
+  return {
+    id: 'polycube',
+    name: 'Polycube',
+    rdns: 'family.polypad.polycube',
+    iconUrl: '/polycube-icon.png',
+    iconBackground: '#000000',
+    downloadUrls: {
+      chrome:
+        'https://chromewebstore.google.com/detail/polywallet/eiffolfghfbiacfghddfkgkholeemglp',
+      browserExtension:
+        'https://chromewebstore.google.com/detail/polywallet/eiffolfghfbiacfghddfkgkholeemglp',
+    },
+    installed: hasPolycube(),
+    createConnector: (walletDetails) =>
+      createConnector((config) => {
+        const base = injected()(config);
+        return {
+          ...base,
+          ...walletDetails,
+          // RainbowKit calls getChainId() before connect(); without a provider it would throw and the
+          // install UI would never show.
+          async getChainId() {
+            if (!hasPolycube()) return config.chains[0].id;
+            return base.getChainId();
+          },
+          async connect(params) {
+            if (!hasPolycube()) {
+              throw new Error('Install Polycube to connect.');
+            }
+            return base.connect(params);
+          },
+        } as typeof base;
+      }),
+  };
+}
+
 export function buildDeepLinkWallets(): Wallet[] {
   // Reuse RainbowKit's official icons; the WalletConnect connectors behind these are never created.
   const ref = { projectId: 'unused', appName: 'Polypad' };
@@ -86,4 +140,27 @@ export function buildDeepLinkWallets(): Wallet[] {
       buildUrl: (u) => `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(u)}`,
     }),
   ];
+}
+
+/**
+ * Robinhood Wallet, listed by name. RainbowKit 2.2.11 ships no Robinhood
+ * connector, and Robinhood publishes no deep link for opening a dapp, so
+ * this entry runs on WalletConnect — the path Robinhood's own docs describe:
+ * scan the QR code with Robinhood Wallet, or pick it from the WalletConnect
+ * list on your phone. Needs a Reown Cloud project ID (NEXT_PUBLIC_
+ * WALLETCONNECT_PROJECT_ID); without one the entry is hidden, exactly like
+ * the other WalletConnect wallets.
+ */
+export function buildRobinhoodWallet(projectId: string): Wallet {
+  return {
+    id: 'polydash-robinhood',
+    name: 'Robinhood Wallet',
+    iconUrl: '/robinhood-wallet.svg',
+    iconBackground: '#00C805',
+    downloadUrls: {
+      android: 'https://play.google.com/store/apps/details?id=com.robinhood.gateway',
+    },
+    qrCode: { getUri: (uri: string) => uri },
+    createConnector: getWalletConnectConnector({ projectId }),
+  };
 }

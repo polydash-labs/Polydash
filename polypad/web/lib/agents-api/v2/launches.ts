@@ -5,9 +5,15 @@
 import { erc20Abi, hookAbi, launchAbi, launchFactoryAbi, stakingFactoryAbi, stateViewAbi, vestingFactoryAbi, bondFactoryAbi } from './abis';
 import { ADDR, EXPLORER, LIMITS, PHASE_NAME, POOL_LP_FEE, POOL_TICK_SPACING, WORDING } from './config';
 import { ApiError, cached, ethDisplay, optUint, unitsDisplay, type Addr, type Ctx } from './core';
-import { getAddress, isAddress } from 'viem';
+import { getAddress, isAddress, parseUnits } from 'viem';
 import { AGENT_LAUNCH_MARK, isAgentLaunched } from '../../agent-mark';
 import { getLogsChunked, blocksPerSecond } from './logs';
+import { POLYDASH_ADDRESS } from '../../x402/constants';
+import {
+  PLATFORM_TOKEN_DESCRIPTION,
+  POLYDASH_DEPLOYER,
+  getPlatformTokenFacts,
+} from '../../platform-token';
 
 export type LaunchInfo = {
   launch: Addr;
@@ -35,6 +41,8 @@ export type LaunchInfo = {
   socialLinks: string[];
   agentLaunched: boolean;
   progressPct: number;
+  /** Set for POLYDASH: it has no launch contract, so links point at the market, not a token page. */
+  platformToken?: boolean;
 };
 
 const LAUNCH_FIELDS = [
@@ -195,7 +203,58 @@ export function launchView(l: LaunchInfo) {
     agentLaunched: l.agentLaunched,
     agentMark: l.agentLaunched ? AGENT_LAUNCH_MARK : null,
     socialLinks: l.socialLinks.filter((s) => s !== AGENT_LAUNCH_MARK).slice(0, 6),
-    links: { token: `https://polypad.family/token/${l.launch}`, explorer: `${EXPLORER}/address/${l.token}` },
+    links: l.platformToken
+      ? { token: `https://dexscreener.com/robinhood/${l.token}`, explorer: `${EXPLORER}/address/${l.token}` }
+      : { token: `https://polypad.family/token/${l.launch}`, explorer: `${EXPLORER}/address/${l.token}` },
+  };
+}
+
+/**
+ * POLYDASH as a synthetic launch: it was never deployed through a launch
+ * factory, so resolveLaunch cannot find it, but agents ask for it by
+ * address and symbol more than any launch. Phase 4 (graduated) is the
+ * honest state — it trades freely on its WETH pool — with no curve, no
+ * raise, and no launch contract. Null when the chain cannot be read.
+ * Used ONLY by polypad_get_token: quote/buy/sell/protections are
+ * launch-specific and must keep 404ing for it.
+ */
+export async function getPlatformTokenLaunch(ctx: Ctx): Promise<LaunchInfo | null> {
+  const facts = await getPlatformTokenFacts(ctx.client, POLYDASH_ADDRESS).catch(() => null);
+  if (!facts) return null;
+  return {
+    launch: POLYDASH_ADDRESS,
+    token: POLYDASH_ADDRESS,
+    factoryId: 'platform',
+    hook: '0x0000000000000000000000000000000000000000',
+    name: facts.name,
+    symbol: facts.symbol,
+    imageUri: '',
+    description: PLATFORM_TOKEN_DESCRIPTION,
+    creator: POLYDASH_DEPLOYER,
+    creatorFeeBps: 0,
+    creatorPayoutWallet: POLYDASH_DEPLOYER,
+    phase: 4,
+    phaseName: 'graduated',
+    spotPriceWei: (() => {
+      if (facts.priceNative == null) return 0n;
+      try {
+        return parseUnits(facts.priceNative, 18);
+      } catch {
+        return 0n;
+      }
+    })(),
+    realEthRaisedWei: 0n,
+    graduationThresholdWei: 0n,
+    tokensSoldWei: facts.totalSupply,
+    curveSupplyWei: 0n,
+    totalSupplyWei: facts.totalSupply,
+    launchTime: 0,
+    devBuyTokensWei: 0n,
+    totalCommittedWei: 0n,
+    socialLinks: [],
+    agentLaunched: false,
+    progressPct: 100,
+    platformToken: true,
   };
 }
 

@@ -1,6 +1,6 @@
 // Promise Ledger read helpers (DB only, no RPC): views, counts and the health-score factor. Server only.
 import type { CreatorPromise } from '@prisma/client';
-import { prisma } from '@/lib/db';
+import { prisma, withTimeout } from '@/lib/db';
 import type { CtoReport, HealthItem } from '@/lib/cto/chain';
 import { bevorItem, type BevorAuditView } from '@/lib/bevor/shared';
 import { getBevorAudit } from '@/lib/bevor/audit';
@@ -132,11 +132,17 @@ export function applySourceVerified(report: CtoReport, sv: SourceVerified | null
 }
 
 export async function withPromiseHealth(report: CtoReport): Promise<CtoReport> {
-  const [s, x, a, b, sv] = await Promise.all([
+  // Enrichment reads the promise ledger, X-ray, Bevor and build tables.
+  // When the DB is down those reads hang instead of failing, so race the
+  // whole enrichment: on timeout the report goes out with its base health
+  // score rather than stalling the request.
+  const enriched = await withTimeout(Promise.all([
     promiseSummary(report.cto.launchAddress).catch(() => null), fairnessFor(report.cto.launchAddress), getBevorAudit(report.cto.launchAddress),
     getBuildScore(report.cto.launchAddress).catch(() => null),
     getSourceVerified([report.cto.tokenAddress, report.cto.launchAddress]).catch(() => null),
-  ]);
+  ]), 1_000);
+  if (!enriched) return report;
+  const [s, x, a, b, sv] = enriched;
   return applyPromiseHealth(applySourceVerified(report, sv), s ?? { total: 0, kept: 0, broken: 0, active: 0, review: 0 }, x, a, b, !!getExternalToken(report.cto.launchAddress));
 }
 

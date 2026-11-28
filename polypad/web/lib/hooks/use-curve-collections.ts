@@ -5,6 +5,7 @@ import { usePublicClient } from 'wagmi';
 import { type PublicClient } from 'viem';
 import { CurveCollectionABI, CurveFactoryABI, getCurveFactoryAddress, getPhase2DeployBlock } from '@/lib/contracts/nft-market-abis';
 import { NFT_FACTORY_DEPLOY_BLOCK } from '@/lib/contracts/nft-abis';
+import { filterHiddenNftCollections, isHiddenNftCollection } from '@/lib/nft-hidden';
 import { robinhoodChain } from '@/lib/chain';
 
 const FIELDS = [
@@ -79,7 +80,9 @@ export function useCurveCollections() {
         contracts: Array.from({ length: len }, (_, i) => ({ address: factory, abi: CurveFactoryABI, functionName: 'allCollections', args: [BigInt(i)] })) as any,
         allowFailure: true,
       });
-      const addrs = addrRes.flatMap((r) => (r.status === 'success' ? [r.result as `0x${string}`] : [])).reverse();
+      const addrs = filterHiddenNftCollections(
+        addrRes.flatMap((r) => (r.status === 'success' ? [r.result as `0x${string}`] : [])),
+      ).reverse();
       return fetchCurveCollections(client!, addrs);
     },
   });
@@ -96,6 +99,8 @@ export function useCurveCollection(address?: string) {
     queryFn: async () => {
       if (!factory) return null;
       const a = address as `0x${string}`;
+      // Hidden test collections never render, even by direct URL.
+      if (isHiddenNftCollection(a)) return null;
       const ok = await client!.readContract({ address: factory, abi: CurveFactoryABI, functionName: 'isCollection', args: [a] });
       if (!ok) return null;
       const [c] = await fetchCurveCollections(client!, [a]);

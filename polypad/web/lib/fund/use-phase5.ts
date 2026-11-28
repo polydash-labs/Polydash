@@ -175,7 +175,7 @@ export function usePhase5Tx(registryOk: boolean) {
   const [pending, setPending] = useState<string | null>(null);
 
   const send = async (o: { key: string; address: Addr; abi: Abi; functionName: string; args?: readonly unknown[]; value?: bigint; success: string; working: string }) => {
-    if (!phase5Live() || !registryOk) { toast.error('Phase 5 is not live on this site yet.'); return null; }
+    if (!phase5Live() || !registryOk) { toast.error('Share trading is not live on this site yet.'); return null; }
     if (!client || !address) { toast.error('Connect a wallet to continue.'); return null; }
     setPending(o.key);
     const tid = toast.loading('Checking the transaction...');

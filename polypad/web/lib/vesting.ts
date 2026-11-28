@@ -90,7 +90,10 @@ export const V2PoolViewABI = parseAbi([
 
 export function fmtDate(sec: number): string {
   if (!sec) return '—';
-  return new Date(sec * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  // UTC, like the security report's day(): the same vault timestamp rendered
+  // "Dec 3, 2026" there and "Dec 2, 2026" here in US timezones (the vault's
+  // cliff/end fall just after UTC midnight — round 7).
+  return new Date(sec * 1000).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric' });
 }
 export function fmtDateTime(sec: number): string {
   if (!sec) return '—';

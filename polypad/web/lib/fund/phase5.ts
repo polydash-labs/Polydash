@@ -19,10 +19,10 @@ export const PHASE5_DEPLOY_BLOCK = 110_620_386n;
 export const P5_TIERS = [30, 90, 180] as const;
 
 export const P5_COPY = {
-  notLive: 'Phase 5 is not live on this site yet. No Phase 5 transaction can be sent from here.',
-  mismatch: 'The Phase 5 registry on Robinhood Chain does not match this site. No Phase 5 transaction can be sent from here.',
+  notLive: 'Share trading is not live on this site yet. No share-trading transaction can be sent from here.',
+  mismatch: 'The share-trading registry on Robinhood Chain does not match this site. No share-trading transaction can be sent from here.',
   nfa: 'Not financial advice.',
-  note: 'Phase 5 contracts on Robinhood Chain (chain id 4663). Sourcify exact match. Not audited. Not financial advice.',
+  note: 'Share-trading contracts on Robinhood Chain (chain id 4663). Sourcify exact match. Not audited. Not financial advice.',
   listTip: 'You set a fixed ETH price. The share can stay in your wallet if you approve this market, or you can send it into escrow. A share in a conviction lock cannot be listed. After a sale, you withdraw the ETH yourself. This is not leaving the tokenized fund. Not financial advice.',
   buyTip: 'A listing is a fixed price set by the seller. It is not a net-value quote. The tokenized fund does not pay anyone. Not financial advice.',
   artTip: "This image is drawn onchain from the tokenized fund's current readings. The figures are vault readings, not a quote of what a buyer will pay. If a price feed cannot be read, the art says so and still returns. Not financial advice.",
@@ -57,7 +57,7 @@ const ERRORS: Record<string, string> = {
   listed: 'This share is listed. Cancel the listing first.',
   notexitable: 'This share cannot exit right now.',
   notqueued: 'This share is not queued.',
-  notfund: 'This is not a Phase 3 tokenized fund.',
+  notfund: 'This tokenized fund does not support share trading.',
 };
 
 // Tuple parsers. viem returns single-struct outputs (listing) as objects and multi-output

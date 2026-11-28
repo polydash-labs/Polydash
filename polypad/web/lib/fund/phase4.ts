@@ -26,9 +26,9 @@ export const P4_MIN_SEASON = 86_400; // MIN_SEASON
 export const P4_MIN_BID = 10_000_000_000_000n; // 0.00001 ETH
 
 export const P4_COPY = {
-  notLive: 'Phase 4 is not live on this site yet. No Phase 4 transaction can be sent from here.',
+  notLive: 'Agent tools are not live on this site yet. No agent-tools transaction can be sent from here.',
   nfa: 'Not financial advice.',
-  note: 'Phase 4 contracts on Robinhood Chain (chain id 4663). Not audited. Not financial advice.',
+  note: 'Agent-tools contracts on Robinhood Chain (chain id 4663). Not audited. Not financial advice.',
   cloneTip: 'This starts a new tokenized fund with the same rules as this one. Your wallet becomes the manager. You still mint the manager shares yourself. One signature.',
   agentTip: 'You can name one address that may trade inside the rules already on this tokenized fund. It cannot withdraw, and you can remove it in one signature. It stops at the time you pick, at most 30 days out.',
   cardTip: 'These are readings of net value per share. The largest drop is only the readings someone recorded, not every moment in between. Not financial advice.',
@@ -94,7 +94,7 @@ const ERRORS: Record<string, string> = {
   nogrant: 'There is no agent on this tokenized fund.',
   notbidder: 'Only the wallet that placed the offer can cancel it before the end time.',
   notexpired: 'Wait until the end time.',
-  notfund: 'This is not a Phase 3 tokenized fund.',
+  notfund: 'This tokenized fund does not support agent tools.',
   notholder: 'Only the wallet holding this share can do that.',
   notinvesting: 'This only works after the tokenized fund starts investing.',
   notmanager: 'Only the tokenized fund manager can do that.',

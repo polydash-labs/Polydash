@@ -1,0 +1,79 @@
+{
+  "receiptFormat": "polypad.agent-receipt/1",
+  "receiptId": "allowlist-executed-23-block-120273453",
+  "chain": {
+    "id": 4663,
+    "name": "Robinhood Chain"
+  },
+  "action": {
+    "type": "allowlist-executed",
+    "description": "Allowlist proposal 23 executed: HEY enabled for Tokenized Funds."
+  },
+  "intent": {
+    "authorizedBy": "0x9a21c75ac263cc43125e70200636f6397f8776d0",
+    "authorization": "Manager proposal #23: allowlist HEY for Tokenized Funds within the price band 122913342636–491653370544 (×10¹⁸) with price feed 0xAC226fAb95e21e048a947B27b3d26c843C27Ec71, after a 2-day public wait.",
+    "bounds": "Price band 122913342636–491653370544 ×10¹⁸ · feed must stay fresh within 3600s · 2-day public wait before execution.",
+    "authorizationHash": "0x7212f69a9cd72ee816fbd00af7005cf11b29d5176cf808dda2796e562d6d8ab2",
+    "authorizationHashKind": "transaction",
+    "authorizedAtIso": "2026-11-20T00:55:19.000Z",
+    "source": "FundAllowlist.proposals(23) + propose transaction"
+  },
+  "identity": {
+    "executor": "0x3e298c64b4073ccffd9df671ebaedb886dcb9270",
+    "executorNote": "FundAllowlist.execute is permissionless once the timelock has passed; the executor is the transaction sender. No registered-agent identity is claimed for this address."
+  },
+  "authority": {
+    "rule": "FundAllowlist.execute may be called by any address once the proposal readyAt has passed and the proposal is neither executed nor canceled. There is no executor allowlist.",
+    "contract": "0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+    "source": "FundAllowlist.execute(uint256) — no access control on the caller"
+  },
+  "approval": {
+    "rule": "Only the contract owner may propose (FundAllowlist.proposeAsset is onlyOwner). A proposal waits the full delay before it can execute.",
+    "proposalId": 23,
+    "target": "0xB33eb16782776b4D738c0Fd643577cb0284Db610",
+    "assetSymbol": "HEY",
+    "assetName": "Hey Research Lab",
+    "feed": "0xAC226fAb95e21e048a947B27b3d26c843C27Ec71",
+    "maxStaleSeconds": "3600",
+    "minPriceX18": "122913342636",
+    "maxPriceX18": "491653370544",
+    "proposedBy": "0x9a21c75ac263cc43125e70200636f6397f8776d0",
+    "ownerAtProposal": "0x9a21c75aC263cC43125E70200636f6397f8776d0",
+    "proposeTransactionHash": "0x7212f69a9cd72ee816fbd00af7005cf11b29d5176cf808dda2796e562d6d8ab2",
+    "proposedAt": "1795136119",
+    "proposedAtIso": "2026-11-20T00:55:19.000Z",
+    "readyAt": "1795308919",
+    "readyAtIso": "2026-11-22T00:55:19.000Z",
+    "delaySeconds": "172800",
+    "executedAt": "1795309188",
+    "executedAtIso": "2026-11-22T00:59:48.000Z",
+    "waitElapsedSeconds": "269",
+    "source": "FundAllowlist.proposals(id) + FundAllowlist.owner() + FundAllowlist.delay()"
+  },
+  "settlement": {
+    "transactionHash": "0x8f5bf4af71611c403b8ea6c2c06c23022d1e596835acace38c42269fda171f27",
+    "blockNumber": "120273453",
+    "blockTimestamp": "1795309188",
+    "blockTimestampIso": "2026-11-22T00:59:48.000Z",
+    "from": "0x3e298c64b4073ccffd9df671ebaedb886dcb9270",
+    "to": "0x7a42dc64f77711ea20d163efb1b9faccc2ca2c19",
+    "status": 1,
+    "executed": true,
+    "canceled": false,
+    "assetAllowed": true,
+    "feedStored": "0xAC226fAb95e21e048a947B27b3d26c843C27Ec71",
+    "events": [
+      "FeedSet",
+      "Executed"
+    ],
+    "explorerUrl": "https://robinhoodchain.blockscout.com/tx/0x8f5bf4af71611c403b8ea6c2c06c23022d1e596835acace38c42269fda171f27"
+  },
+  "evidence": {
+    "allowlistUrl": "https://robinhoodchain.blockscout.com/address/0x7A42Dc64f77711EA20d163eFB1B9FaCCC2cA2c19",
+    "assetUrl": "https://robinhoodchain.blockscout.com/address/0xB33eb16782776b4D738c0Fd643577cb0284Db610",
+    "feedUrl": "https://robinhoodchain.blockscout.com/address/0xAC226fAb95e21e048a947B27b3d26c843C27Ec71",
+    "proposeTxUrl": "https://robinhoodchain.blockscout.com/tx/0x7212f69a9cd72ee816fbd00af7005cf11b29d5176cf808dda2796e562d6d8ab2",
+    "executorUrl": "https://robinhoodchain.blockscout.com/address/0x3e298c64b4073ccffd9df671ebaedb886dcb9270"
+  },
+  "disclaimer": "This receipt records what happened on-chain. It is not a guarantee, reimbursement, or insurance promise."
+}

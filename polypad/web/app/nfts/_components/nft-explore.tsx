@@ -3,14 +3,21 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useReadContract } from 'wagmi';
+import { parseAbi } from 'viem';
 import { Button } from '@/components/ui/button';
 import { formatEth } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { useListings } from '@/lib/fund/use-phase5';
+import { phase5Live } from '@/lib/fund/phase5';
+import { robinhoodChain } from '@/lib/chain';
 import { useNftCollections, useNow, collectionStatus, STATUS_LABEL, formatCountdown, type NftCollection, type NftStatus } from '@/lib/hooks/use-nft-collections';
 import { useCurveCollections, type CurveCollection } from '@/lib/hooks/use-curve-collections';
 import { useAllGatedCollections, type GatedSummary } from '@/lib/hooks/use-gated-mint';
 import { PHASE_HOLDER, PHASE_PUBLIC, phaseLabel } from '@/lib/gatedMint';
 import { useAllFloorCollections, type FloorSummary } from '@/lib/hooks/use-floor-vault';
+import { useTerminalFunds } from '@/lib/terminal/use-terminal';
+import GlossaryBox from '@/components/glossary-box';
 
 type FilterKey = 'all' | NftStatus | 'curve' | 'graduated';
 const FILTERS: { key: FilterKey; label: string }[] = [
@@ -63,8 +70,9 @@ export function NftExplore() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-[26px] font-semibold tracking-tight text-white sm:text-[32px]">NFT collections</h1>
-          <p className="mt-1 max-w-xl text-[13px] text-white/50">
-            Two sale types: fixed-price mints with a commitment window, and bonding curves where holders can sell back to the pool until the collection graduates. Every collection has a floor vault that any holder can burn an NFT against.
+          <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-white/50">
+            Two ways to buy. <span className="text-white/75">Fixed-price mint:</span> you commit ETH during a short window, then claim your NFTs — if too many people commit, everyone gets a smaller share and the extra ETH is refunded.
+            {' '}<span className="text-white/75">Bonding curve:</span> the price rises as more NFTs are bought, and you can sell back to the pool until the collection graduates. Every collection has a floor vault: a pot of value any holder can trade an NFT back for.
           </p>
         </div>
         <Button asChild className="self-start sm:self-auto">
@@ -72,15 +80,18 @@ export function NftExplore() {
         </Button>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1 sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name, symbol or address"
-            className="h-9 w-full rounded-full border border-white/10 bg-white/[0.03] pl-9 pr-3 text-[16px] text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-polydash-green/60 sm:text-[13px]"
-          />
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div>
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by name — e.g. POLYDASH — or paste a token code (0x…)"
+              className="h-11 w-full rounded-full border border-white/10 bg-white/[0.03] pl-9 pr-3 text-[16px] text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-polydash-green/60 sm:text-[13px]"
+            />
+          </div>
+          <p className="mt-1.5 text-[11.5px] text-white/45">Where do I find this? A token code looks like 0x… and is shown on the collection&apos;s page or on the chain explorer.</p>
         </div>
         <div className="flex gap-1.5 overflow-x-auto">
           {FILTERS.map((f) => (
@@ -88,7 +99,7 @@ export function NftExplore() {
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={cn(
-                'h-8 shrink-0 rounded-full px-3 text-[12px] font-medium transition-colors',
+                'h-11 min-h-[44px] shrink-0 rounded-full px-3 text-[12px] font-medium transition-colors',
                 filter === f.key ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'
               )}
             >
@@ -96,6 +107,10 @@ export function NftExplore() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6">
+        <FundSharesSection />
       </div>
 
       <div className="mt-6">
@@ -124,6 +139,101 @@ export function NftExplore() {
               ? <FloorCard key={it.c.address} c={it.c} />
               : <CollectionCard key={it.c.address} c={it.c} now={now} />)}
           </div>
+        )}
+      </div>
+      <GlossaryBox
+        className="mt-8"
+        terms={[
+          { term: 'Commit', def: 'Paying ETH up front during a short window to reserve NFTs. If too many people commit, you get fewer NFTs than you paid for and the extra ETH is refunded when you claim.' },
+          { term: 'Mint', def: 'Buying an NFT at its fixed price — it arrives in your wallet right away.' },
+          { term: 'Bonding curve', def: 'A pricing rule where each NFT costs a little more than the last one. Early buyers pay less; you can sell back to the pool until the collection graduates.' },
+          { term: 'Graduate', def: 'When a bonding-curve collection has sold enough, it moves to normal trading and the curve closes.' },
+          { term: 'Floor vault', def: 'A pot of value backing a collection. Any holder can trade an NFT back to the vault for its share of the pot — that share is the floor price.' },
+          { term: 'Burn', def: 'Permanently destroying an NFT — for example, trading it to the floor vault. It cannot be undone.' },
+        ]}
+      />
+    </div>
+  );
+}
+
+const FUND_SHARE_NAV_ABI = parseAbi(['function navPerNft() view returns (uint256)']);
+
+/** Shares of live Tokenized Funds, listed for sale by their holders on the fund secondary market. */
+function FundSharesSection() {
+  // The fund list comes from the same live-funds hook the Terminal uses, so a
+  // new live fund shows up here without a code change.
+  const { funds, isLoading } = useTerminalFunds();
+  if (!phase5Live()) {
+    return (
+      <section>
+        <h2 className="text-[18px] font-semibold text-white">Tokenized Fund shares for sale</h2>
+        <p className="mt-1 max-w-xl text-[13px] text-white/50">Fund shares for sale are not live yet.</p>
+      </section>
+    );
+  }
+  return (
+    <section>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-[18px] font-semibold text-white">Tokenized Fund shares for sale</h2>
+        <p className="max-w-xl text-[13px] text-white/50">
+          Shares of live Tokenized Funds, listed for sale by their holders. You pay the seller&apos;s price. You then own that share and its value. The vault value per share is shown as a reference — a listing price can be above or below it.
+        </p>
+      </div>
+      {isLoading ? (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 2 }).map((_, i) => <div key={i} className="glass-card h-[190px] animate-pulse" />)}
+        </div>
+      ) : funds.length === 0 ? (
+        <p className="mt-4 text-[13px] text-white/55">No Tokenized Funds yet.</p>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {funds.map((f) => (
+            <FundShareCard key={f.address} address={f.address as `0x${string}`} name={f.name} symbol={f.symbol} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FundShareCard({ address, name, symbol }: { address: `0x${string}`; name: string; symbol: string }) {
+  const { data: nav } = useReadContract({
+    address, abi: FUND_SHARE_NAV_ABI, functionName: 'navPerNft', chainId: robinhoodChain.id,
+    query: { refetchInterval: 30_000 },
+  });
+  const { data: market } = useListings(address);
+  const listings = market?.listings ?? [];
+  const lowest = listings.length ? listings.reduce((a, b) => (a.price < b.price ? a : b)) : null;
+  return (
+    <div className="glass-card overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="truncate text-[15px] font-semibold text-white">{name}</h3>
+          <span className="shrink-0 font-mono text-[11px] text-white/40">{symbol}</span>
+        </div>
+        <span className="mt-1 inline-block rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white">Tokenized Fund share</span>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[12px]">
+          <div className="rounded-lg bg-white/[0.04] px-2.5 py-1.5">
+            <span className="text-white/50">Vault value per share</span>
+            <p className="font-mono font-semibold text-white">{nav != null ? `${formatEth(nav, 5)} ETH` : '—'}</p>
+          </div>
+          <div className="rounded-lg bg-white/[0.04] px-2.5 py-1.5">
+            <span className="text-white/50">Lowest listed price</span>
+            <p className="font-mono font-semibold text-white">{lowest ? `${formatEth(lowest.price, 5)} ETH` : 'None listed'}</p>
+          </div>
+        </div>
+        <div className="mt-3 flex justify-between text-[11px] text-white/50">
+          <span className="font-mono">{listings.length === 0 ? 'No shares listed' : `${listings.length} share${listings.length === 1 ? '' : 's'} listed`}</span>
+          <Link href={`/funds/${address}`} className="text-white/70 hover:text-white">View fund →</Link>
+        </div>
+        {lowest ? (
+          <Link href={`/funds/${address}#phase5`} className="mt-3 flex min-h-[44px] items-center justify-center rounded-xl bg-polydash-green px-3 text-center text-[13px] font-semibold text-black transition-colors hover:bg-polydash-green-light">
+            Buy lowest listed share — {formatEth(lowest.price, 5)} ETH + network fee
+          </Link>
+        ) : (
+          <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2.5 text-[12px] leading-relaxed text-white/60">
+            No shares for sale right now — <Link href={`/funds/${address}`} className="text-polydash-green hover:underline">buy a new share on the fund page</Link>.
+          </p>
         )}
       </div>
     </div>

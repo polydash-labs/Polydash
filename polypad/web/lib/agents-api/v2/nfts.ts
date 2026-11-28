@@ -3,11 +3,12 @@
  * Collections created by the fixed-price factory are readable and buyable here. Bonding-curve collections
  * are listed when they exist, but this API does not prepare buys for them until their ABI is verified.
  */
-import { encodeFunctionData } from 'viem';
+import { encodeFunctionData, zeroAddress } from 'viem';
 import { nftCollectionAbi, nftFactoryAbi, nftMarketAbi } from './abis';
 import { ADDR, EXPLORER, LIMITS, SITE_ORIGIN, WORDING } from './config';
 import { ApiError, bodyGuard, cached, ethDisplay, guardAmountWei, optUint, reqAddress, assertNotFeeWallet, type Addr, type Ctx, type Meta } from './core';
-import { finishPrepared } from './prepared';
+import { ethToWei } from './intent';
+import { finishPrepared, validReturnUrl } from './prepared';
 
 export type Collection = {
   address: Addr;
@@ -195,6 +196,7 @@ export async function prepareNftBuy(ctx: Ctx, rawInput: unknown, meta: Meta) {
       signParams: { l: row.id },
       from,
       meta,
+      returnUrl: validReturnUrl(input.returnUrl),
       allowTargets: [],
       steps: [{ kind: 'market_buy', description: 'Buy the listed NFT from the Polypad marketplace. The listing price is sent with the transaction.', to: ADDR.nftMarket, data: encodeFunctionData({ abi: nftMarketAbi, functionName: 'buy', args: [id] }), value: row.priceWei, simulate: true }],
       summary: {
@@ -231,6 +233,7 @@ export async function prepareNftBuy(ctx: Ctx, rawInput: unknown, meta: Meta) {
     signParams: { col: col.address, q: qty.toString() },
     from,
     meta,
+    returnUrl: validReturnUrl(input.returnUrl),
     allowTargets: [col.address],
     steps: [{ kind: 'mint', description: 'Mint from the collection at its fixed price.', to: col.address, data: encodeFunctionData({ abi: nftCollectionAbi, functionName: 'mint', args: [qty] }), value: cost, simulate: true }],
     summary: {
@@ -240,5 +243,128 @@ export async function prepareNftBuy(ctx: Ctx, rawInput: unknown, meta: Meta) {
       risks: NFT_RISKS,
     },
     extra: { collection: collectionView(col) },
+  });
+}
+
+function reqText(input: Record<string, unknown>, field: string, min: number, max: number): string {
+  const v = input[field];
+  if (typeof v !== 'string' || v.trim().length < min || v.trim().length > max) {
+    throw new ApiError(400, 'invalid_params', `${field} must be ${min} to ${max} characters.`, { field });
+  }
+  return v.trim();
+}
+
+function optText(input: Record<string, unknown>, field: string, max: number): string {
+  const v = input[field];
+  if (v === undefined || v === null || v === '') return '';
+  if (typeof v !== 'string' || v.length > max) {
+    throw new ApiError(400, 'invalid_params', `${field} must be at most ${max} characters.`, { field });
+  }
+  return v.trim();
+}
+
+/**
+ * Prepare a fixed-price NFT collection creation on the Polypad NFT factory.
+ * Used by Major League Operator's Card Studio: a player designs a card, picks an edition
+ * size and a creator royalty, and a parent signs this one transaction with their own wallet
+ * (Coinbase Wallet via the signing page). The creator pays gas only — creating the collection
+ * costs no ETH beyond gas. The collection's royalty pays the player on every resale; the
+ * marketplace platform fee (0.2%) goes to Polydash.
+ */
+export type NftCreateParams = {
+  name: string;
+  symbol: string;
+  imageUri: string;
+  description: string;
+  baseURI: string;
+  maxSupply: number;
+  mintPriceWei: bigint;
+  royaltyBps: number;
+  floorBps: number;
+  maxPerWallet: number;
+  commitWindow: number;
+};
+
+/**
+ * Validate + normalize a collection-creation request and encode the factory call.
+ * Shared by the prepare tool (the caller signs) and the relayer (Polypad signs and pays gas).
+ * Defaults mirror the site's own create wizard — the factory rejects zero values with
+ * InvalidParam, so mint price, floor, per-wallet cap, and window all have nonzero defaults.
+ */
+export function parseNftCreateParams(rawInput: unknown): NftCreateParams & { data: `0x${string}` } {
+  const input = bodyGuard(rawInput);
+  const name = reqText(input, 'name', 1, 64);
+  const symbol = reqText(input, 'symbol', 1, 10).toUpperCase();
+  const imageUri = reqText(input, 'imageUri', 1, 512);
+  const description = optText(input, 'description', 500);
+  const baseURI = optText(input, 'baseURI', 512);
+  const maxSupply = optUint(input.maxSupply, 'maxSupply', 25, 1, 10_000);
+  const royaltyBps = optUint(input.royaltyBps, 'royaltyBps', 1000, 0, 1500);
+  const maxPerWallet = optUint(input.maxPerWallet, 'maxPerWallet', 5, 1, 100);
+  const commitWindow = optUint(input.commitWindow, 'commitWindow', 86400, 3600, 2_592_000);
+  const floorBps = optUint(input.floorBps, 'floorBps', 2000, 2000, 8000);
+  let mintPriceWei: bigint;
+  if (input.mintPriceWei !== undefined && input.mintPriceWei !== null && input.mintPriceWei !== '') {
+    const raw = String(input.mintPriceWei).trim();
+    if (!/^\d{1,40}$/.test(raw)) throw new ApiError(400, 'invalid_params', 'mintPriceWei must be a whole number of wei.', { field: 'mintPriceWei' });
+    mintPriceWei = BigInt(raw);
+  } else {
+    const eth = typeof input.mintPriceEth === 'string' && input.mintPriceEth !== '' ? input.mintPriceEth : '0.001';
+    const parsed = ethToWei(eth);
+    if (parsed === null) throw new ApiError(400, 'invalid_params', 'mintPriceEth must be a plain decimal.', { field: 'mintPriceEth' });
+    mintPriceWei = parsed;
+  }
+  if (mintPriceWei === 0n) throw new ApiError(400, 'invalid_params', 'The factory does not allow a zero mint price — set mintPriceEth above 0.', { field: 'mintPriceEth' });
+  if (mintPriceWei > 10n * 10n ** 18n) throw new ApiError(400, 'invalid_params', 'Mint price must be at most 10 ETH.', { field: 'mintPriceEth' });
+  guardAmountWei(mintPriceWei, input, 'mint price');
+
+  const params = {
+    name,
+    symbol,
+    imageUri,
+    description,
+    baseURI,
+    maxSupply: BigInt(maxSupply),
+    mintPrice: mintPriceWei,
+    floorBps: BigInt(floorBps),
+    royaltyBps: BigInt(royaltyBps),
+    maxPerWallet: BigInt(maxPerWallet),
+    commitWindow: BigInt(commitWindow),
+    payoutWallet: zeroAddress,
+  };
+  const data = encodeFunctionData({ abi: nftFactoryAbi, functionName: 'createCollection', args: [params] });
+  return { name, symbol, imageUri, description, baseURI, maxSupply, mintPriceWei, royaltyBps, floorBps, maxPerWallet, commitWindow, data };
+}
+
+export async function prepareNftCreate(ctx: Ctx, rawInput: unknown, meta: Meta) {
+  const input = bodyGuard(rawInput);
+  const from = reqAddress(input, 'from');
+  assertNotFeeWallet(from);
+
+  const { name, symbol, imageUri, description, baseURI, maxSupply, mintPriceWei, royaltyBps, floorBps, maxPerWallet, commitWindow, data } = parseNftCreateParams(rawInput);
+  return finishPrepared(ctx, {
+    action: 'nft-create',
+    // Short keys the /sign link parser accepts for nft-create.
+    signParams: { n: name, s: symbol, img: imageUri, d: description, bu: baseURI, ms: maxSupply, mp: mintPriceWei.toString(), rb: royaltyBps, mw: maxPerWallet, cw: commitWindow, fb: floorBps },
+    from,
+    meta,
+    returnUrl: validReturnUrl(input.returnUrl),
+    allowTargets: [ADDR.nftFactory],
+    steps: [{ kind: 'nft_create', description: 'Create the NFT collection on the Polypad fixed-price factory. The new collection address is in the transaction receipt.', to: ADDR.nftFactory, data, value: 0n, simulate: true }],
+    summary: {
+      headline: `Create NFT collection "${name}" (${symbol})`,
+      lines: [
+        `Max supply: ${maxSupply} editions`,
+        `Mint price: ${ethDisplay(mintPriceWei)} ETH each`,
+        `Creator royalty: ${royaltyBps / 100}% on every resale — paid to the creator`,
+        'Platform fee on marketplace sales: 0.2% to Polydash',
+        `${floorBps / 100}% of each mint goes into the collection floor vault`,
+        `Max per wallet: ${maxPerWallet}`,
+        `Commitment window: ${commitWindow / 86400} day${commitWindow === 86400 ? '' : 's'} — buyers commit first, then mint`,
+      ],
+      youPay: 'Gas only — creating the collection costs no ETH beyond gas.',
+      risks: NFT_RISKS,
+    },
+    extra: { collection: { name, symbol, imageUri, maxSupply, mintPriceWei: mintPriceWei.toString(), royaltyBps, floorBps, maxPerWallet, commitWindow, factory: ADDR.nftFactory } },
   });
 }

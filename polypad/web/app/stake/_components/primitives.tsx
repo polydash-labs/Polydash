@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { Tip } from '@/components/cto/xray-card';
 import { cn } from '@/lib/utils';
 import { fmtNum, type PoolStatus, type TokenInfo } from '@/lib/staking/shared';
+import { DARK_CARD } from '@/lib/ui/template';
 
 export const APR_LABEL = 'Current APR (variable)';
 export const APR_TIP = 'Estimated from the current reward rate and amount staked. It changes as people stake or withdraw. Not a guarantee.';
@@ -146,7 +147,7 @@ export function ProgressBar({ value, className }: { value: number; className?: s
 
 export function EmptyState({ icon, text, action }: { icon: ReactNode; text: string; action?: ReactNode }) {
   return (
-    <div className="stk-glass flex flex-col items-center gap-3 px-6 py-10 text-center">
+    <div className={cn(DARK_CARD, 'flex flex-col items-center gap-3 px-6 py-10 text-center')}>
       <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.05] text-white/60 ring-1 ring-white/10">{icon}</span>
       <p className="max-w-sm text-[14px] text-white/65">{text}</p>
       {action}

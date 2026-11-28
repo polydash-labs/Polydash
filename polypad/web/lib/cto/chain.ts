@@ -1,7 +1,7 @@
 // Token CTO: server-side indexer + per-launch report built from on-chain data. Server only (uses the DB).
 import { decodeEventLog, formatEther, getAddress, pad, toEventSelector, type Address, type Hex } from 'viem';
 import type { TokenCTO } from '@prisma/client';
-import { prisma } from '@/lib/db';
+import { prisma, withTimeout, DB_READ_TIMEOUT_MS } from '@/lib/db';
 import { PolydashFactoryABI, PolydashLaunchABI, PolydashTokenABI } from '@/lib/contracts/abis';
 import { withPromiseHealth } from '@/lib/promises/summary';
 import { resolveLaunchAddress } from '@/lib/launches-core';
@@ -96,18 +96,30 @@ export async function addAlerts(rows: { launchAddress: string; type: string; mes
 // ---------- TokenCTO rows ----------
 const LAUNCH_READS = ['token', 'creator', 'launchTime', 'totalSupply', 'graduationThreshold'] as const;
 
-/** Build or refresh a TokenCTO row from LaunchCreated/LaunchConfigured logs plus current contract state. */
-async function upsertFromChain(launch: Address, logs?: RawLog[]): Promise<TokenCTO | null> {
+/**
+ * Build a TokenCTO-shaped row from LaunchCreated/LaunchConfigured logs plus
+ * current contract state. Chain reads only — no DB. Used when the database
+ * is unreachable so the report can still build from on-chain data.
+ */
+async function rowFromChain(launch: Address, logs?: RawLog[]): Promise<TokenCTO | null> {
   const key = lc(launch);
-  let evs = logs?.filter((l) => topicAddr(l.topics[1]) === key);
-  if (!evs || !evs.some((l) => l.topics[0] === SEL.created)) {
+  // Find the LaunchCreated event, newest blocks first. Launches are usually
+  // recent, so this is 1-2 RPC calls. The old code scanned the full history
+  // (32M blocks) in 9M chunks; on this RPC each chunk can split recursively
+  // and blow the 9s handler budget before the report even starts.
+  // The Configured event is not fetched: launchTime / totalSupply /
+  // graduationThreshold all come from the contract multicall below.
+  let created = logs?.filter((l) => topicAddr(l.topics[1]) === key).find((l) => l.topics[0] === SEL.created);
+  if (!created) {
     const latest = Number(await publicClient.getBlockNumber());
-    evs = await getLogsRange(FACTORIES, [[SEL.created, SEL.configured], pad(launch)], DEPLOY_BLOCK, latest);
+    const CHUNK = 1_000_000;
+    for (let to = latest; to >= DEPLOY_BLOCK && !created; to -= CHUNK) {
+      const from = Math.max(DEPLOY_BLOCK, to - CHUNK + 1);
+      const chunk = await getLogsRange(FACTORIES, [[SEL.created], pad(launch)], from, to, CHUNK);
+      created = chunk.find((l) => topicAddr(l.topics[1]) === key);
+    }
   }
-  const created = evs.find((l) => l.topics[0] === SEL.created);
-  const configured = evs.find((l) => l.topics[0] === SEL.configured);
   const c = created ? (decodeEventLog({ abi: PolydashFactoryABI, data: created.data, topics: created.topics as any }).args as any) : null;
-  const g = configured ? (decodeEventLog({ abi: PolydashFactoryABI, data: configured.data, topics: configured.topics as any }).args as any) : null;
 
   const res = await publicClient.multicall({ contracts: LAUNCH_READS.map((f) => ({ address: launch, abi: PolydashLaunchABI, functionName: f })) as any, allowFailure: true });
   const s: Record<string, any> = {};
@@ -124,22 +136,42 @@ async function upsertFromChain(launch: Address, logs?: RawLog[]): Promise<TokenC
   }
   const createdBlock = created ? bn(created) : 0;
   const createdAt = createdBlock ? new Date((await blockTime(createdBlock)) * 1000) : new Date();
-  const data = {
-    tokenAddress: lc(token), creator: lc(creator), name: name!.slice(0, 100), symbol: symbol!.slice(0, 32), imageUri: (imageUri ?? '').slice(0, 500),
+  return {
+    launchAddress: key,
+    tokenAddress: lc(token),
+    creator: lc(creator),
+    name: name!.slice(0, 100),
+    symbol: symbol!.slice(0, 32),
+    imageUri: (imageUri ?? '').slice(0, 500),
     agentName: `$${symbol!.slice(0, 32)} CTO`,
-    launchTime: Number(s.launchTime ?? g?.launchTime ?? 0),
-    totalSupply: String(s.totalSupply ?? g?.totalSupply ?? 0),
-    graduationThreshold: String(s.graduationThreshold ?? g?.graduationThreshold ?? 0),
+    launchTime: Number(s.launchTime ?? 0),
+    totalSupply: String(s.totalSupply ?? 0),
+    graduationThreshold: String(s.graduationThreshold ?? 0),
     createdBlock,
+    createdAt,
   };
-  return prisma.tokenCTO.upsert({ where: { launchAddress: key }, create: { launchAddress: key, createdAt, ...data }, update: data });
+}
+
+/** Build or refresh a TokenCTO row from chain, persisting it when the DB answers (best-effort, never blocks). */
+async function upsertFromChain(launch: Address, logs?: RawLog[]): Promise<TokenCTO | null> {
+  const row = await rowFromChain(launch, logs);
+  if (!row) return null;
+  const { launchAddress, createdAt, ...data } = row;
+  const saved = await withTimeout(
+    prisma.tokenCTO.upsert({ where: { launchAddress }, create: { launchAddress, createdAt, ...data }, update: data }),
+    DB_READ_TIMEOUT_MS,
+  );
+  return saved ?? row;
 }
 
 /** Lazy fallback: return the row, creating it from on-chain reads if the launch is real but not indexed yet. */
 export async function ensureCto(input: string): Promise<TokenCTO | null> {
   if (!/^0x[0-9a-fA-F]{40}$/.test(input)) return null;
   const a = lc(input);
-  const row = await prisma.tokenCTO.findFirst({ where: { OR: [{ launchAddress: a }, { tokenAddress: a }] } });
+  // DB reads are raced: when Neon is suspended the pooler holds the
+  // connection for seconds, and a hung read must not eat the 9s handler
+  // budget. Null here means "DB didn't answer in time", not "no row".
+  const row = await withTimeout(prisma.tokenCTO.findFirst({ where: { OR: [{ launchAddress: a }, { tokenAddress: a }] } }));
   if (row) return row;
   // Accept the launch contract or the token address, on any known factory.
   const ext = getExternalToken(a);
@@ -156,8 +188,12 @@ export async function ensureCto(input: string): Promise<TokenCTO | null> {
     ]);
     return externalCtoRow(ext, ts, String(supply));
   }
-  const existing = await prisma.tokenCTO.findUnique({ where: { launchAddress: lc(launch) } });
-  return existing ?? upsertFromChain(getAddress(launch));
+  const existing = await withTimeout(prisma.tokenCTO.findUnique({ where: { launchAddress: lc(launch) } }));
+  if (existing) return existing;
+  // Not indexed yet, or the DB didn't answer: build the row from chain.
+  // upsertFromChain persists it when the DB is up and returns the chain
+  // row as-is when it isn't, so the report builds either way.
+  return upsertFromChain(getAddress(launch));
 }
 
 /**
@@ -317,6 +353,11 @@ export interface CtoReport {
 
 const REPORT_TTL = 60_000;
 const inflight = new Map<string, Promise<CtoReport>>();
+/** Warm-instance report cache: when the DB is down there is no persistent
+ * cache, so repeat requests (e.g. the frontend polling a first build, or a
+ * paid x402 call right after a page view) reuse the last computed report
+ * instead of rebuilding it from chain every time. Same 60s TTL as the DB. */
+const memoryCache = new Map<string, { report: CtoReport; at: number }>();
 
 /** Recompute a report and store it in the DB cache (one run per launch at a time). */
 function refreshReport(row: TokenCTO): Promise<CtoReport> {
@@ -325,9 +366,11 @@ function refreshReport(row: TokenCTO): Promise<CtoReport> {
   if (running) return running;
   const p = computeReport(row)
     .then(async (r) => {
+      memoryCache.set(key, { report: r, at: Date.now() });
       const data = { report: r as any, generatedAt: new Date(r.generatedAt) };
-      await prisma.cTOReportCache.upsert({ where: { launchAddress: key }, create: { launchAddress: key, ...data }, update: data })
-        .catch((e) => console.error('cto report cache write failed', key, e?.message));
+      await withTimeout(
+        prisma.cTOReportCache.upsert({ where: { launchAddress: key }, create: { launchAddress: key, ...data }, update: data }),
+      ).catch((e) => console.error('cto report cache write failed', key, e?.message));
       return r;
     })
     .finally(() => inflight.delete(key));
@@ -341,11 +384,18 @@ function refreshReport(row: TokenCTO): Promise<CtoReport> {
  * still running (the build continues in the background).
  */
 export async function getCachedReport(row: TokenCTO, waitMs = 4_000): Promise<{ report: CtoReport | null; refreshing: boolean }> {
-  const hit = await prisma.cTOReportCache.findUnique({ where: { launchAddress: row.launchAddress } }).catch(() => null);
+  const key = row.launchAddress;
+  const mem = memoryCache.get(key);
+  if (mem && Date.now() - mem.at < REPORT_TTL) {
+    return { report: await withPromiseHealth(mem.report), refreshing: false };
+  }
+  const hit = await withTimeout(prisma.cTOReportCache.findUnique({ where: { launchAddress: key } }));
   if (hit) {
     const stale = Date.now() - hit.generatedAt.getTime() > REPORT_TTL;
     if (stale) refreshReport(row).catch((e) => console.error('cto report refresh failed', row.launchAddress, e?.message));
-    return { report: await withPromiseHealth(hit.report as unknown as CtoReport), refreshing: stale };
+    const report = await withPromiseHealth(hit.report as unknown as CtoReport);
+    memoryCache.set(key, { report, at: Date.now() });
+    return { report, refreshing: stale };
   }
   const p = refreshReport(row);
   p.catch((e) => console.error('cto report build failed', row.launchAddress, e?.message));
@@ -380,9 +430,12 @@ async function computeReport(row: TokenCTO): Promise<CtoReport> {
     publicClient.multicall({ contracts: fields.map((f) => ({ address: launch, abi: PolydashLaunchABI, functionName: f })) as any, allowFailure: true }),
     getLogsRange(token, [SEL.transfer], fromBlock, latest),
     getLogsRange(launch, [[SEL.bought, SEL.sold, SEL.graduated]], fromBlock, latest),
-    securityScan(token).catch(() => null),
-    analyzeToken(token).catch(() => null),
-    listPools().catch(() => []),
+    // External scans are raced: Sourcify has a 15s abort timeout and can
+    // stall the whole report past the 9s handler budget. The report works
+    // without them (health items just read as unknown).
+    withTimeout(securityScan(token), 2_500),
+    withTimeout(analyzeToken(token), 2_500),
+    withTimeout(listPools(), 2_500).then((r) => r ?? []),
   ]);
   const st: Record<string, any> = {};
   fields.forEach((f, i) => { st[f] = stateRes[i]?.status === 'success' ? stateRes[i].result : undefined; });

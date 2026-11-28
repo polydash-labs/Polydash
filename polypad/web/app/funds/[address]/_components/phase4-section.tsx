@@ -56,8 +56,8 @@ export function Phase4Section({ fund, isManager, now }: { fund: Phase3Detail; is
     <section id="phase4" className="space-y-4 border-t border-white/10 pt-5">
       <div>
         <h2 className="flex items-center gap-2 text-[18px] font-semibold text-white">
-          Phase 4 add-ons
-          <span className="rounded-full border border-white/25 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/80">Phase 4</span>
+          Agent tools
+          <span className="rounded-full border border-white/25 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/80">Agents</span>
         </h2>
         <p className="mt-1 text-[13px] text-white/55">Extra tools that read this tokenized fund. The share stays the ownership claim. Leaving the tokenized fund still works the same way.</p>
       </div>
@@ -173,7 +173,7 @@ function TradingAgent({ fund, tx, now }: { fund: Phase3Detail; tx: P4Tx; now: nu
         <Row label="Agent" tip="The one address that may trade for this tokenized fund through the gate." value={a?.agent ? shortenAddress(a.agent) : 'None'} sub={a?.agent && !a.active ? 'Not active' : undefined} />
         <Row label="End time" tip="After this time the agent cannot trade. Anyone can then clear it." value={a?.agent ? utcDate(a.expiry) : '—'} />
         <Row label="Max trade size" tip="An extra limit per trade. 0 means only the tokenized fund's own trade cap applies." value={a?.agent ? (a.maxAmountIn === 0n ? '0 (tokenized fund cap only)' : formatFundEth(a.maxAmountIn)) : '—'} />
-        <Row label="Gate can trade on the vault" tip="Whether the Phase 4 gate is still allowed to trade on this tokenized fund's vault." value={a?.gateIsExecutor ?? gateOn ? 'Yes' : 'No'} />
+        <Row label="Gate can trade on the vault" tip="Whether the agent gate is still allowed to trade on this tokenized fund's vault." value={a?.gateIsExecutor ?? gateOn ? 'Yes' : 'No'} />
       </div>
       {!tx.account ? <ConnectHint /> : (
         <div className="mt-4 grid gap-5 lg:grid-cols-2">
@@ -181,7 +181,7 @@ function TradingAgent({ fund, tx, now }: { fund: Phase3Detail; tx: P4Tx; now: nu
             <h3 className="text-[13px] font-medium text-white">Step 1. Let the gate trade on the vault</h3>
             <P4Button tx={tx} id="gate-on" primary label={gateOn ? 'Done: the gate can trade' : 'Allow the gate (sign 1 transaction)'} disabled={gateOn}
               onClick={() => tx.send({ key: 'gate-on', address: fund.vault, abi: VAULT, functionName: 'setExecutor', args: [p4, true], working: 'Allowing the gate', success: 'Gate allowed' })} />
-            <Hint>Calls setExecutor on your vault with the Phase 4 address. The gate only forwards trades from the agent you name.</Hint>
+            <Hint>Calls setExecutor on your vault with the agent-gate address. The gate only forwards trades from the agent you name.</Hint>
             <h3 className="pt-2 text-[13px] font-medium text-white">Step 2. Name the agent</h3>
             <label className="block space-y-1">
               <span className="text-xs text-white/55">Agent address</span>

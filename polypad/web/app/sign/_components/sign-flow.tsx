@@ -6,6 +6,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, usePublicClient, useSendTransaction, useSwitchChain } from 'wagmi';
 import type { Hex } from 'viem';
 import { parseSignLink, type ParsedLink } from '../_lib/link';
+import { ConnectWallet } from './connect-wallet';
 import { CHAIN_ID, EXPLORER, checkSteps, dataBytes, ethOf, feeLines, fingerprint, type ApiFailure, type Prepared } from '../_lib/prepared';
 
 type Prep =
@@ -226,6 +227,26 @@ export function SignFlow() {
     }
   };
 
+  // Connect-on-/sign: /sign?connect=1 binds a wallet to the agent API with a signature and issues
+  // a token, instead of preparing a transaction. It renders instead of the signing flow.
+  if (sp?.get('connect') === '1') {
+    return <ConnectWallet search={new URLSearchParams(sp?.toString() ?? '')} />;
+  }
+
+  // Return link back to the agent's flow, once the outcome is known. The page adds the tx hash and
+  // the status, so the agent can pick up where it left off without asking "did it confirm?"
+  const returnHref = useMemo(() => {
+    if (!link.ok || !link.returnUrl || !sentHash || !tx || (tx.status !== 'confirmed' && tx.status !== 'failed')) return null;
+    try {
+      const u = new URL(link.returnUrl);
+      u.searchParams.set('tx', sentHash);
+      u.searchParams.set('status', tx.status);
+      return u.toString();
+    } catch {
+      return null;
+    }
+  }, [link, sentHash, tx]);
+
   const doSwitch = async () => {
     setSwitchError(null);
     try {
@@ -403,6 +424,17 @@ export function SignFlow() {
           {tx?.status === 'timeout' && <p className="mt-1 text-[14px] text-white/75">No result after 2 minutes. Check the explorer, or ask the chat for the status.</p>}
           {tx?.next && <p className="mt-1 break-all text-[13px] text-white/60">{tx.next}</p>}
           <p className="mt-2 break-all font-mono text-[12px] text-white/60">{run.hash}</p>
+          {link.ok && link.returnUrl && !returnHref && (
+            <p className="mt-3 text-[13px] text-white/60">A link back to your agent appears here once Robinhood Chain confirms the transaction.</p>
+          )}
+          {returnHref && (
+            <div className="mt-4">
+              <a className={`${primary} block text-center`} href={returnHref}>
+                {tx?.status === 'confirmed' ? 'Back to the agent — confirmed' : 'Back to the agent — failed'}
+              </a>
+              <p className="mt-2 break-all text-[12px] text-white/45">Returns to {link.returnUrl} with the transaction hash and status.</p>
+            </div>
+          )}
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <a className={`${secondary} text-center`} href={`${EXPLORER}/tx/${run.hash}`} target="_blank" rel="noopener noreferrer">View on explorer</a>
             <button type="button" className={primary} onClick={copyDone}>{copied ? 'Copied' : 'Copy a message for the chat'}</button>
@@ -438,6 +470,7 @@ function actionLabel(a: string): string {
     sell: 'Sell a token',
     'nft-buy': 'Buy an NFT',
     'nft-mint': 'Mint an NFT',
+    'nft-create': 'Create an NFT collection',
     'fund-create': 'Create a Tokenized Fund',
     'fund-mint': 'Invest in a Tokenized Fund',
     'fund-redeem': 'Exit a Tokenized Fund',

@@ -5,7 +5,7 @@ import { agentClient } from '@/lib/agents-api/core';
 import { PolydashFactoryABI } from '@/lib/contracts/abis';
 import { FACTORY } from '@/lib/cto/chain';
 
-export const AGENT_ACTIONS = ['buy', 'sell', 'nft-buy', 'nft-mint', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
+export const AGENT_ACTIONS = ['buy', 'sell', 'nft-buy', 'nft-mint', 'nft-create', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
 export const AGENT_STATUSES = ['viewed', 'connected', 'sent', 'confirmed', 'failed'] as const;
 export const REF_RE = /^[a-z0-9_-]{1,24}$/;
 export const isClient = (s: unknown): s is string => typeof s === 'string' && s.length >= 1 && s.length <= 64 && !/[\u0000-\u001f]/.test(s);

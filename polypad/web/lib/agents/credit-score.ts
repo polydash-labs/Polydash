@@ -56,48 +56,22 @@ export interface AgentRow {
 
 type Addr = `0x${string}`;
 
-/** Every registered agent with its score, newest first. Reads on-chain only. */
+/** Every registered agent with its score, newest first. Read on the server behind /api/agents/scores (round 7): the browser-side chain read (agentCount + two multicalls through wagmi) stopped resolving on /agents/scores in the Nov 21 evening scan — 35s+ on "Loading agents from Robinhood Chain…" while /agents rendered the same 5 scores fine — so the loader, not the chain, was broken. The route returns `stake` as a decimal string (AgentRow carries a bigint, which JSON cannot carry); it is revived here. */
 export function useAgentDirectory() {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
   return useQuery({
     queryKey: ['agent-credit-score', 'directory'],
-    enabled: !!client && !!REGISTRY_ADDRESS && !!SCORE_ADDRESS,
+    enabled: !!REGISTRY_ADDRESS && !!SCORE_ADDRESS,
     refetchInterval: 60_000,
+    // Retry with backoff like the fund hooks: a slow first-paint read must
+    // not flash the empty state (same pattern as useV3Funds). A 502 means
+    // the server read was not ready in time, not that there are no agents.
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     queryFn: async (): Promise<AgentRow[]> => {
-      if (!client || !REGISTRY_ADDRESS || !SCORE_ADDRESS) return [];
-      const count = Number(await client.readContract({ address: REGISTRY_ADDRESS, abi: AgentRegistryABI, functionName: 'agentCount' }));
-      if (!count) return [];
-      const ids = Array.from({ length: Math.min(count, 200) }, (_, i) => i + 1);
-      const agents = await client.multicall({
-        allowFailure: true,
-        contracts: ids.map((id) => ({ address: REGISTRY_ADDRESS, abi: AgentRegistryABI, functionName: 'agents' as const, args: [BigInt(id)] as const })),
-      });
-      const scores = await client.multicall({
-        allowFailure: true,
-        contracts: ids.map((id) => ({ address: SCORE_ADDRESS, abi: AgentScoreABI, functionName: 'scores' as const, args: [BigInt(id)] as const })),
-      });
-      return ids
-        .map((id, i) => {
-          const a = agents[i]?.status === 'success' ? (agents[i].result as unknown as readonly [string, string, string, bigint, bigint, boolean]) : null;
-          const s = scores[i]?.status === 'success' ? (scores[i].result as unknown as readonly [number, number, number, number, number, number, bigint, string, boolean]) : null;
-          if (!a) return null;
-          const scored = !!s && s[8] === true;
-          return {
-            id,
-            name: a[2] || `Agent #${id}`,
-            wallet: a[0],
-            agentAccount: a[1],
-            stake: a[3],
-            registeredAt: Number(a[4]),
-            active: a[5],
-            scored,
-            score: scored ? Number(s[0]) : null,
-            components: scored ? [Number(s[1]), Number(s[2]), Number(s[3]), Number(s[4]), Number(s[5])] : null,
-            updatedAt: scored ? Number(s[6]) : null,
-          } satisfies AgentRow;
-        })
-        .filter((r): r is AgentRow => r !== null)
-        .reverse();
+      const r = await fetch('/api/agents/scores', { signal: AbortSignal.timeout(15_000) });
+      if (!r.ok) throw new Error(`Agent list read failed: ${r.status}`);
+      const j = (await r.json()) as { agents: (Omit<AgentRow, 'stake'> & { stake: string })[] };
+      return (j.agents ?? []).map((a) => ({ ...a, stake: BigInt(a.stake ?? '0') }));
     },
   });
 }
@@ -125,15 +99,17 @@ export function useAgentScoreByWallet(wallet: string | undefined) {
       if (!client || !valid || !REGISTRY_ADDRESS || !SCORE_ADDRESS) return none;
       const id = Number(await client.readContract({ address: REGISTRY_ADDRESS, abi: AgentRegistryABI, functionName: 'agentIdByWallet', args: [wallet as Addr] }));
       if (!id) return none;
-      const s = (await client.readContract({ address: SCORE_ADDRESS, abi: AgentScoreABI, functionName: 'scores', args: [BigInt(id)] })) as unknown as readonly [number, number, number, number, number, number, bigint, string, boolean];
-      const scored = s[8] === true;
+      const s = (await client.readContract({ address: SCORE_ADDRESS, abi: AgentScoreABI, functionName: 'scores', args: [BigInt(id)] })) as unknown as { score: number; performance: number; history: number; activity: number; stake: number; conduct: number; updatedAt: bigint; inputsHash: string; exists: boolean };
+      // Named access: viem decodes tuples as objects, not arrays (see
+      // useAgentDirectory above) — s[8] would be undefined forever.
+      const scored = s.exists === true;
       return {
         registered: true,
         agentId: id,
         scored,
-        score: scored ? Number(s[0]) : null,
-        components: scored ? [Number(s[1]), Number(s[2]), Number(s[3]), Number(s[4]), Number(s[5])] : null,
-        updatedAt: scored ? Number(s[6]) : null,
+        score: scored ? Number(s.score) : null,
+        components: scored ? [Number(s.performance), Number(s.history), Number(s.activity), Number(s.stake), Number(s.conduct)] : null,
+        updatedAt: scored ? Number(s.updatedAt) : null,
       };
     },
   });

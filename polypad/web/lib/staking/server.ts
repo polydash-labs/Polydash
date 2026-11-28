@@ -146,20 +146,59 @@ async function readPools(addrs: Address[]): Promise<RawPool[]> {
 }
 const lastGoodPool = new Map<string, Record<string, any>>();
 
+// Last good per-token USD price (10-minute expiry), so a flaky
+// launches-snapshot refresh — a thin token's priceEth briefly reading 0 —
+// never drops a pool card's dollar line mid-session. Same pattern as
+// lastGoodPool below and getPolydashUsd's own fallback.
+const lastGoodPrice = new Map<string, { price: number; at: number }>();
+const LAST_GOOD_PRICE_MS = 10 * 60_000;
 async function priceBook() {
   const [launches, ethUsd] = await Promise.all([getLaunchesSnapshot(2_500), getEthUsd()]);
   const m = new Map<string, { logo: string | null; priceUsd: number | null; name: string }>();
   for (const l of launches ?? []) {
-    const p = l.priceEth > 0 && ethUsd > 0 ? l.priceEth * ethUsd : null;
-    m.set(l.tokenAddress.toLowerCase(), { logo: l.imageUri || null, priceUsd: p, name: l.name });
+    const key = l.tokenAddress.toLowerCase();
+    const fresh = l.priceEth > 0 && ethUsd > 0 ? l.priceEth * ethUsd : null;
+    const prev = lastGoodPrice.get(key);
+    const price = fresh != null && fresh > 0 ? fresh : (prev && Date.now() - prev.at < LAST_GOOD_PRICE_MS ? prev.price : null);
+    if (price != null && price > 0) lastGoodPrice.set(key, { price, at: Date.now() });
+    m.set(key, { logo: l.imageUri || null, priceUsd: price, name: l.name });
   }
+  // POLYDASH is the platform token, not a launch, so it is never in the
+  // launches snapshot — without this every POLYDASH pool priced at null and
+  // the /stake totals showed "N/A" (round 5).
+  const polyUsd = await getPolydashUsd();
+  if (polyUsd > 0) m.set(POLYDASH_TOKEN.toLowerCase(), { logo: POLYDASH_LOGO, priceUsd: polyUsd, name: 'Polydash' });
   return m;
+}
+
+// POLYDASH/USD from Dexscreener (on-chain price from the POLYDASH/WETH pool), 60 s cache.
+// Same source as the x402 facilitator (lib/x402/facilitator.ts getPolydashUsd).
+// Do NOT use CoinGecko's simple-price API for this token: it returned $0.00054081 on
+// 2026-11-17 while the on-chain price was ~$0.000000194 — ~2,790x too high.
+// Timeout is 8 s (not the facilitator's 3 s): this fetch runs in parallel with
+// the pool reads, so a slow Dexscreener response costs no extra wall time, and
+// a price that arrives at 4 s beats a null price.
+let polyPrice: { price: number; at: number } | null = null;
+async function getPolydashUsd(): Promise<number> {
+  try {
+    if (polyPrice && Date.now() - polyPrice.at < 60_000) return polyPrice.price;
+    const res = await fetch(
+      'https://api.dexscreener.com/latest/dex/tokens/0x319525528f42167eF7fC18b77b889958080568e4',
+      { cache: 'no-store', signal: AbortSignal.timeout(8_000) },
+    );
+    const price = Number((await res.json())?.pairs?.[0]?.priceUsd);
+    if (!Number.isFinite(price) || price <= 0) throw new Error('bad price');
+    polyPrice = { price, at: Date.now() };
+    return price;
+  } catch {
+    return polyPrice?.price ?? 0;
+  }
 }
 
 async function tokenInfo(addr: Address, book: Awaited<ReturnType<typeof priceBook>>): Promise<TokenInfo> {
   const meta = await tokenMeta(addr);
   const b = book.get(addr.toLowerCase());
-  const isPd = addr.toLowerCase() === POLYDASH_TOKEN;
+  const isPd = addr.toLowerCase() === POLYDASH_TOKEN.toLowerCase();
   return { address: addr, symbol: meta.symbol, name: b?.name ?? meta.symbol, decimals: meta.decimals, logo: isPd ? POLYDASH_LOGO : b?.logo ?? null, priceUsd: b?.priceUsd ?? null };
 }
 
@@ -354,9 +393,26 @@ function totalsFor(pools: PoolSummary[], st: EvState | null): StakeTotals {
   };
   const staked = new Map<string, TokenTotal>(), alloc = new Map<string, TokenTotal>(), paid = new Map<string, TokenTotal>();
   for (const p of pools) { add(staked, p.stake, p.totalStaked); add(alloc, p.reward, p.totalRewards); add(paid, p.reward, p.totalRewardsPaid); }
-  const sort = (m: Map<string, TokenTotal>) => Array.from(m.values()).sort((a, b) => (b.usd ?? 0) - (a.usd ?? 0) || b.amount - a.amount);
+  const sort = (m: Map<string, TokenTotal>) => Array.from(m.values())
+    // A token with zero total amount is worth $0 however its price was read,
+    // so it must not block the USD total: SWARM's price comes from the
+    // launches snapshot, which is often not ready in 2.5s, and its zero-amount
+    // entry (usd null) used to make totalFigure fall back to "Value
+    // unavailable" for the whole total even though POLYDASH was priced
+    // (round 7). A nonzero holding with no price still stays null, so the
+    // total stays honest about missing value.
+    .map((t) => (t.amount === 0 && t.usd == null ? { ...t, usd: 0 } : t))
+    .sort((a, b) => (b.usd ?? 0) - (a.usd ?? 0) || b.amount - a.amount);
   // Unique wallets with a share balance > 0 across these pools, from the full event history. Until
   // the first scan finishes we reuse the last exact value (never a different method's count).
+  // Fallback while the scan has never completed: the sum of each pool's
+  // on-chain stakerCount (already read in the pool multicall — no extra RPC).
+  // The scan is a 37M-block event walk that never finishes inside one
+  // serverless request (each request waits 5s, then the background refresh
+  // is frozen), so without this the tile spun on "Counting stakers…" forever.
+  // The sum can double-count a wallet staked in two pools; the exact unique
+  // count replaces it as soon as the scan completes (stakersExact is false
+  // until then).
   const cacheKey = pools.map((p) => p.address.toLowerCase()).sort().join(',');
   let stakers: number | null = lastStakers.get(cacheKey) ?? null;
   let exact = false;
@@ -365,6 +421,8 @@ function totalsFor(pools: PoolSummary[], st: EvState | null): StakeTotals {
     for (const p of pools) analyze(p, st).holders.forEach((_, u) => users.add(u));
     stakers = users.size; exact = true;
     lastStakers.set(cacheKey, stakers);
+  } else if (stakers == null) {
+    stakers = pools.reduce((s, p) => s + (p.stakerCount ?? 0), 0);
   }
   return { pools: pools.length, active: pools.filter((p) => p.status !== 'ended' && p.status !== 'upcoming').length, staked: sort(staked), rewardsAllocated: sort(alloc), rewardsPaid: sort(paid), stakers, stakersExact: exact };
 }
@@ -374,10 +432,16 @@ const lastPoolStakers = new Map<string, number>();
 
 function rank(p: PoolSummary) { return p.status === 'ended' ? 3 : p.status === 'upcoming' ? 2 : 1; }
 
-export async function getStakingOverview(token?: string | null): Promise<PoolsResponse | null> {
+export async function getStakingOverview(token?: string | null, opts?: { skipEvents?: boolean }): Promise<PoolsResponse | null> {
   const base = await getPools();
   if (!base) return null;
-  const st = await getEvents(base.map((p) => p.address));
+  // skipEvents: the /stake page's first-paint read only needs the pools
+  // (APR, staked, rewards) — the event scan (staker counts, sparklines)
+  // takes seconds on a cold instance and must not hold the pools hostage.
+  // With skipEvents the overview returns pools with analyticsPending=true
+  // and the client hook's 4s refetch fills in the analytics once the scan
+  // completes. The route never passes this; its behavior is unchanged.
+  const st = opts?.skipEvents ? null : await getEvents(base.map((p) => p.address));
   let pools = base.map((p) => ({ ...p }));
   if (st) {
     for (const p of pools) {
@@ -392,7 +456,7 @@ export async function getStakingOverview(token?: string | null): Promise<PoolsRe
     for (const p of pools) { const c = lastPoolStakers.get(p.address.toLowerCase()); if (c != null) p.stakerCount = c; }
   }
   // Featured: the newest live POLYDASH pool.
-  const pd = pools.filter((p) => p.stake.address.toLowerCase() === POLYDASH_TOKEN && p.status !== 'ended')
+  const pd = pools.filter((p) => p.stake.address.toLowerCase() === POLYDASH_TOKEN.toLowerCase() && p.status !== 'ended')
     .sort((a, b) => (b.createdBlock ?? 0) - (a.createdBlock ?? 0) || b.startTime - a.startTime)[0];
   if (pd) pd.featured = true;
   pools.sort((a, b) => Number(b.featured) - Number(a.featured) || rank(a) - rank(b) || (b.apr ?? -1) - (a.apr ?? -1) || b.totalStaked - a.totalStaked);

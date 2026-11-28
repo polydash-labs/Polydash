@@ -118,9 +118,9 @@ export function fmtUsd(v: number | null | undefined): string {
 }
 
 export function fmtApr(p: Pick<PoolSummary, 'apr' | 'aprKind'>): string {
-  if (p.aprKind === 'ended') return '0%';
-  if (p.aprKind === 'new') return 'New: be first';
-  if (p.aprKind === 'na' || p.apr == null) return 'n/a';
+  if (p.aprKind === 'ended') return 'Ended';
+  if (p.aprKind === 'new') return 'No rewards yet';
+  if (p.aprKind === 'na' || p.apr == null) return 'No data yet';
   const a = p.apr;
   if (a >= 100_000) return `${fmtNum(a)}%`;
   if (a >= 100) return `${Math.round(a).toLocaleString('en-US')}%`;

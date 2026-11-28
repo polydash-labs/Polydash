@@ -57,10 +57,64 @@ export async function getLogsFromDeploy<T>(client: PublicClient, query: (fromBlo
 }
 
 /** null = volume unknown (the RPC rejected the log query, e.g. multi-address ranges); UI shows an em dash instead of $0. */
+async function getLogsOnce(client: PublicClient, address: `0x${string}`, event: never, fromBlock: bigint, toBlock: bigint): Promise<unknown[]> {
+  try {
+    return await client.getLogs({ address, event, fromBlock, toBlock });
+  } catch (e) {
+    // The Robinhood RPC rate-limits eth_getLogs from Vercel's shared egress
+    // IPs (429, seen Nov 24) — one retry after a pause is often enough.
+    const msg = (e as Error)?.message ?? '';
+    if (/429|rate limit/i.test(msg)) {
+      await new Promise((r) => setTimeout(r, 1500));
+      return await client.getLogs({ address, event, fromBlock, toBlock });
+    }
+    throw e;
+  }
+}
+
+async function fetchLogsWidePerAddress<T>(client: PublicClient, addresses: `0x${string}`[], event: T, fromBlock: bigint, latest: bigint): Promise<unknown[]> {
+  // One address at a time, 9M-block ranges — the same shape
+  // getLogsFromDeploy uses for a single address (narrow: false).
+  // Measured Nov 24, 2026: 5 launches over ~37M blocks took 7.5s this way
+  // vs 79s for the multi-address narrow scan below, and returned the same
+  // events. Only 2 queries in flight: the RPC 429s eth_getLogs from
+  // Vercel's shared egress IPs when bursts of 8+ land at once.
+  const jobs: { address: `0x${string}`; from: bigint; to: bigint }[] = [];
+  for (const a of addresses) {
+    for (let s = fromBlock; s <= latest; s += LOG_CHUNK_WIDE) {
+      const e = s + LOG_CHUNK_WIDE - BigInt(1);
+      jobs.push({ address: a, from: s, to: e > latest ? latest : e });
+    }
+  }
+  const out: unknown[] = [];
+  const CONCURRENCY = 2;
+  for (let i = 0; i < jobs.length; i += CONCURRENCY) {
+    const parts = await Promise.all(
+      jobs.slice(i, i + CONCURRENCY).map((j) => getLogsOnce(client, j.address, event as never, j.from, j.to)),
+    );
+    out.push(...parts.flat());
+  }
+  return out;
+}
+
 async function fetchVolumes(client: PublicClient, launches: `0x${string}`[]): Promise<Record<string, number> | null> {
   const vol: Record<string, number> = {};
   if (launches.length === 0) return vol;
   try {
+    // Small launch sets (the normal case: 5 launches Nov 2026) scan one
+    // address at a time over wide ranges — ~10x faster than the narrow
+    // multi-address scan. Past ~20 launches the narrow scan wins again
+    // (its cost is ranges, not addresses), so fall back to it there.
+    if (launches.length > 1 && launches.length <= 20) {
+      const latest = await client.getBlockNumber();
+      const [buys, sells] = await Promise.all([
+        fetchLogsWidePerAddress(client, launches, BOUGHT, DEPLOY_BLOCK, latest),
+        fetchLogsWidePerAddress(client, launches, SOLD, DEPLOY_BLOCK, latest),
+      ]);
+      for (const l of buys as { address: string; args: { ethIn?: bigint } }[]) vol[l.address.toLowerCase()] = (vol[l.address.toLowerCase()] ?? 0) + Number(formatEther(l.args.ethIn ?? BigInt(0)));
+      for (const l of sells as { address: string; args: { ethOut?: bigint } }[]) vol[l.address.toLowerCase()] = (vol[l.address.toLowerCase()] ?? 0) + Number(formatEther(l.args.ethOut ?? BigInt(0)));
+      return vol;
+    }
     const narrow = launches.length > 1;
     const [buys, sells] = await Promise.all([
       getLogsFromDeploy(client, (fromBlock, toBlock) => client.getLogs({ address: launches, event: BOUGHT, fromBlock, toBlock }), { narrow }),

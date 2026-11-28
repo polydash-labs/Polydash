@@ -157,11 +157,13 @@ export function useKeyStatus(keyAddress: string | undefined) {
       if (!client || !valid || !SPEND_VAULT_ADDRESS) return null;
       const k = (await client.readContract({
         address: SPEND_VAULT_ADDRESS, abi: SpendVaultABI, functionName: 'keys', args: [keyAddress as Addr],
-      })) as unknown as readonly [string, string, bigint, bigint, bigint, boolean, bigint, bigint, bigint];
-      if (k[0] === '0x0000000000000000000000000000000000000000') return null;
+      })) as unknown as { owner: string; token: string; perPaymentCap: bigint; dailyCap: bigint; expiry: bigint; revoked: boolean; spentDay: bigint; spentToday: bigint; allowlistCount: bigint };
+      // Named access: viem decodes tuples as plain objects, not arrays —
+      // k[0] would be undefined and a missing key would never read as null.
+      if (k.owner === '0x0000000000000000000000000000000000000000') return null;
       return {
-        key: keyAddress, owner: k[0], token: k[1], perPaymentCap: k[2], dailyCap: k[3],
-        expiry: Number(k[4]), revoked: k[5], spentToday: k[7],
+        key: keyAddress, owner: k.owner, token: k.token, perPaymentCap: k.perPaymentCap, dailyCap: k.dailyCap,
+        expiry: Number(k.expiry), revoked: k.revoked, spentToday: k.spentToday,
       } satisfies VaultKeyRow;
     },
   });
@@ -200,19 +202,19 @@ export function useMyKeys(owner: string | undefined) {
         .map((k) => {
           const i = keyAddrs.indexOf(k);
           const s = states[i]?.status === 'success'
-            ? (states[i].result as unknown as readonly [string, string, bigint, bigint, bigint, boolean, bigint, bigint, bigint])
+            ? (states[i].result as unknown as { owner: string; token: string; perPaymentCap: bigint; dailyCap: bigint; expiry: bigint; revoked: boolean; spentDay: bigint; spentToday: bigint; allowlistCount: bigint })
             : null;
           const log = logs.find((l) => l.args.key.toLowerCase() === k);
           if (!s && !log) return null;
           return {
             key: k,
-            owner: s ? s[0] : owner,
-            token: s ? s[1] : log!.args.token,
-            perPaymentCap: s ? s[2] : log!.args.perPaymentCap,
-            dailyCap: s ? s[3] : log!.args.dailyCap,
-            expiry: s ? Number(s[4]) : Number(log!.args.expiry),
-            revoked: s ? s[5] : false,
-            spentToday: s ? s[7] : 0n,
+            owner: s ? s.owner : owner,
+            token: s ? s.token : log!.args.token,
+            perPaymentCap: s ? s.perPaymentCap : log!.args.perPaymentCap,
+            dailyCap: s ? s.dailyCap : log!.args.dailyCap,
+            expiry: s ? Number(s.expiry) : Number(log!.args.expiry),
+            revoked: s ? s.revoked : false,
+            spentToday: s ? s.spentToday : 0n,
           } satisfies VaultKeyRow;
         })
         .filter((r): r is VaultKeyRow => r !== null);

@@ -3,7 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
 import { FundFactoryPhase3ABI, FundVaultPhase3ABI } from '@/lib/contracts/fund-phase3-abi';
-import { readSummary, type Phase3Summary } from '@/lib/fund/use-phase3';
+import { fetchFundsListWire, readSummary, type Phase3Summary } from '@/lib/fund/use-phase3';
+import { v3FundSummaryFromWire, type FundsListWire } from '@/lib/fund/list-wire';
 import { FundVaultV3ABI } from '@/lib/contracts/fund-v3-abi';
 import { robinhoodChain } from '@/lib/chain';
 import { FUND_FACTORY_V3 } from '@/lib/fund/phase7';
@@ -27,34 +28,27 @@ export function useV3IsFund(address: string) {
 
 export type V3FundSummary = Phase3Summary & { raiseDeadline: number };
 
-/** Every tokenized fund listed by the V3 factory (Strategy #6–#9), newest first. */
-export function useV3Funds() {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
+/** Every tokenized fund listed by the V3 factory (Strategy #6–#9), newest first.
+ * Pass the server-read list (from the page's first-paint read) and the
+ * section renders with real figures on first paint instead of the skeleton. */
+export function useV3Funds(initialWire?: FundsListWire) {
   return useQuery({
     queryKey: ['p6', 'v3funds'],
-    enabled: !!client,
     refetchInterval: 30_000,
-    // A slow first-paint chain read must not flash the error state: the
-    // single RPC times out at 10s under concurrent load, so retry with
-    // backoff inside the loading state, and keep the last good list when
-    // a background refetch fails (same pattern as useLaunches).
+    // The list used to read the chain directly from the browser and the
+    // official RPC rejected it in the first-load storm, so the /funds lists
+    // sat on "Loading tokenized funds…" for 20+s (round 4). The read now
+    // runs once on the server behind /api/funds/list (cached 30s); retry
+    // with backoff inside the loading state, and keep the last good list
+    // when a background refetch fails (same pattern as useLaunches).
     retry: 5,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     placeholderData: (prev) => prev,
+    initialData: initialWire ? initialWire.v3.map(v3FundSummaryFromWire) : undefined,
+    staleTime: initialWire ? 30_000 : undefined,
     queryFn: async (): Promise<V3FundSummary[]> => {
-      if (!client) return [];
-      const count = Number(await client.readContract({ address: FUND_FACTORY_V3, abi: FundFactoryPhase3ABI, functionName: 'allFundsLength' }));
-      if (!count) return [];
-      const addrs = await client.multicall({
-        allowFailure: true,
-        contracts: Array.from({ length: Math.min(count, 200) }, (_, i) => ({ address: FUND_FACTORY_V3, abi: FundFactoryPhase3ABI, functionName: 'allFunds' as const, args: [BigInt(i)] as const })),
-      });
-      const rows = await Promise.all(addrs.map((r, i) => (r.status === 'success' ? readSummary(client, r.result as Addr, i) : Promise.resolve(null))));
-      const list = rows.filter((r): r is Phase3Summary => r !== null);
-      const deadlines = list.length
-        ? await client.multicall({ allowFailure: true, contracts: list.map((f) => ({ address: f.vault, abi: FundVaultPhase3ABI, functionName: 'raiseDeadline' as const })) })
-        : [];
-      return list.map((f, i) => ({ ...f, raiseDeadline: Number(ok(deadlines[i], 0n)) })).reverse();
+      const wire = await fetchFundsListWire();
+      return wire.v3.map(v3FundSummaryFromWire);
     },
   });
 }

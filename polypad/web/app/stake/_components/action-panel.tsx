@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { erc20Abi, fmtNum, type PoolSummary } from '@/lib/staking/shared';
 import { TokenLogo, sym, useReducedMotion } from './primitives';
 import { usePoolWallet, useStakeTx } from './use-stake';
+import { EMERALD_CARD } from '@/lib/ui/template';
 
 type Tab = 'stake' | 'unstake' | 'claim';
 const Z = BigInt(0);
@@ -52,13 +53,23 @@ function NoWallet({ onClick }: { onClick?: () => void }) {
   );
 }
 
-export function ActionPanel({ pool, className }: { pool: PoolSummary; className?: string }) {
+export function ActionPanel({ pool, className, initialTab }: { pool: PoolSummary; className?: string; initialTab?: Tab }) {
   const { chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { openConnectModal } = useConnectModal();
   const w = usePoolWallet(pool);
   const { send, pending } = useStakeTx();
   const [tab, setTab] = useState<Tab>('stake');
+  const userPickedTab = useRef(false);
+  // Ended pools: if this wallet still has a stake or rewards here, open on
+  // the withdraw (or claim) tab instead of stake, so the money out is first.
+  useEffect(() => {
+    if (userPickedTab.current || !w.ready || pool.status !== 'ended') return;
+    if (w.staked > Z || w.claimable > Z) setTab(w.staked === Z ? 'claim' : 'unstake');
+  }, [w.ready, w.staked, w.claimable, pool.status]);
+  useEffect(() => {
+    if (initialTab && !userPickedTab.current) setTab(initialTab);
+  }, [initialTab]);
   const [amount, setAmount] = useState('');
   const [maxPick, setMaxPick] = useState(false);
   const [stage, setStage] = useState<'idle' | 'approve' | 'stake'>('idle');
@@ -138,7 +149,12 @@ export function ActionPanel({ pool, className }: { pool: PoolSummary; className?
   const approveDone = !needsApprove || stage === 'stake';
 
   return (
-    <div className={cn('stk-glass p-4 sm:p-5', className)}>
+    <div className={cn(EMERALD_CARD, className)}>
+      {ended && w.address && (w.staked > Z || w.claimable > Z) && (
+        <div className="mb-4 rounded-xl bg-amber-400/[0.08] p-3 text-[13px] leading-relaxed text-amber-200 ring-1 ring-amber-400/30" role="status">
+          This pool ended. Your {fmtNum(toNum(w.staked, sd))} {S}{w.claimable > Z ? ` and ${fmtNum(toNum(w.claimable, rd))} ${R} in rewards` : ''} {w.staked > Z ? 'is' : 'are'} still here — withdraw it below, or use “Withdraw all and claim” to take everything at once.
+        </div>
+      )}
       {/* Earned */}
       <div className="rounded-xl bg-black/30 p-4 ring-1 ring-white/[0.06]">
         <div className="flex items-center justify-between text-[12px] text-white/50">
@@ -166,10 +182,10 @@ export function ActionPanel({ pool, className }: { pool: PoolSummary; className?
 
       {/* Segmented control */}
       <div role="tablist" aria-label="Pool actions" className="mt-4 grid grid-cols-3 rounded-xl bg-white/[0.04] p-1 ring-1 ring-white/[0.06]">
-        {(['stake', 'unstake', 'claim'] as Tab[]).map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
-            className={cn('h-11 rounded-lg text-[14px] font-medium capitalize transition-colors sm:h-10', tab === t ? 'bg-white/[0.1] text-white shadow-sm' : 'text-white/55 hover:text-white')}>
-            {t}
+        {([['stake', 'Stake'], ['unstake', 'Withdraw'], ['claim', 'Claim']] as const).map(([t, label]) => (
+          <button key={t} role="tab" aria-selected={tab === t} onClick={() => { userPickedTab.current = true; setTab(t); }}
+            className={cn('h-11 rounded-lg text-[14px] font-medium transition-colors sm:h-10', tab === t ? 'bg-white/[0.1] text-white shadow-sm' : 'text-white/55 hover:text-white')}>
+            {label}
           </button>
         ))}
       </div>
@@ -200,7 +216,7 @@ export function ActionPanel({ pool, className }: { pool: PoolSummary; className?
         <div className="mt-4 rounded-xl bg-white/[0.03] p-4 text-[13px] text-white/65 ring-1 ring-white/[0.06]">
           <div className="flex justify-between"><span>Ready to claim</span><span className="tabular-nums text-white">{fmtNum(toNum(w.claimable, rd))} {R}</span></div>
           <div className="mt-1 flex justify-between"><span>Claim fee</span><span className="tabular-nums">{(pool.claimFeeBps / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}%</span></div>
-          <p className="mt-2 text-[12px] text-white/45">Rewards keep adding up every second. You can claim anytime; your stake stays in the pool.</p>
+          <p className="mt-2 text-[12px] text-white/45">{ended ? 'Rewards have stopped. Your stake is still here — withdraw it.' : 'Rewards keep adding up every second. You can claim anytime; your stake stays in the pool.'}</p>
         </div>
       )}
 
@@ -224,6 +240,12 @@ export function ActionPanel({ pool, className }: { pool: PoolSummary; className?
         className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-polydash-green text-[15px] font-semibold text-black transition-colors hover:bg-polydash-green-light disabled:cursor-not-allowed disabled:bg-white/[0.08] disabled:text-white/40">
         {busy && <Loader2 className="h-4 w-4 animate-spin" />}{!busy && primary.icon}{primary.label}
       </button>
+
+      {tab === 'stake' && needsApprove && amt != null && amt > Z && (
+        <p className="mt-2 text-[12px] leading-relaxed text-white/55">
+          Step 1 of 2: you approve this page to move up to {fmtNum(toNum(amt, sd))} {S} once. Step 2: you stake it. Approving alone moves nothing.
+        </p>
+      )}
 
       {done && (
         <div className="stk-check mt-3 flex items-center gap-2 rounded-xl bg-polydash-green/[0.08] px-3 py-2.5 text-[13px] text-polydash-green ring-1 ring-polydash-green/25" role="status">

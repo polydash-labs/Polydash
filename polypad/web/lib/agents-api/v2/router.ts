@@ -1,6 +1,8 @@
 /** HTTP dispatch for /api/agents/v2/*. Pure: takes a Request, returns status, body, and headers. */
 import { ApiError, defaultCtx, metaOf, scrub, toApiError, type Ctx } from './core';
 import { LIMITS } from './config';
+import { resolveApiKey } from './keys';
+import { FREE_KEY_ID, kindOf, recordUsage } from './usage';
 import { TOOLS, indexBody, runTool } from './tools';
 
 export type HttpResult = { status: number; body: Record<string, unknown>; headers: Record<string, string> };
@@ -9,7 +11,7 @@ export function corsHeaders(): Record<string, string> {
   return {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, OPTIONS',
-    'access-control-allow-headers': 'content-type, x-polypad-client',
+    'access-control-allow-headers': 'content-type, x-polypad-client, x-api-key',
     'access-control-max-age': '86400',
     'cache-control': 'no-store',
   };
@@ -24,6 +26,11 @@ const ALIASES: Record<string, string> = { 'token': 'token', 'fund': 'fund', 'pro
 export async function handleV2(req: Request, slug: string[], ctx: Ctx = defaultCtx()): Promise<HttpResult> {
   const headers = corsHeaders();
   try {
+    // Optional API key, same as the MCP: no key → free tier, valid key → Pro, bad key → 401.
+    const key = await resolveApiKey(req);
+    if (key.tier === 'invalid') {
+      return { status: 401, body: { ok: false, error: { code: 'invalid_api_key', message: key.reason } }, headers };
+    }
     const path = slug.join('/');
     if (path === '') {
       if (req.method !== 'GET') throw new ApiError(405, 'method_not_allowed', 'Use GET.');
@@ -50,8 +57,16 @@ export async function handleV2(req: Request, slug: string[], ctx: Ctx = defaultC
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new ApiError(400, 'invalid_json', 'Expected a JSON object.');
       input = { ...(parsed as Record<string, unknown>), ...params };
     }
-    const meta = metaOf(req, input);
-    const body = await runTool(ctx, tool, input, meta);
+    const meta = metaOf(req, input, key.tier, key.tier === 'pro' ? key.keyId : null);
+    let body: Record<string, unknown>;
+    try {
+      body = await runTool(ctx, tool, input, meta);
+      recordUsage({ keyId: key.tier === 'pro' ? key.keyId : FREE_KEY_ID, tool: tool.name, kind: kindOf(tool), status: 'ok' });
+    } catch (err) {
+      const e = toApiError(err);
+      recordUsage({ keyId: key.tier === 'pro' ? key.keyId : FREE_KEY_ID, tool: tool.name, kind: kindOf(tool), status: e.status === 429 ? 'rate_limited' : 'error' });
+      throw err;
+    }
     return { status: 200, body, headers };
   } catch (err) {
     const e = toApiError(err);

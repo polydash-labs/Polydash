@@ -9,8 +9,8 @@ import { FundPhase4ABI } from '@/lib/contracts/fund-phase4-abi';
 import { FundFactoryPhase3ABI, FundNFTPhase3ABI, FundVaultPhase3ABI } from '@/lib/contracts/fund-phase3-abi';
 import { getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { robinhoodChain } from '@/lib/chain';
-import { PHASE3_LOG_CHUNK } from '@/lib/fund/phase3';
-import { FUND_PHASE4, PHASE4_DEPLOY_BLOCK, phase4Live, phase4TxError } from '@/lib/fund/phase4';
+import { FUND_PHASE4, phase4Live, phase4TxError } from '@/lib/fund/phase4';
+import { offersFromWire, type OffersWire } from '@/lib/fund/list-wire';
 
 type Addr = `0x${string}`;
 type Row = { status: string; result?: unknown; error?: unknown };
@@ -105,52 +105,26 @@ export type Offer = {
 };
 
 export function useOffers(nft: Addr) {
-  const client = usePublicClient({ chainId: robinhoodChain.id });
   return useQuery({
     queryKey: ['p4-offers', nft.toLowerCase()],
-    enabled: !!client && phase4Live(),
+    enabled: phase4Live(),
     refetchInterval: 30_000,
     queryFn: async (): Promise<Offer[]> => {
-      if (!client || !FUND_PHASE4) return [];
-      const p4 = FUND_PHASE4;
-      const head = await client.getBlockNumber();
-      const logs: { id: bigint; tokenId: bigint; bidder: Addr; amount: bigint; expiry: number }[] = [];
-      for (let from = PHASE4_DEPLOY_BLOCK; from <= head; from += PHASE3_LOG_CHUNK) {
-        const to = from + PHASE3_LOG_CHUNK - 1n > head ? head : from + PHASE3_LOG_CHUNK - 1n;
-        const part = await client.getContractEvents({ address: p4, abi: FundPhase4ABI, eventName: 'BidPlaced', fromBlock: from, toBlock: to });
-        for (const l of part) {
-          const a = l.args as { id?: bigint; nft?: Addr; tokenId?: bigint; bidder?: Addr; amount?: bigint; expiry?: bigint };
-          if (a.id === undefined || a.nft?.toLowerCase() !== nft.toLowerCase()) continue;
-          logs.push({ id: a.id, tokenId: a.tokenId ?? 0n, bidder: a.bidder ?? ZERO, amount: a.amount ?? 0n, expiry: Number(a.expiry ?? 0n) });
-        }
+      if (!FUND_PHASE4) return [];
+      // The BidPlaced scan + per-bid status reads used to run directly from
+      // the browser; on a first load they fired into the same storm that
+      // broke the detail page, so the card sat on "Could not read offers
+      // right now" (round 5). The reads now run on the server behind
+      // /api/fund/offers and the browser makes one cheap request.
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 15_000);
+      try {
+        const r = await fetch(`/api/fund/offers?nft=${nft}`, { signal: ctrl.signal });
+        if (!r.ok) throw new Error(`Offers read failed: ${r.status}`);
+        return offersFromWire((await r.json()) as OffersWire);
+      } finally {
+        clearTimeout(t);
       }
-      if (!logs.length) return [];
-      const recent = logs.slice(-100);
-      const st = await client.multicall({
-        allowFailure: true,
-        contracts: recent.flatMap((b) => [
-          { address: p4, abi: P4, functionName: 'bidStatus', args: [b.id] },
-          { address: nft, abi: FundNFTPhase3ABI as Abi, functionName: 'ownerOf', args: [b.tokenId] },
-          { address: nft, abi: FundNFTPhase3ABI as Abi, functionName: 'getApproved', args: [b.tokenId] },
-        ]),
-      }) as Row[];
-      const out: Offer[] = recent.map((b, i) => {
-        const s = ok(st[i * 3]) ? (st[i * 3].result as readonly [boolean, boolean, boolean, bigint]) : [false, false, false, 0n] as const;
-        const holder = ok(st[i * 3 + 1]) ? (st[i * 3 + 1].result as Addr) : null;
-        const approvedTo = ok(st[i * 3 + 2]) ? (st[i * 3 + 2].result as Addr) : null;
-        return { ...b, open: s[0], expired: s[1], withinNav: s[2], navPerShare: s[3], holder, approved: !!approvedTo && approvedTo.toLowerCase() === p4 };
-      });
-      // Operator approval also counts.
-      const holders = Array.from(new Set(out.filter((o) => o.open && o.holder && !o.approved).map((o) => o.holder as Addr)));
-      if (holders.length) {
-        const ap = await client.multicall({
-          allowFailure: true,
-          contracts: holders.map((h) => ({ address: nft, abi: FundNFTPhase3ABI as Abi, functionName: 'isApprovedForAll', args: [h, p4] })),
-        }) as Row[];
-        const all = new Set(holders.filter((_, i) => ok(ap[i]) && ap[i].result === true).map((h) => h.toLowerCase()));
-        out.forEach((o) => { if (o.holder && all.has(o.holder.toLowerCase())) o.approved = true; });
-      }
-      return out.reverse();
     },
   });
 }
@@ -167,7 +141,7 @@ export function usePhase4Tx() {
 
   const run = async (key: string, working: string, success: string, exec: () => Promise<Hex>): Promise<TransactionReceipt | null> => {
     if (!phase4Live()) {
-      toast.error('Phase 4 is not live on this site yet.');
+      toast.error('Agent tools are not live on this site yet.');
       return null;
     }
     if (!client || !address) {

@@ -1,0 +1,2645 @@
+{
+  "_generated": {
+    "by": "scripts/generate-tool-reference.ts",
+    "source": "lib/agents-api/v2/tools.ts",
+    "note": "Do not edit by hand. Edit the tool definitions (or the sample/error maps in the script) and re-run: npx tsx scripts/generate-tool-reference.ts",
+    "toolCount": 25
+  },
+  "errors": [
+    {
+      "code": "amount_too_large",
+      "status": 400,
+      "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+    },
+    {
+      "code": "confirm_large_required",
+      "status": 400,
+      "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+    },
+    {
+      "code": "invalid_amount",
+      "status": 400,
+      "meaning": "The 402 requirement has a zero amount."
+    },
+    {
+      "code": "invalid_json",
+      "status": 400,
+      "meaning": "The request body was not valid JSON, or was not a JSON object."
+    },
+    {
+      "code": "invalid_params",
+      "status": 400,
+      "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+    },
+    {
+      "code": "key_material_rejected",
+      "status": 400,
+      "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+    },
+    {
+      "code": "no_stable_requirement",
+      "status": 400,
+      "meaning": "The endpoint only accepts a non-stable asset (such as POLYDASH). Cross-chain pay works for the USD stablecoins — USDG on Robinhood Chain, USDC on Base."
+    },
+    {
+      "code": "not_a_402",
+      "status": 400,
+      "meaning": "The URL did not return a 402 payment challenge. Cross-chain pay needs an x402 endpoint."
+    },
+    {
+      "code": "invalid_api_key",
+      "status": 401,
+      "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+    },
+    {
+      "code": "tool_not_available",
+      "status": 403,
+      "meaning": "This tool is only available to allowlisted business API keys."
+    },
+    {
+      "code": "not_found",
+      "status": 404,
+      "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+    },
+    {
+      "code": "tx_not_found",
+      "status": 404,
+      "meaning": "No transaction with that hash on Robinhood Chain yet — it may not have been sent."
+    },
+    {
+      "code": "unknown_template",
+      "status": 404,
+      "meaning": "No Strategy with that id. List the strategies first."
+    },
+    {
+      "code": "method_not_allowed",
+      "status": 405,
+      "meaning": "Wrong HTTP method for the endpoint (GET vs POST)."
+    },
+    {
+      "code": "ambiguous_collection",
+      "status": 409,
+      "meaning": "More than one collection matches. Use the collection address."
+    },
+    {
+      "code": "ambiguous_fund",
+      "status": 409,
+      "meaning": "More than one tokenized fund matches. Use the fund address."
+    },
+    {
+      "code": "ambiguous_token",
+      "status": 409,
+      "meaning": "More than one token matches. Use the token address."
+    },
+    {
+      "code": "amount_exceeds_curve",
+      "status": 409,
+      "meaning": "More tokens than the bonding curve can buy back right now. Try a smaller amount."
+    },
+    {
+      "code": "choose_template",
+      "status": 409,
+      "meaning": "More than one Strategy fits the assets. Ask the user which one."
+    },
+    {
+      "code": "commit_window_open",
+      "status": 409,
+      "meaning": "The collection is still in its commitment window. Commit from the collection page."
+    },
+    {
+      "code": "insufficient_balance",
+      "status": 409,
+      "meaning": "The wallet holds less than the amount requested."
+    },
+    {
+      "code": "listing_not_valid",
+      "status": 409,
+      "meaning": "The listing is sold, cancelled, expired, or no longer backed by the seller."
+    },
+    {
+      "code": "no_shares",
+      "status": 409,
+      "meaning": "The wallet holds no shares of that tokenized fund."
+    },
+    {
+      "code": "not_holder",
+      "status": 409,
+      "meaning": "The wallet does not hold the share(s) being redeemed."
+    },
+    {
+      "code": "not_tradable",
+      "status": 409,
+      "meaning": "The token is in a phase that cannot be traded right now."
+    },
+    {
+      "code": "own_listing",
+      "status": 409,
+      "meaning": "This wallet is the seller of that listing."
+    },
+    {
+      "code": "raise_closed",
+      "status": 409,
+      "meaning": "The tokenized fund is not open for minting."
+    },
+    {
+      "code": "raise_open",
+      "status": 409,
+      "meaning": "The tokenized fund is still raising. Exit opens after the raise closes; a refund opens only if the raise fails."
+    },
+    {
+      "code": "skin_required",
+      "status": 409,
+      "meaning": "Public minting is not open yet — the manager must mint their required shares first."
+    },
+    {
+      "code": "sold_out",
+      "status": 409,
+      "meaning": "Sold out (NFT collection, or no shares left)."
+    },
+    {
+      "code": "unsupported_fund",
+      "status": 409,
+      "meaning": "Exits from this fund type are not prepared by the API yet. Open the fund page."
+    },
+    {
+      "code": "wallet_cap",
+      "status": 409,
+      "meaning": "The collection’s per-wallet mint limit is reached."
+    },
+    {
+      "code": "payload_too_large",
+      "status": 413,
+      "meaning": "Request body over 16 KB."
+    },
+    {
+      "code": "no_matching_template",
+      "status": 422,
+      "meaning": "No Strategy can hold the requested assets."
+    },
+    {
+      "code": "quote_failed",
+      "status": 422,
+      "meaning": "The pool could not quote that amount. Try a smaller amount."
+    },
+    {
+      "code": "simulation_reverted",
+      "status": 422,
+      "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+    },
+    {
+      "code": "quota",
+      "status": 429,
+      "meaning": "The chat service is out of credits. Try again later."
+    },
+    {
+      "code": "rate_limited",
+      "status": 429,
+      "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+    },
+    {
+      "code": "rate_limited_wallet",
+      "status": 429,
+      "meaning": "Too many prepared actions for this wallet. Wait a minute."
+    },
+    {
+      "code": "internal_error",
+      "status": 500,
+      "meaning": "Unexpected error. Nothing was signed or sent."
+    },
+    {
+      "code": "unsupported_collection_type",
+      "status": 501,
+      "meaning": "Buys from bonding-curve collections are not prepared by the API yet. Open the collection page."
+    },
+    {
+      "code": "resource_unreachable",
+      "status": 502,
+      "meaning": "The x402 URL could not be fetched."
+    },
+    {
+      "code": "agent_chat_unavailable",
+      "status": 503,
+      "meaning": "Agent chat is not configured yet, or the chat service did not answer."
+    },
+    {
+      "code": "rpc_unavailable",
+      "status": 503,
+      "meaning": "The chain data source could not be reached. Retry shortly."
+    },
+    {
+      "code": "timeout",
+      "status": 503,
+      "meaning": "The quote took too long. Try again."
+    }
+  ],
+  "tools": [
+    {
+      "name": "polypad_what_can_i_do",
+      "title": "What can I do",
+      "description": "Start here. Explains what Polypad on Robinhood Chain can do from chat, example requests, live counts, how signing works, and the guardrails.",
+      "group": "Read",
+      "kind": "read",
+      "method": "GET",
+      "path": "onboard",
+      "inputs": [],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/onboard\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_what_can_i_do\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_intent",
+      "title": "Understand a request",
+      "description": "Turns a plain-language request (\"buy 0.01 ETH of POLYCAT\", \"launch a fund with POLYDASH\") into the right tool call. Runs read-only requests directly. For actions that move funds it needs the wallet address in `from`; if details are missing it returns the questions to ask.",
+      "group": "Read",
+      "kind": "read",
+      "method": "POST",
+      "path": "intent",
+      "inputs": [
+        {
+          "field": "text",
+          "type": "string",
+          "required": true,
+          "description": "What the user said, as written."
+        },
+        {
+          "field": "from",
+          "type": "string",
+          "required": false,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        }
+      ],
+      "exampleArgs": {
+        "text": "What tokens launched today?"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/intent\" -H \"content-type: application/json\" -d '{\"text\":\"What tokens launched today?\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_intent\",\"arguments\":{\"text\":\"What tokens launched today?\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_token",
+          "status": 409,
+          "meaning": "More than one token matches. Use the token address."
+        },
+        {
+          "code": "ambiguous_fund",
+          "status": 409,
+          "meaning": "More than one tokenized fund matches. Use the fund address."
+        }
+      ]
+    },
+    {
+      "name": "polypad_list_tokens",
+      "title": "Browse tokens",
+      "description": "Trending, new, graduating, or high-volume token launches on Polypad, with search. Counts activity from on-chain trades. No price predictions.",
+      "group": "Launch",
+      "kind": "read",
+      "method": "GET",
+      "path": "tokens",
+      "inputs": [
+        {
+          "field": "sort",
+          "type": "string",
+          "required": false,
+          "description": "trending, new, graduating, volume, or graduated.",
+          "enum": [
+            "trending",
+            "new",
+            "graduating",
+            "volume",
+            "graduated"
+          ]
+        },
+        {
+          "field": "q",
+          "type": "string",
+          "required": false,
+          "description": "Search by name, symbol, or address."
+        },
+        {
+          "field": "phase",
+          "type": "string",
+          "required": false,
+          "description": "Filter by phase.",
+          "enum": [
+            "commit_window",
+            "trading",
+            "graduated"
+          ]
+        },
+        {
+          "field": "agentLaunched",
+          "type": "boolean",
+          "required": false,
+          "description": "Only tokens prepared through the agent API."
+        },
+        {
+          "field": "limit",
+          "type": "integer",
+          "required": false,
+          "description": "How many to return, 1 to 50. Default 12."
+        }
+      ],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/tokens\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_list_tokens\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_get_token",
+      "title": "Token details",
+      "description": "One token: price reading, bonding-curve progress, creator, fees, and links. Accepts a symbol, name, token address, or launch address. POLYDASH itself works too — it is not a launch, so it has no curve or launch contract.",
+      "group": "Launch",
+      "kind": "read",
+      "method": "GET",
+      "path": "token",
+      "inputs": [
+        {
+          "field": "token",
+          "type": "string",
+          "required": true,
+          "description": "Symbol, name, token address, or launch address."
+        }
+      ],
+      "exampleArgs": {
+        "token": "0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/token?token=0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_get_token\",\"arguments\":{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_token",
+          "status": 409,
+          "meaning": "More than one token matches. Use the token address."
+        }
+      ]
+    },
+    {
+      "name": "polypad_token_protections",
+      "title": "Token protections in plain words",
+      "description": "A plain-language read of a token's on-chain protections: liquidity, fees, creator holdings, staking pool, vesting lock, bond. It says what is met, what is not, and what it cannot tell you. Not a promise about price.",
+      "group": "Read",
+      "kind": "read",
+      "method": "GET",
+      "path": "protections",
+      "inputs": [
+        {
+          "field": "token",
+          "type": "string",
+          "required": true,
+          "description": "Symbol, name, token address, or launch address."
+        }
+      ],
+      "exampleArgs": {
+        "token": "0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/protections?token=0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_token_protections\",\"arguments\":{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_token",
+          "status": 409,
+          "meaning": "More than one token matches. Use the token address."
+        }
+      ]
+    },
+    {
+      "name": "polypad_quote_trade",
+      "title": "Quote a buy or sell",
+      "description": "Quote a buy (ETH in) or sell (token amount in) for a launch token, on the bonding curve or in the Uniswap V4 pool after graduation. Returns expected output, minimum after slippage, and fees. A reading, not a promise.",
+      "group": "Trade",
+      "kind": "read",
+      "method": "GET",
+      "path": "quote",
+      "inputs": [
+        {
+          "field": "token",
+          "type": "string",
+          "required": true,
+          "description": "Symbol, name, token address, or launch address."
+        },
+        {
+          "field": "side",
+          "type": "string",
+          "required": true,
+          "description": "buy or sell.",
+          "enum": [
+            "buy",
+            "sell"
+          ]
+        },
+        {
+          "field": "amount",
+          "type": "string",
+          "required": false,
+          "description": "Base units as a decimal string: wei of ETH for a buy, token base units (18 decimals) for a sell."
+        },
+        {
+          "field": "amountEth",
+          "type": "string",
+          "required": false,
+          "description": "Buy only: ETH as a decimal such as 0.01. Use instead of amount."
+        },
+        {
+          "field": "slippageBps",
+          "type": "integer",
+          "required": false,
+          "description": "Slippage limit in basis points. Default 100, maximum 1000."
+        }
+      ],
+      "exampleArgs": {
+        "token": "0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B",
+        "side": "buy"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/quote?token=0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B&side=buy\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_quote_trade\",\"arguments\":{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\",\"side\":\"buy\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_token",
+          "status": 409,
+          "meaning": "More than one token matches. Use the token address."
+        },
+        {
+          "code": "quote_failed",
+          "status": 422,
+          "meaning": "The pool could not quote that amount. Try a smaller amount."
+        },
+        {
+          "code": "not_tradable",
+          "status": 409,
+          "meaning": "The token is in a phase that cannot be traded right now."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_buy",
+      "title": "Prepare a buy",
+      "description": "Prepares a buy of a launch token with ETH. Simulates it on-chain before returning. Returns the unsigned transaction (to, data, value, chainId 4663, gas estimate), a plain summary, and a one-tap signing link. Show the summary before the link. Never signs.",
+      "group": "Trade",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/buy",
+      "inputs": [
+        {
+          "field": "token",
+          "type": "string",
+          "required": true,
+          "description": "Symbol, name, token address, or launch address."
+        },
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "amountEth",
+          "type": "string",
+          "required": false,
+          "description": "ETH to spend, as a decimal such as 0.01."
+        },
+        {
+          "field": "amountWei",
+          "type": "string",
+          "required": false,
+          "description": "ETH to spend in wei. Use instead of amountEth."
+        },
+        {
+          "field": "slippageBps",
+          "type": "integer",
+          "required": false,
+          "description": "Slippage limit in basis points. Default 100, maximum 1000."
+        },
+        {
+          "field": "confirmLarge",
+          "type": "boolean",
+          "required": false,
+          "description": "Set true only after the user confirmed an amount above 1 ETH."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "token": "0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B",
+        "from": "0x1111111111111111111111111111111111111111"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/buy\" -H \"content-type: application/json\" -d '{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\",\"from\":\"0x1111111111111111111111111111111111111111\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_buy\",\"arguments\":{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\",\"from\":\"0x1111111111111111111111111111111111111111\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_token",
+          "status": 409,
+          "meaning": "More than one token matches. Use the token address."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "insufficient_balance",
+          "status": 409,
+          "meaning": "The wallet holds less than the amount requested."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "not_tradable",
+          "status": 409,
+          "meaning": "The token is in a phase that cannot be traded right now."
+        },
+        {
+          "code": "amount_exceeds_curve",
+          "status": 409,
+          "meaning": "More tokens than the bonding curve can buy back right now. Try a smaller amount."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_sell",
+      "title": "Prepare a sell",
+      "description": "Prepares a sale of a launch token for ETH, with the exact-amount approval step if needed. Simulates step 1 on-chain. Returns unsigned transactions, a summary, and a signing link. Accepts an amount or a percent of the wallet balance.",
+      "group": "Trade",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/sell",
+      "inputs": [
+        {
+          "field": "token",
+          "type": "string",
+          "required": true,
+          "description": "Symbol, name, token address, or launch address."
+        },
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "amount",
+          "type": "string",
+          "required": false,
+          "description": "Token base units (18 decimals) as a decimal string."
+        },
+        {
+          "field": "percentOfBalance",
+          "type": "integer",
+          "required": false,
+          "description": "Percent of the wallet balance, 1 to 100. Use instead of amount."
+        },
+        {
+          "field": "slippageBps",
+          "type": "integer",
+          "required": false,
+          "description": "Slippage limit in basis points. Default 100, maximum 1000."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "token": "0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B",
+        "from": "0x1111111111111111111111111111111111111111"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/sell\" -H \"content-type: application/json\" -d '{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\",\"from\":\"0x1111111111111111111111111111111111111111\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_sell\",\"arguments\":{\"token\":\"0x3Da9244DDE38284017fD15e45d1Fdf66D3617B4B\",\"from\":\"0x1111111111111111111111111111111111111111\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_token",
+          "status": 409,
+          "meaning": "More than one token matches. Use the token address."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "insufficient_balance",
+          "status": 409,
+          "meaning": "The wallet holds less than the amount requested."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "not_tradable",
+          "status": 409,
+          "meaning": "The token is in a phase that cannot be traded right now."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_list_nfts",
+      "title": "Browse NFT collections",
+      "description": "Polypad NFT collections with status (commitment window, public mint, sold out), price, supply, and royalties.",
+      "group": "NFTs",
+      "kind": "read",
+      "method": "GET",
+      "path": "nfts",
+      "inputs": [
+        {
+          "field": "q",
+          "type": "string",
+          "required": false,
+          "description": "Search by name, symbol, or address."
+        },
+        {
+          "field": "status",
+          "type": "string",
+          "required": false,
+          "description": "Filter by status.",
+          "enum": [
+            "commit_window",
+            "public_mint",
+            "sold_out"
+          ]
+        },
+        {
+          "field": "sort",
+          "type": "string",
+          "required": false,
+          "description": "newest, minted, or price.",
+          "enum": [
+            "newest",
+            "minted",
+            "price"
+          ]
+        },
+        {
+          "field": "limit",
+          "type": "integer",
+          "required": false,
+          "description": "1 to 50."
+        }
+      ],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/nfts\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_list_nfts\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_list_nft_listings",
+      "title": "Browse marketplace listings",
+      "description": "Active fixed-price NFT listings on the Polypad marketplace, lowest price at the top, optionally for one collection or under a price.",
+      "group": "NFTs",
+      "kind": "read",
+      "method": "GET",
+      "path": "nfts/listings",
+      "inputs": [
+        {
+          "field": "collection",
+          "type": "string",
+          "required": false,
+          "description": "Collection address."
+        },
+        {
+          "field": "maxPriceEth",
+          "type": "string",
+          "required": false,
+          "description": "Only listings at or below this many ETH."
+        },
+        {
+          "field": "maxPriceWei",
+          "type": "string",
+          "required": false,
+          "description": "Same in wei."
+        },
+        {
+          "field": "limit",
+          "type": "integer",
+          "required": false,
+          "description": "1 to 50."
+        }
+      ],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/nfts/listings\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_list_nft_listings\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_nft_buy",
+      "title": "Prepare an NFT buy or mint",
+      "description": "Prepares either a marketplace purchase (listingId) or a public mint from a fixed-price collection (collection + quantity). Checks supply, wallet limits, and price, then simulates. Returns unsigned transactions, a summary, and a signing link. Collections still in their commitment window are sent to the collection page instead.",
+      "group": "NFTs",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/nft-buy",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "listingId",
+          "type": "integer",
+          "required": false,
+          "description": "Marketplace listing id."
+        },
+        {
+          "field": "collection",
+          "type": "string",
+          "required": false,
+          "description": "Collection address for a public mint."
+        },
+        {
+          "field": "collectionName",
+          "type": "string",
+          "required": false,
+          "description": "Collection name, if no address is known."
+        },
+        {
+          "field": "quantity",
+          "type": "integer",
+          "required": false,
+          "description": "How many to mint, 1 to 50. Default 1."
+        },
+        {
+          "field": "confirmLarge",
+          "type": "boolean",
+          "required": false,
+          "description": "Set true only after the user confirmed an amount above 1 ETH."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/nft-buy\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_nft_buy\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_collection",
+          "status": 409,
+          "meaning": "More than one collection matches. Use the collection address."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "insufficient_balance",
+          "status": 409,
+          "meaning": "The wallet holds less than the amount requested."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "sold_out",
+          "status": 409,
+          "meaning": "Sold out (NFT collection, or no shares left)."
+        },
+        {
+          "code": "commit_window_open",
+          "status": 409,
+          "meaning": "The collection is still in its commitment window. Commit from the collection page."
+        },
+        {
+          "code": "wallet_cap",
+          "status": 409,
+          "meaning": "The collection’s per-wallet mint limit is reached."
+        },
+        {
+          "code": "listing_not_valid",
+          "status": 409,
+          "meaning": "The listing is sold, cancelled, expired, or no longer backed by the seller."
+        },
+        {
+          "code": "own_listing",
+          "status": 409,
+          "meaning": "This wallet is the seller of that listing."
+        },
+        {
+          "code": "unsupported_collection_type",
+          "status": 501,
+          "meaning": "Buys from bonding-curve collections are not prepared by the API yet. Open the collection page."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_nft_create",
+      "title": "Prepare an NFT collection creation",
+      "description": "Creates a fixed-price NFT collection on the Polypad NFT factory: name, symbol, artwork, max supply, mint price, and creator royalty. The caller signs once in their own wallet and pays gas only — creating a collection costs no ETH beyond gas. Only allowlisted business API keys can call it (used by Major League Operator Card Studio). Returns unsigned transactions, a summary, and a signing link.",
+      "group": "NFTs",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/nft-create",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "name",
+          "type": "string",
+          "required": true,
+          "description": "Collection name, 1 to 64 characters."
+        },
+        {
+          "field": "symbol",
+          "type": "string",
+          "required": true,
+          "description": "Collection symbol, 1 to 10 characters, uppercased."
+        },
+        {
+          "field": "imageUri",
+          "type": "string",
+          "required": true,
+          "description": "Artwork URL (https:// or ipfs://). Shown as the collection image."
+        },
+        {
+          "field": "description",
+          "type": "string",
+          "required": false,
+          "description": "Plain description, up to 500 characters."
+        },
+        {
+          "field": "baseURI",
+          "type": "string",
+          "required": false,
+          "description": "Metadata base URI (https:// or ipfs://). Optional."
+        },
+        {
+          "field": "maxSupply",
+          "type": "integer",
+          "required": false,
+          "description": "How many editions to mint, 1 to 10000. Default 25."
+        },
+        {
+          "field": "mintPriceEth",
+          "type": "string",
+          "required": false,
+          "description": "Mint price per edition in ETH as a plain decimal, above 0 to 10. Default 0.001. The factory does not allow a zero mint price. Use mintPriceWei instead for raw wei."
+        },
+        {
+          "field": "mintPriceWei",
+          "type": "string",
+          "required": false,
+          "description": "Mint price per edition in wei. Use instead of mintPriceEth."
+        },
+        {
+          "field": "royaltyBps",
+          "type": "integer",
+          "required": false,
+          "description": "Creator royalty in basis points, 0 to 1500 (10% = 1000). Default 1000. Paid to the creator on every resale."
+        },
+        {
+          "field": "maxPerWallet",
+          "type": "integer",
+          "required": false,
+          "description": "Max mints per wallet, 1 to 100. Default 5."
+        },
+        {
+          "field": "commitWindow",
+          "type": "integer",
+          "required": false,
+          "description": "Commitment window in seconds, 1 hour to 30 days. Default 86400 (24 hours). Buyers commit first, then mint."
+        },
+        {
+          "field": "floorBps",
+          "type": "integer",
+          "required": false,
+          "description": "Share of mint price kept in the collection floor vault, in basis points, 2000 to 8000. Default 2000 (20%)."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "name": "Example Token",
+        "symbol": "EXMPL",
+        "imageUri": "ipfs://bafybeihk6cgm5ndcrmy6cucrqz44xzqxa3sz3vkqmasj6ubfnpai7rwrkm"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/nft-create\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\",\"name\":\"Example Token\",\"symbol\":\"EXMPL\",\"imageUri\":\"ipfs://bafybeihk6cgm5ndcrmy6cucrqz44xzqxa3sz3vkqmasj6ubfnpai7rwrkm\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_nft_create\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\",\"name\":\"Example Token\",\"symbol\":\"EXMPL\",\"imageUri\":\"ipfs://bafybeihk6cgm5ndcrmy6cucrqz44xzqxa3sz3vkqmasj6ubfnpai7rwrkm\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_list_fund_templates",
+      "title": "Fund templates",
+      "description": "The published strategy templates a fund can be created from: allowed assets, position and trade caps, performance fee, drawdown brake, and manager lock.",
+      "group": "Tokenized Funds",
+      "kind": "read",
+      "method": "GET",
+      "path": "fund-templates",
+      "inputs": [],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/fund-templates\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_list_fund_templates\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_list_funds",
+      "title": "Discover funds",
+      "description": "Polypad Funds with filters: open for minting, status, template, asset held, manager, factory, search, and sort by newest, raise progress, deadline, or shares.",
+      "group": "Tokenized Funds",
+      "kind": "read",
+      "method": "GET",
+      "path": "funds",
+      "inputs": [
+        {
+          "field": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Only funds currently raising and not sold out."
+        },
+        {
+          "field": "status",
+          "type": "string",
+          "required": false,
+          "description": "raising, raise_closed, investing, or failed.",
+          "enum": [
+            "raising",
+            "raise_closed",
+            "investing",
+            "failed"
+          ]
+        },
+        {
+          "field": "templateId",
+          "type": "integer",
+          "required": false,
+          "description": "Template id."
+        },
+        {
+          "field": "asset",
+          "type": "string",
+          "required": false,
+          "description": "Asset symbol or address the fund may hold, such as POLYDASH."
+        },
+        {
+          "field": "manager",
+          "type": "string",
+          "required": false,
+          "description": "Manager address."
+        },
+        {
+          "field": "factory",
+          "type": "string",
+          "required": false,
+          "description": "phase6, phase3, phase2, phase1a, or v3.",
+          "enum": [
+            "phase6",
+            "phase3",
+            "phase2",
+            "phase1a",
+            "v3"
+          ]
+        },
+        {
+          "field": "q",
+          "type": "string",
+          "required": false,
+          "description": "Search by name, symbol, or address."
+        },
+        {
+          "field": "sort",
+          "type": "string",
+          "required": false,
+          "description": "newest, raise_progress, deadline, or shares.",
+          "enum": [
+            "newest",
+            "raise_progress",
+            "deadline",
+            "shares"
+          ]
+        },
+        {
+          "field": "limit",
+          "type": "integer",
+          "required": false,
+          "description": "1 to 50."
+        }
+      ],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/funds\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_list_funds\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_get_fund",
+      "title": "Fund details",
+      "description": "One fund: status, raise progress, price per share, fees, assets, template rules, and whether public minting is open.",
+      "group": "Tokenized Funds",
+      "kind": "read",
+      "method": "GET",
+      "path": "fund",
+      "inputs": [
+        {
+          "field": "fund",
+          "type": "string",
+          "required": true,
+          "description": "Fund name, symbol, or address."
+        }
+      ],
+      "exampleArgs": {
+        "fund": "0x7c1d31629ac68aebe83f230edbc7eacfc26285ef"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/fund?fund=0x7c1d31629ac68aebe83f230edbc7eacfc26285ef\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_get_fund\",\"arguments\":{\"fund\":\"0x7c1d31629ac68aebe83f230edbc7eacfc26285ef\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_fund",
+          "status": 409,
+          "meaning": "More than one tokenized fund matches. Use the fund address."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_fund_create",
+      "title": "Prepare a fund launch",
+      "description": "Prepares creating a fund from a published template (Phase 6 factory by default). Give templateId, or list the assets wanted and it matches a template, or tells you honestly that none can hold them. Returns the unsigned createFund transaction, what the manager must mint next, and a signing link.",
+      "group": "Tokenized Funds",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/fund-create",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "templateId",
+          "type": "integer",
+          "required": false,
+          "description": "Template id from polypad_list_fund_templates."
+        },
+        {
+          "field": "assets",
+          "type": "array",
+          "required": false,
+          "description": "Asset symbols the fund should hold, used to match a template."
+        },
+        {
+          "field": "name",
+          "type": "string",
+          "required": true,
+          "description": "Fund name, up to 64 bytes."
+        },
+        {
+          "field": "symbol",
+          "type": "string",
+          "required": true,
+          "description": "Fund ticker, up to 16 bytes."
+        },
+        {
+          "field": "mintPriceEth",
+          "type": "string",
+          "required": false,
+          "description": "Price per share in ETH, a decimal such as 0.01."
+        },
+        {
+          "field": "mintPriceWei",
+          "type": "string",
+          "required": false,
+          "description": "Same in wei."
+        },
+        {
+          "field": "raiseCapEth",
+          "type": "string",
+          "required": false,
+          "description": "Raise cap in ETH."
+        },
+        {
+          "field": "raiseCapWei",
+          "type": "string",
+          "required": false,
+          "description": "Same in wei."
+        },
+        {
+          "field": "entryFeeBps",
+          "type": "integer",
+          "required": false,
+          "description": "Manager entry fee in basis points, 0 to 500. Default 0."
+        },
+        {
+          "field": "raiseDurationDays",
+          "type": "integer",
+          "required": false,
+          "description": "Raise length in days, 1 to 30. Default 7."
+        },
+        {
+          "field": "minSkinBps",
+          "type": "integer",
+          "required": false,
+          "description": "Manager skin requirement in basis points. 0 means the 5% default."
+        },
+        {
+          "field": "imageUri",
+          "type": "string",
+          "required": false,
+          "description": "https:// or ipfs:// image for the fund."
+        },
+        {
+          "field": "factory",
+          "type": "string",
+          "required": false,
+          "description": "phase6 (default), phase3, or v3.",
+          "enum": [
+            "phase6",
+            "phase3",
+            "v3"
+          ]
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "name": "Example Token",
+        "symbol": "EXMPL"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/fund-create\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\",\"name\":\"Example Token\",\"symbol\":\"EXMPL\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_fund_create\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\",\"name\":\"Example Token\",\"symbol\":\"EXMPL\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "unknown_template",
+          "status": 404,
+          "meaning": "No Strategy with that id. List the strategies first."
+        },
+        {
+          "code": "no_matching_template",
+          "status": 422,
+          "meaning": "No Strategy can hold the requested assets."
+        },
+        {
+          "code": "choose_template",
+          "status": 409,
+          "meaning": "More than one Strategy fits the assets. Ask the user which one."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_fund_mint",
+      "title": "Prepare a fund investment",
+      "description": "Prepares minting shares of an open fund. Checks the raise is open, that public minting is open (the manager has to mint the required shares before anyone else), supply, and balance. Simulates, then returns unsigned transactions, a summary, and a signing link.",
+      "group": "Tokenized Funds",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/fund-mint",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "fund",
+          "type": "string",
+          "required": true,
+          "description": "Fund address."
+        },
+        {
+          "field": "quantity",
+          "type": "integer",
+          "required": false,
+          "description": "Number of shares. Default 1."
+        },
+        {
+          "field": "confirmLarge",
+          "type": "boolean",
+          "required": false,
+          "description": "Set true only after the user confirmed an amount above 1 ETH."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "fund": "0x7c1d31629ac68aebe83f230edbc7eacfc26285ef"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/fund-mint\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\",\"fund\":\"0x7c1d31629ac68aebe83f230edbc7eacfc26285ef\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_fund_mint\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\",\"fund\":\"0x7c1d31629ac68aebe83f230edbc7eacfc26285ef\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_fund",
+          "status": 409,
+          "meaning": "More than one tokenized fund matches. Use the fund address."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "insufficient_balance",
+          "status": 409,
+          "meaning": "The wallet holds less than the amount requested."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "raise_closed",
+          "status": 409,
+          "meaning": "The tokenized fund is not open for minting."
+        },
+        {
+          "code": "sold_out",
+          "status": 409,
+          "meaning": "Sold out (NFT collection, or no shares left)."
+        },
+        {
+          "code": "skin_required",
+          "status": 409,
+          "meaning": "Public minting is not open yet — the manager must mint their required shares first."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_fund_redeem",
+      "title": "Prepare a fund exit or refund",
+      "description": "Prepares exiting a fund after its raise closes (pro-rata share of the vault) or a refund if the raise failed. Finds the wallet's shares on-chain, or takes a quantity or specific ids.",
+      "group": "Tokenized Funds",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/fund-redeem",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "fund",
+          "type": "string",
+          "required": true,
+          "description": "Fund address."
+        },
+        {
+          "field": "quantity",
+          "type": "integer",
+          "required": false,
+          "description": "How many shares, starting from the lowest ids. Default all."
+        },
+        {
+          "field": "ids",
+          "type": "array",
+          "required": false,
+          "description": "Specific share ids."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "fund": "0x7c1d31629ac68aebe83f230edbc7eacfc26285ef"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/fund-redeem\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\",\"fund\":\"0x7c1d31629ac68aebe83f230edbc7eacfc26285ef\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_fund_redeem\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\",\"fund\":\"0x7c1d31629ac68aebe83f230edbc7eacfc26285ef\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        },
+        {
+          "code": "ambiguous_fund",
+          "status": 409,
+          "meaning": "More than one tokenized fund matches. Use the fund address."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "raise_open",
+          "status": 409,
+          "meaning": "The tokenized fund is still raising. Exit opens after the raise closes; a refund opens only if the raise fails."
+        },
+        {
+          "code": "no_shares",
+          "status": 409,
+          "meaning": "The wallet holds no shares of that tokenized fund."
+        },
+        {
+          "code": "not_holder",
+          "status": 409,
+          "meaning": "The wallet does not hold the share(s) being redeemed."
+        },
+        {
+          "code": "unsupported_fund",
+          "status": 409,
+          "meaning": "Exits from this fund type are not prepared by the API yet. Open the fund page."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_prepare_token_launch",
+      "title": "Prepare a token launch",
+      "description": "Prepares launching a new token on the Polypad factory, with the Agent-launched label by default. Validates every field, simulates createLaunch, and returns the unsigned transaction, a summary, and a signing link.",
+      "group": "Launch",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "prepare/token-launch",
+      "inputs": [
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "name",
+          "type": "string",
+          "required": true,
+          "description": "Token name, up to 64 bytes."
+        },
+        {
+          "field": "symbol",
+          "type": "string",
+          "required": true,
+          "description": "Ticker, up to 32 bytes."
+        },
+        {
+          "field": "imageUri",
+          "type": "string",
+          "required": false,
+          "description": "https:// or ipfs:// logo."
+        },
+        {
+          "field": "description",
+          "type": "string",
+          "required": false,
+          "description": "Up to 2000 characters."
+        },
+        {
+          "field": "socialLinks",
+          "type": "array",
+          "required": false,
+          "description": "https:// links, up to 8."
+        },
+        {
+          "field": "creatorFeeBps",
+          "type": "integer",
+          "required": true,
+          "description": "Creator fee in basis points, 0 to 500. Required. 0 means 0%."
+        },
+        {
+          "field": "devBuyEth",
+          "type": "string",
+          "required": false,
+          "description": "Optional buy at launch, in wei."
+        },
+        {
+          "field": "launchDelay",
+          "type": "string",
+          "required": false,
+          "description": "Seconds before trading opens, 0 to 2592000."
+        },
+        {
+          "field": "agentMark",
+          "type": "boolean",
+          "required": false,
+          "description": "Agent-launched label. Default true."
+        },
+        {
+          "field": "repository",
+          "type": "string",
+          "required": false,
+          "description": "https://github.com/owner/repo, optional."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "name": "Example Token",
+        "symbol": "EXMPL",
+        "creatorFeeBps": 100
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/prepare/token-launch\" -H \"content-type: application/json\" -d '{\"from\":\"0x1111111111111111111111111111111111111111\",\"name\":\"Example Token\",\"symbol\":\"EXMPL\",\"creatorFeeBps\":100}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_prepare_token_launch\",\"arguments\":{\"from\":\"0x1111111111111111111111111111111111111111\",\"name\":\"Example Token\",\"symbol\":\"EXMPL\",\"creatorFeeBps\":100}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "amount_too_large",
+          "status": 400,
+          "meaning": "One action is above the 25 ETH cap. Split it into smaller actions."
+        },
+        {
+          "code": "confirm_large_required",
+          "status": 400,
+          "meaning": "The amount is above 1 ETH. Confirm it with the user first, then resend with \"confirmLarge\": true."
+        },
+        {
+          "code": "simulation_reverted",
+          "status": 422,
+          "meaning": "The on-chain simulation reverted — the transaction as built would fail. Nothing was sent."
+        },
+        {
+          "code": "payload_too_large",
+          "status": 413,
+          "meaning": "Request body over 16 KB."
+        },
+        {
+          "code": "key_material_rejected",
+          "status": 400,
+          "meaning": "The request contained a private key or seed phrase. Never send one — Polypad never needs it. Nothing was processed."
+        }
+      ]
+    },
+    {
+      "name": "polypad_portfolio",
+      "title": "Wallet portfolio (read-only)",
+      "description": "Read-only view of a wallet: ETH, launch tokens with current exit value, fund shares with net value, and NFTs. Results are in ETH units from on-chain data. No USD value, no forecasts.",
+      "group": "Read",
+      "kind": "read",
+      "method": "GET",
+      "path": "portfolio",
+      "inputs": [
+        {
+          "field": "address",
+          "type": "string",
+          "required": true,
+          "description": "Wallet address (0x...)."
+        }
+      ],
+      "exampleArgs": {
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/portfolio?address=0x1111111111111111111111111111111111111111\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_portfolio\",\"arguments\":{\"address\":\"0x1111111111111111111111111111111111111111\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_found",
+          "status": 404,
+          "meaning": "No token, tokenized fund, collection, listing, or endpoint matched."
+        }
+      ]
+    },
+    {
+      "name": "polypad_get_tx_status",
+      "title": "Transaction status",
+      "description": "Follow up on a transaction: pending, confirmed, or failed, with a plain result (tokens bought, fund created, and so on) and an explorer link.",
+      "group": "Read",
+      "kind": "read",
+      "method": "GET",
+      "path": "tx/status",
+      "inputs": [
+        {
+          "field": "hash",
+          "type": "string",
+          "required": true,
+          "description": "Transaction hash (0x, 32 bytes)."
+        }
+      ],
+      "exampleArgs": {
+        "hash": "0x2a4c03794a3195f7a56120f488978d7d6f3a15e8ced3c964d8d55438f65704be"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/tx/status?hash=0x2a4c03794a3195f7a56120f488978d7d6f3a15e8ced3c964d8d55438f65704be\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_get_tx_status\",\"arguments\":{\"hash\":\"0x2a4c03794a3195f7a56120f488978d7d6f3a15e8ced3c964d8d55438f65704be\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "tx_not_found",
+          "status": 404,
+          "meaning": "No transaction with that hash on Robinhood Chain yet — it may not have been sent."
+        }
+      ]
+    },
+    {
+      "name": "polypad_stats",
+      "title": "Agent traffic stats",
+      "description": "Counts of actions prepared through the agent API by action and ref tag. Per server process; the on-chain attribution suffix is the durable record.",
+      "group": "Read",
+      "kind": "read",
+      "method": "GET",
+      "path": "stats",
+      "inputs": [],
+      "exampleArgs": {},
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/stats\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_stats\",\"arguments\":{}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        }
+      ]
+    },
+    {
+      "name": "x402_cross_chain_quote",
+      "title": "Cross-chain x402 quote",
+      "description": "Dry-run plan for paying any x402 endpoint from the other chain: fetch the 402, read the wallet's balances on Base and Robinhood Chain, and quote the Relay bridge for only the shortfall. Read-only — no key, no signature, nothing moves. Works for the USD stablecoins (USDG on Robinhood Chain, USDC on Base); a POLYDASH-only endpoint cannot cross-chain.",
+      "group": "x402",
+      "kind": "read",
+      "method": "GET",
+      "path": "x402/cross-chain/quote",
+      "inputs": [
+        {
+          "field": "url",
+          "type": "string",
+          "required": true,
+          "description": "The x402 URL to pay — it must return a 402 payment challenge."
+        },
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        }
+      ],
+      "exampleArgs": {
+        "url": "https://polypad.family/api/x402/products/token-report?address=0x319525528f42167eF7fC18b77b889958080568e4",
+        "from": "0x1111111111111111111111111111111111111111"
+      },
+      "exampleCurl": "curl \"https://polypad.family/api/agents/v2/x402/cross-chain/quote?url=https%3A%2F%2Fpolypad.family%2Fapi%2Fx402%2Fproducts%2Ftoken-report%3Faddress%3D0x319525528f42167eF7fC18b77b889958080568e4&from=0x1111111111111111111111111111111111111111\"",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"x402_cross_chain_quote\",\"arguments\":{\"url\":\"https://polypad.family/api/x402/products/token-report?address=0x319525528f42167eF7fC18b77b889958080568e4\",\"from\":\"0x1111111111111111111111111111111111111111\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_a_402",
+          "status": 400,
+          "meaning": "The URL did not return a 402 payment challenge. Cross-chain pay needs an x402 endpoint."
+        },
+        {
+          "code": "no_stable_requirement",
+          "status": 400,
+          "meaning": "The endpoint only accepts a non-stable asset (such as POLYDASH). Cross-chain pay works for the USD stablecoins — USDG on Robinhood Chain, USDC on Base."
+        },
+        {
+          "code": "invalid_amount",
+          "status": 400,
+          "meaning": "The 402 requirement has a zero amount."
+        },
+        {
+          "code": "resource_unreachable",
+          "status": 502,
+          "meaning": "The x402 URL could not be fetched."
+        },
+        {
+          "code": "timeout",
+          "status": 503,
+          "meaning": "The quote took too long. Try again."
+        }
+      ]
+    },
+    {
+      "name": "x402_cross_chain_pay",
+      "title": "Cross-chain x402 pay",
+      "description": "The executable package for paying any x402 endpoint from the other chain: the dry-run plan, the unsigned Relay bridge transactions (approve + deposit, shortfall only), and the EIP-3009 typed data to sign for the settlement. Returns unsigned transactions only — the agent signs the bridge steps on the origin chain, waits for the bridge to land, signs the typed data, and POSTs it to the product URL as an X-PAYMENT header. Never signs, never takes a private key.",
+      "group": "x402",
+      "kind": "prepare",
+      "method": "POST",
+      "path": "x402/cross-chain/pay",
+      "inputs": [
+        {
+          "field": "url",
+          "type": "string",
+          "required": true,
+          "description": "The x402 URL to pay — it must return a 402 payment challenge."
+        },
+        {
+          "field": "from",
+          "type": "string",
+          "required": true,
+          "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+        },
+        {
+          "field": "ref",
+          "type": "string",
+          "required": false,
+          "description": "Attribution tag for traffic measurement. Default \"grok\"."
+        },
+        {
+          "field": "returnUrl",
+          "type": "string",
+          "required": false,
+          "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+        },
+        {
+          "field": "walletToken",
+          "type": "string",
+          "required": false,
+          "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+        }
+      ],
+      "exampleArgs": {
+        "url": "https://polypad.family/api/x402/products/token-report?address=0x319525528f42167eF7fC18b77b889958080568e4",
+        "from": "0x1111111111111111111111111111111111111111"
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/x402/cross-chain/pay\" -H \"content-type: application/json\" -d '{\"url\":\"https://polypad.family/api/x402/products/token-report?address=0x319525528f42167eF7fC18b77b889958080568e4\",\"from\":\"0x1111111111111111111111111111111111111111\"}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"x402_cross_chain_pay\",\"arguments\":{\"url\":\"https://polypad.family/api/x402/products/token-report?address=0x319525528f42167eF7fC18b77b889958080568e4\",\"from\":\"0x1111111111111111111111111111111111111111\"}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "not_a_402",
+          "status": 400,
+          "meaning": "The URL did not return a 402 payment challenge. Cross-chain pay needs an x402 endpoint."
+        },
+        {
+          "code": "no_stable_requirement",
+          "status": 400,
+          "meaning": "The endpoint only accepts a non-stable asset (such as POLYDASH). Cross-chain pay works for the USD stablecoins — USDG on Robinhood Chain, USDC on Base."
+        },
+        {
+          "code": "invalid_amount",
+          "status": 400,
+          "meaning": "The 402 requirement has a zero amount."
+        },
+        {
+          "code": "resource_unreachable",
+          "status": 502,
+          "meaning": "The x402 URL could not be fetched."
+        },
+        {
+          "code": "timeout",
+          "status": 503,
+          "meaning": "The quote took too long. Try again."
+        }
+      ]
+    },
+    {
+      "name": "polypad_agent_chat",
+      "title": "Business agent chat",
+      "description": "Run a business agent chat completion through Polypad: send a system prompt and messages, get the assistant reply. Only allowlisted business API keys can call it — every call is metered as API usage. The model is fixed (gpt-4o-mini) and the caller never sees the OpenAI key. Prompt and reply content is never logged.",
+      "group": "Business",
+      "kind": "read",
+      "method": "POST",
+      "path": "agent-chat",
+      "inputs": [
+        {
+          "field": "systemPrompt",
+          "type": "string",
+          "required": true,
+          "description": "The system prompt for the business agent, 1 to 12000 characters."
+        },
+        {
+          "field": "messages",
+          "type": "array",
+          "required": true,
+          "description": "Chat messages, oldest first. 1 to 20 messages; each content 1 to 12000 characters."
+        },
+        {
+          "field": "temperature",
+          "type": "number",
+          "required": false,
+          "description": "Sampling temperature. Default 0.7."
+        },
+        {
+          "field": "maxTokens",
+          "type": "integer",
+          "required": false,
+          "description": "Max reply tokens, 1 to 2000. Default 600."
+        }
+      ],
+      "exampleArgs": {
+        "systemPrompt": "You are a helpful youth baseball sports agent.",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What should I work on to get recruited?"
+          }
+        ]
+      },
+      "exampleCurl": "curl -X POST \"https://polypad.family/api/agents/v2/agent-chat\" -H \"content-type: application/json\" -d '{\"systemPrompt\":\"You are a helpful youth baseball sports agent.\",\"messages\":[{\"role\":\"user\",\"content\":\"What should I work on to get recruited?\"}]}'",
+      "exampleMcp": "curl -X POST \"https://polypad.family/api/mcp\" -H \"content-type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"polypad_agent_chat\",\"arguments\":{\"systemPrompt\":\"You are a helpful youth baseball sports agent.\",\"messages\":[{\"role\":\"user\",\"content\":\"What should I work on to get recruited?\"}]}}}'",
+      "errors": [
+        {
+          "code": "invalid_params",
+          "status": 400,
+          "meaning": "A field was missing, the wrong type, or out of range (bad address, bad number, bad hash). The error names the field."
+        },
+        {
+          "code": "invalid_api_key",
+          "status": 401,
+          "meaning": "The API key sent was unknown or revoked. Free calls need no key — send no key at all, or get a Pro key from /agents/accounts."
+        },
+        {
+          "code": "rate_limited",
+          "status": 429,
+          "meaning": "Too many requests from this IP. Wait a minute; the reply says how long (retry-after)."
+        },
+        {
+          "code": "rpc_unavailable",
+          "status": 503,
+          "meaning": "The chain data source could not be reached. Retry shortly."
+        },
+        {
+          "code": "internal_error",
+          "status": 500,
+          "meaning": "Unexpected error. Nothing was signed or sent."
+        },
+        {
+          "code": "tool_not_available",
+          "status": 403,
+          "meaning": "This tool is only available to allowlisted business API keys."
+        },
+        {
+          "code": "quota",
+          "status": 429,
+          "meaning": "The chat service is out of credits. Try again later."
+        },
+        {
+          "code": "agent_chat_unavailable",
+          "status": 503,
+          "meaning": "Agent chat is not configured yet, or the chat service did not answer."
+        }
+      ]
+    }
+  ]
+}

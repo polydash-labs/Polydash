@@ -41,12 +41,13 @@ export function LiveDot({ label }: { label: string }) {
   );
 }
 
-function StripCell({ label, value, sub, gloss, tone }: { label: string; value: string; sub?: string; gloss: string; tone?: 'up' | 'down' }) {
+function StripCell({ label, value, sub, gloss, tone, note }: { label: string; value: string; sub?: string; gloss: string; tone?: 'up' | 'down'; note?: string }) {
   return (
     <div className="min-w-0 rounded-xl bg-white/[0.04] p-3 ring-1 ring-white/10">
       <p className="text-[11px] uppercase tracking-wide text-white/45">{label}</p>
       <p className={cn('mt-1 break-words font-mono text-[17px] text-white', tone === 'up' && 'text-emerald-300', tone === 'down' && 'text-red-300')}>{value}</p>
       {sub && <p className="text-[11px] text-white/55">{sub}</p>}
+      {note && <p className="mt-1 text-[12px] leading-snug text-white/60">{note}</p>}
       <Gloss text={gloss} className="mt-1.5" />
     </div>
   );
@@ -68,6 +69,10 @@ export function FundHealthStrip(p: {
   max: bigint;
   launched: boolean;
   liveLabel?: string;
+  /** True while the raise is still open (NAV is just vault ETH ÷ shares until investing starts). */
+  raising?: boolean;
+  /** True when the vault status is still Raising but the raise deadline has passed (Polycat, round 7): the badge must say the raise ended, not "Raising — no trades yet". Display only — the on-chain status is unchanged until failRaise is called. */
+  raiseEnded?: boolean;
   /** Plain note under the badge explaining shares sold before any trade (e.g. the manager's locked stake). */
   soldNote?: string;
   holdersFallback?: string;
@@ -79,14 +84,14 @@ export function FundHealthStrip(p: {
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-[15px] font-semibold text-white">Tokenized fund health</h2>
           <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-medium', p.launched ? 'bg-emerald-400/15 text-emerald-200' : 'bg-amber-400/15 text-amber-100')}>
-            {p.launched ? 'Launched — investing' : p.soldNote ? 'Raising — no trades yet' : 'Not yet launched — awaiting first buy'}
+            {p.launched ? 'Launched — investing' : p.raiseEnded ? 'Raise ended — deadline passed' : p.soldNote ? 'Raising — no trades yet' : 'Not yet launched — awaiting first buy'}
           </span>
         </div>
         <LiveDot label={p.liveLabel ?? 'Live from Robinhood Chain · refreshes every 30 s'} />
       </div>
       {!p.launched && p.soldNote && <p className="-mt-1 mb-3 text-[12px] text-white/60" data-testid="sold-note">{p.soldNote}</p>}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-        <StripCell label="Value per share (NAV)" value={p.navPerShare === null ? '—' : `${formatFundEth(p.navPerShare)} ETH`} sub={usdOf(p.navPerShare, p.ethUsd)} gloss={GLOSS.nav} />
+        <StripCell label="Value per share" value={p.navPerShare === null ? '—' : `${formatFundEth(p.navPerShare)} ETH`} sub={usdOf(p.navPerShare, p.ethUsd)} gloss={GLOSS.nav} note={p.raising && !p.launched ? 'Right now this is just the ETH in the vault ÷ shares — it only changes once investing starts.' : undefined} />
         <StripCell
           label="Return vs high-water mark"
           value={ret === null ? 'Not set yet' : `${ret >= 0 ? '+' : ''}${ret.toFixed(2)}%`}
@@ -204,7 +209,7 @@ export function LedgerCards({ ledger, loading, feeBps, earned, payable, ethUsd, 
         {loading ? <LoadingLine text="Reading trades…" /> : trades.length === 0 ? <EmptyLine text="No trades yet — first buy coming" /> : (
           <div className="max-h-72 overflow-auto">
             <table className="w-full text-left text-[12px]">
-              <thead className="sticky top-0 bg-black text-white/45"><tr><th className="py-1.5 font-normal">Side</th><th className="font-normal">Asset</th><th className="font-normal">Size</th><th className="font-normal">NAV after</th><th className="font-normal">Block</th></tr></thead>
+              <thead className="sticky top-0 bg-black text-white/45"><tr><th className="py-1.5 font-normal">Side</th><th className="font-normal">Asset</th><th className="font-normal">Size</th><th className="font-normal">Value after</th><th className="font-normal">Block</th></tr></thead>
               <tbody className="text-white/80">
                 {trades.slice(0, 50).map((t) => (
                   <tr key={`${t.tx}-${t.asset}-${t.size}`} className="border-t border-white/5">
@@ -253,6 +258,92 @@ export function EmptyLine({ text }: { text: string }) {
   return <p className="rounded-lg border border-dashed border-white/15 px-3 py-5 text-center text-[13px] text-white/60">{text}</p>;
 }
 
+/** Minimal markdown rendering for strategy write-ups (the published files are
+ * markdown). Display-only: the source text is never edited — mandate files
+ * are byte-exact and hashed on-chain. Handles headings, quotes, bullets,
+ * checklist items, simple tables, and **bold** / `code` inline. */
+function renderInline(text: string, keyPrefix: string): ReactNode[] {
+  const parts: ReactNode[] = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith('**')) parts.push(<strong key={`${keyPrefix}-${i}`} className="font-semibold text-white">{tok.slice(2, -2)}</strong>);
+    else if (tok.startsWith('*')) parts.push(<em key={`${keyPrefix}-${i}`}>{tok.slice(1, -1)}</em>);
+    else parts.push(<code key={`${keyPrefix}-${i}`} className="rounded bg-white/10 px-1 font-mono text-[11px]">{tok.slice(1, -1)}</code>);
+    last = m.index + tok.length;
+    i += 1;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
+function MandateText({ text }: { text: string }) {
+  const blocks: ReactNode[] = [];
+  let list: string[] = [];
+  let quote: string[] = [];
+  let table: string[][] = [];
+  const flushList = () => {
+    if (!list.length) return;
+    const items = list;
+    list = [];
+    blocks.push(<ul key={`ul-${blocks.length}`} className="list-disc space-y-1 pl-5">{items.map((l, i) => <li key={i}>{renderInline(l, `li-${blocks.length}-${i}`)}</li>)}</ul>);
+  };
+  const flushQuote = () => {
+    if (!quote.length) return;
+    const lines = quote;
+    quote = [];
+    blocks.push(<blockquote key={`q-${blocks.length}`} className="border-l-2 border-white/25 pl-3 text-white/65">{lines.map((l, i) => <p key={i}>{renderInline(l, `q-${blocks.length}-${i}`)}</p>)}</blockquote>);
+  };
+  const flushTable = () => {
+    if (!table.length) return;
+    const rows = table;
+    table = [];
+    blocks.push(<table key={`t-${blocks.length}`} className="w-full text-left"><tbody>{rows.map((r, i) => (<tr key={i} className="border-t border-white/5">{r.map((c, j) => (<td key={j} className="py-1 pr-3 align-top">{renderInline(c, `t-${blocks.length}-${i}-${j}`)}</td>))}</tr>))}</tbody></table>);
+  };
+  // The published mandates are hard-wrapped: a bold/italic span can open on one
+  // line and close on the next (e.g. "**inside the\nliquidity pool ...**"), which
+  // per-line rendering would show literally. Join soft-wrapped continuation lines
+  // into the previous block line first; a line that starts a new block, a blank
+  // line, and lines after a heading or table row still break the paragraph.
+  const isBlockStart = (l: string) =>
+    l.startsWith('# ') || l.startsWith('## ') || l.startsWith('> ') ||
+    l.startsWith('- ') || l.startsWith('* ') || /^\d+\.\s/.test(l) || /^\|.*\|$/.test(l);
+  const logical: string[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) { logical.push(''); continue; }
+    const prev = logical[logical.length - 1];
+    if (prev && !prev.startsWith('# ') && !prev.startsWith('## ') && !/^\|.*\|$/.test(prev) && !isBlockStart(line)) {
+      logical[logical.length - 1] = `${prev} ${line}`;
+    } else {
+      logical.push(line);
+    }
+  }
+  for (const raw of logical) {
+    const line = raw.trim();
+    if (!line) { flushList(); flushQuote(); flushTable(); continue; }
+    if (line.startsWith('# ')) { flushList(); flushQuote(); flushTable(); blocks.push(<h3 key={`h-${blocks.length}`} className="pt-2 text-[15px] font-semibold text-white">{renderInline(line.slice(2), `h-${blocks.length}`)}</h3>); continue; }
+    if (line.startsWith('## ')) { flushList(); flushQuote(); flushTable(); blocks.push(<h4 key={`h-${blocks.length}`} className="pt-2 text-[14px] font-semibold text-white">{renderInline(line.slice(3), `h-${blocks.length}`)}</h4>); continue; }
+    if (line.startsWith('> ')) { flushList(); flushTable(); quote.push(line.slice(2)); continue; }
+    if (line.startsWith('- ') || line.startsWith('* ')) { flushQuote(); flushTable(); list.push(line.slice(2).replace(/^\[( |x)\]\s*/, '☐ ')); continue; }
+    if (/^\|.*\|$/.test(line)) {
+      const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+      if (cells.every((c) => /^:?-+:?$/.test(c))) continue; // table separator row
+      flushList(); flushQuote();
+      table.push(cells);
+      continue;
+    }
+    flushList(); flushQuote(); flushTable();
+    blocks.push(<p key={`p-${blocks.length}`}>{renderInline(line, `p-${blocks.length}`)}</p>);
+  }
+  flushList(); flushQuote(); flushTable();
+  return <div className="space-y-2 text-[12px] leading-relaxed text-white/75">{blocks}</div>;
+}
+
 /** Strategy rules / thesis shown inline from IPFS through a public gateway. Never links a raw ipfs:// address. */
 export function MandateCard({ title, uri, httpUrl, lines, hash, tip, fallbackText }: { title: string; uri: string; httpUrl: string; lines?: readonly string[]; hash?: string; tip?: string; fallbackText?: string }) {
   const [state, setState] = useState<{ loading: boolean; text: string | null; reason?: string; source?: string }>({ loading: !!httpUrl, text: null });
@@ -281,7 +372,7 @@ export function MandateCard({ title, uri, httpUrl, lines, hash, tip, fallbackTex
       )}
       {state.loading ? <LoadingLine text="Loading the full write-up from IPFS…" /> : state.text ? (
         <div data-testid="mandate-writeup">
-          <pre className="whitespace-pre-wrap break-words rounded-lg bg-white/[0.04] p-3 font-sans text-[12px] leading-relaxed text-white/75">{state.text}</pre>
+          <div className="rounded-lg bg-white/[0.04] p-3"><MandateText text={state.text} /></div>
           {state.source === 'bundled' && <p className="mt-2 text-[11px] text-white/45">{isDerivedMandate(uri) ? DERIVED_MANDATE_NOTE : <>Full write-up shown from the site&apos;s copy of the published file, because no IPFS gateway is serving it right now.</>}</p>}
           {state.source === 'summary' && <p className="mt-2 text-[11px] text-white/45">Full strategy rules shown from the site&apos;s copy, because the published file is not being served by any IPFS gateway right now. The link below opens the published file once it is available.</p>}
         </div>

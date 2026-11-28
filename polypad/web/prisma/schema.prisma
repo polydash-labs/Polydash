@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 /// One auto-assigned CTO agent per launch. launchAddress is lowercase.
@@ -262,6 +263,23 @@ model AgentApiKey {
   @@index([ipHash, createdAt])
 }
 
+/// Append-only per-key API usage log (Pro metering, v1). One row per keyed tool call
+/// (MCP tools/call + v2 REST). kind: read | prepare | intent. status: ok | error |
+/// rate_limited. Written fire-and-forget from the request path — a failed write never
+/// fails the call. No foreign key: the log must survive key revocation, and keys are
+/// never deleted. Dashboard: /agents/usage (looks up by key hash).
+model ApiKeyUsage {
+  id        Int      @id @default(autoincrement())
+  keyId     String
+  tool      String
+  kind      String
+  status    String
+  createdAt DateTime @default(now())
+
+  @@index([keyId, createdAt])
+  @@index([createdAt])
+}
+
 /// Operator terms acceptance. subject = "wallet:<lowercase address>" or "key:<key id>".
 model AgentTermsAcceptance {
   id         Int      @id @default(autoincrement())
@@ -374,6 +392,83 @@ model BuildNonce {
   @@index([launchAddress])
 }
 
+/// Poly credits: account holding a spendable balance (integer cents).
+/// subject = "key:<AgentApiKey.id>" or "wallet:<lowercase address>".
+/// No FK: an account survives key revocation / wallet unlinking.
+model PolyCreditAccount {
+  id           String   @id @default(cuid())
+  subject      String   @unique // "key:<AgentApiKey.id>" or "wallet:<lowercase address>"
+  balanceCents Int      @default(0)
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@index([expiresAt])
+}
+
+/// Poly credits: append-only ledger. kind: grant | spend | revoke | expire | match | topup.
+/// amountCents is signed (+grant, -spend). No FK: the log must survive key revocation.
+/// txHash links a topup row to its on-chain payment (see PolyCreditTopup).
+model PolyCreditLedger {
+  id                Int      @id @default(autoincrement())
+  accountId         String
+  kind              String   // grant | spend | revoke | expire | match | topup
+  amountCents       Int      // signed: +grant, -spend
+  balanceAfterCents Int
+  productId         String?
+  reason            String?
+  txHash            String?  // on-chain payment hash for kind='topup' (paid top-ups)
+  createdAt         DateTime @default(now())
+  @@index([accountId, createdAt])
+  @@index([createdAt])
+  @@index([txHash])
+}
+
+/// Poly credits: one row per confirmed top-up payment. txHash is the replay
+/// guard — the same payment can never credit twice (unique constraint).
+model PolyCreditTopup {
+  id          String   @id @default(cuid())
+  txHash      String   @unique // lowercase 0x hash of the payment tx
+  subject     String   // "key:<AgentApiKey.id>" or "wallet:<lowercase address>"
+  asset       String   // 'ETH' | 'POLYDASH'
+  amountRaw   String   // raw amount received, decimal string (wei)
+  amountCents Int      // cents credited (floor of USD value at confirmation)
+  priceUsd    String   // USD price used at confirmation, for audit
+  sender      String   // lowercase wallet that sent the payment
+  blockNumber Int
+  createdAt   DateTime @default(now())
+
+  @@index([subject, createdAt])
+}
+
+/// Poly credits: one row per confirmed CARD top-up (Stripe Checkout).
+/// stripeSessionId is the replay guard — the same Checkout session can
+/// never credit twice (unique constraint), mirroring PolyCreditTopup's
+/// txHash guard for on-chain payments. amountCents is the USD cents
+/// paid by card and the credits granted (100¢ = $1, no surcharge).
+model PolyCreditCardTopup {
+  id                  String   @id @default(cuid())
+  stripeSessionId     String   @unique // cs_test_... / cs_live_...
+  stripePaymentIntent String?
+  subject             String   // "key:<AgentApiKey.id>" or "wallet:<lowercase address>"
+  amountCents         Int      // USD cents paid AND credits granted
+  email               String?
+  createdAt           DateTime @default(now())
+
+  @@index([subject, createdAt])
+}
+
+/// Poly credits: one starter grant per wallet (enforced by the unique wallet).
+model PolyCreditClaim {
+  id          String   @id @default(cuid())
+  wallet      String   @unique // lowercase address; one starter grant per wallet
+  keyId       String?
+  amountCents Int
+  note        String? // applicant's "what you're building" text, ≤500 chars
+  createdAt   DateTime @default(now())
+
+  @@index([keyId])
+}
+
 /// Treasury rules airdrop Merkle trees (OpenZeppelin StandardMerkleTree dump). Public data; accepted only when the root matches an on-chain round or pending airdrop change.
 model TreasuryTree {
   root      String   @id
@@ -400,4 +495,173 @@ model AgentAction {
 
   @@index([createdAt])
   @@index([action, ref, createdAt])
+}
+
+/// Agent Wallets (Phase 1): approval queue. A big move above the agent key's
+/// caps waits here until the human approves or denies it. Approval executes
+/// client-side with the owner's Safe signature; this row only records the
+/// decision + the execution tx hash. status: pending | executed | denied.
+/// Addresses lowercase. No key material is ever stored here.
+model AgentWalletApproval {
+  id             String   @id @default(cuid())
+  wallet         String
+  owner          String
+  title          String
+  description    String   @default("")
+  to             String
+  value          String   @default("0")
+  data           String   @default("0x")
+  status         String   @default("pending")
+  requestedBy    String
+  decisionTxHash String?
+  createdAt      DateTime @default(now())
+  decidedAt      DateTime?
+
+  @@index([wallet, createdAt])
+  @@index([wallet, status])
+  @@index([owner, createdAt])
+}
+
+/// Warden audit requests. Projects submit on /audits (no email intake);
+/// Warden reviews oldest first (createdAt asc). status: queued |
+/// in_review | reviewed. verdict: green | yellow | red — set only when
+/// reviewed (see the service spec for the definitions). reportUrl links
+/// the published report. contact is for the fix round only and is never
+/// returned by the public list endpoint.
+model WardenAuditRequest {
+  id                String   @id @default(cuid())
+  projectName       String
+  repoUrl           String
+  commitHash        String
+  contractsInScope  String
+  chain             String   @default("Robinhood Chain")
+  deployedAddresses String   @default("")
+  description       String
+  contact           String
+  status            String   @default("queued")
+  verdict           String?
+  reportUrl         String?
+  createdAt         DateTime @default(now())
+  reviewedAt        DateTime?
+
+  @@index([status, createdAt])
+}
+
+/// Newsletter subscribers (Explore page subscribe card). One row per email —
+/// the unique email is the dedupe guard. source: where they signed up
+/// ("explore"). unsubscribedAt is set when they opt out; the list for a
+/// send is the rows with unsubscribedAt null, oldest first.
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  source         String    @default("explore")
+  createdAt      DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([createdAt])
+}
+
+model DemoRequest {
+  id        String   @id @default(cuid())
+  email     String
+  company   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+/// Partnership inquiries from /build/partnerships. One row per inquiry.
+/// type: Integration | Staking | NFT launch | Growth fund | Strategic | Other.
+/// emailSent: true once the notification email to jon@dasheco.xyz went out;
+/// false (emailPending) when ZOHO_SMTP_PASSWORD was not set at submit time.
+model PartnerInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  company   String?
+  email     String
+  website   String?
+  type      String
+  message   String
+  emailSent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+/// MCP Tasks (SEP: Tasks + Elicitation, server v2.2.0). One row per task
+/// created by a task-augmented tools/call. kind 'fund-watch' is a
+/// polypad_get_fund call that completes when the fund's on-chain state
+/// changes (the 2-day proposal-wait watch); watchSnapshot is the stable
+/// fund fields compared on each poll. status 'input_required' means the
+/// task is paused for human approval — elicitationId + elicitation hold
+/// the elicitation/create params the host presents, and the host answers
+/// by POSTing a JSON-RPC response to /api/mcp. result is the tool's
+/// result payload once the task completes. Rows in a terminal state are
+/// pruned after 7 days (best-effort, in the task store).
+model McpTask {
+  id              String   @id
+  tool            String
+  args            Json
+  kind            String   @default("tool-call")
+  status          String   @default("working")
+  statusMessage   String?
+  result          Json?
+  watchSnapshot   String?
+  elicitationId   String?  @unique
+  elicitation     Json?
+  ttlMs           Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+/// Base-side agent wallet (Coinbase CDP Server Wallet on Base, chain 8453).
+/// A parallel wallet next to the Safe wallets on Robinhood Chain (4663) —
+/// CDP does not support 4663, so this wallet can only pay on Base (USDC).
+/// The CDP account key lives in Coinbase's secure enclave; Polypad never
+/// sees it. The agent spends with a bearer key (pp_base_…, SHA-256 stored,
+/// shown once) inside the caps below; the human proves ownership with a
+/// wallet signature at creation. The daily cap is enforced by Polypad
+/// before signing; CDP enforces the per-payment network + destination
+/// rules on the account policy. Money is integer US cents.
+model BaseAgentWallet {
+  id                    String   @id @default(cuid())
+  address               String   @unique
+  name                  String
+  ownerAddress          String
+  createNonce           String   @unique
+  keyHash               String   @unique
+  keyPrefix             String
+  dailyCapUsdCents      Int
+  perPaymentCapUsdCents Int
+  expiresAt             DateTime
+  policyId              String?
+  frozen                Boolean  @default(false)
+  revoked               Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  payments              BaseAgentWalletPayment[]
+
+  @@index([ownerAddress, createdAt])
+}
+
+/// One payment made from a Base agent wallet. status: pending | settled | failed.
+/// The nonce is unique so a replayed pay request is rejected instead of paying twice.
+model BaseAgentWalletPayment {
+  id             Int      @id @default(autoincrement())
+  walletId       String
+  wallet         BaseAgentWallet @relation(fields: [walletId], references: [id])
+  nonce          String   @unique
+  product        String
+  amountUsdCents Int
+  txHash         String?
+  status         String   @default("pending")
+  error          String?
+  createdAt      DateTime @default(now())
+
+  @@index([walletId, createdAt])
 }

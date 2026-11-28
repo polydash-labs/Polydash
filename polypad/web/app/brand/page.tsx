@@ -35,7 +35,7 @@ const links = [
   { label: 'Company', href: 'https://dasheco.xyz' },
   { label: 'X', href: 'https://x.com/Polydash_' },
   { label: 'Telegram', href: 'https://t.me/polydashofficial' },
-  { label: 'GitHub', href: 'https://github.com/PolydashDev/Polydash' },
+  { label: 'GitHub', href: 'https://github.com/polydash-labs/Polydash' },
 ];
 
 const donts = [
@@ -65,7 +65,7 @@ export default function BrandPage() {
           <p><span className="text-white/85">Short:</span> Polypad is a non-custodial token launchpad on Robinhood Chain, built by Polydash.</p>
           <p>
             <span className="text-white/85">Long:</span> Polypad lets anyone launch a token on a bonding curve, trade it, and move it to a Uniswap V4
-            pool with locked liquidity once it graduates. It also supports NFT collections, staking pools and AI agents that help review tokens.
+            pool with locked liquidity once it graduates. It also supports NFT collections, staking pools, Tokenized Funds, and AI agents that help review tokens.
             Polypad is built by Polydash.
           </p>
         </div>

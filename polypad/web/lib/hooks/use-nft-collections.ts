@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePublicClient } from 'wagmi';
 import { type PublicClient } from 'viem';
 import { NftCollectionABI, NftFactoryABI, NFT_FACTORY_DEPLOY_BLOCK, getNftFactoryAddress } from '@/lib/contracts/nft-abis';
+import { filterHiddenNftCollections, isHiddenNftCollection } from '@/lib/nft-hidden';
 import { robinhoodChain } from '@/lib/chain';
 
 const FIELDS = [
@@ -75,7 +76,9 @@ export function useNftCollections() {
         contracts: idx.map((i) => ({ address: factory, abi: NftFactoryABI, functionName: 'allCollections', args: [i] })) as any,
         allowFailure: true,
       });
-      const addrs = addrRes.flatMap((r) => (r.status === 'success' ? [r.result as `0x${string}`] : [])).reverse();
+      const addrs = filterHiddenNftCollections(
+        addrRes.flatMap((r) => (r.status === 'success' ? [r.result as `0x${string}`] : [])),
+      ).reverse();
       return fetchCollections(client!, addrs);
     },
   });
@@ -90,6 +93,8 @@ export function useNftCollection(address?: string) {
     refetchInterval: 15_000,
     queryFn: async () => {
       const a = address as `0x${string}`;
+      // Hidden test collections never render, even by direct URL.
+      if (isHiddenNftCollection(a)) return null;
       const ok = await client!.readContract({ address: getNftFactoryAddress(), abi: NftFactoryABI, functionName: 'isCollection', args: [a] });
       if (!ok) return null;
       const [c] = await fetchCollections(client!, [a]);

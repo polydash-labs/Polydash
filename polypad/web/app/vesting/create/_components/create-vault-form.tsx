@@ -19,7 +19,7 @@ import {
   fmtDate, isAddr, isPolydashToken, isZero, meetsBadge, vestingFactory, type Addr, type PresetId,
 } from '@/lib/vesting';
 import { useNowSec } from '@/app/stake/_components/primitives';
-import { BadgePill, HowItWorks, NoAdminWarning, VestingNote, VestingNotLive } from '@/components/vesting/notes';
+import { BadgePill, HowItWorks, VestingNote, VestingNotLive } from '@/components/vesting/notes';
 import { PoolSelect } from '@/components/vesting/pool-select';
 
 const label = 'text-[12px] font-medium text-white/70';
@@ -126,6 +126,15 @@ export function CreateVaultForm({ initialToken }: { initialToken: string }) {
       <VestingNote className="mt-6" />
       {!live && <VestingNotLive className="mt-4" />}
 
+      <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-400/[0.06] p-4 sm:p-5" role="note">
+        <h2 className="text-[14px] font-semibold text-white">Who this is for — and what happens</h2>
+        <ul className="mt-2 space-y-1.5 text-[13px] leading-relaxed text-white/70">
+          <li><span className="text-white">Who this is for:</span> a token&apos;s launch creator who wants to lock tokens on a fixed schedule — for example, to show holders the team cannot sell right away.</li>
+          <li><span className="text-white">What happens:</span> the tokens unlock bit by bit on the schedule you set. Nothing unlocks before the waiting period (the cliff) ends, and nobody — not even Polypad — can shorten the schedule.</li>
+          <li className="font-medium text-amber-200">There is no admin. A lost beneficiary wallet cannot be recovered.</li>
+        </ul>
+      </div>
+
       <fieldset disabled={!live} className="mt-6 space-y-4 disabled:opacity-70">
         {/* Token */}
         <section className={section}>
@@ -209,14 +218,14 @@ export function CreateVaultForm({ initialToken }: { initialToken: string }) {
           {preset === 'custom' && (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label htmlFor="vest-cliff" className={label}>Cliff (days)</label>
+                <label htmlFor="vest-cliff" className={label}>Waiting period before anything unlocks (cliff, in days)</label>
                 <Input id="vest-cliff" inputMode="numeric" value={cliffDays} onChange={(e) => setCliffDays(e.target.value)} className="font-mono" />
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="vest-dur" className={label}>Duration (days)</label>
+                <label htmlFor="vest-dur" className={label}>Total lock-up time (duration, in days)</label>
                 <Input id="vest-dur" inputMode="numeric" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} className="font-mono" />
               </div>
-              <p className="col-span-2 text-[11px] text-white/50">Duration {MIN_DURATION_DAYS} to {MAX_DURATION_DAYS.toLocaleString('en-US')} days; the cliff cannot be longer than the duration.</p>
+              <p className="col-span-2 text-[11px] text-white/50">Total lock-up time {MIN_DURATION_DAYS} to {MAX_DURATION_DAYS.toLocaleString('en-US')} days; the waiting period cannot be longer than the total lock-up time. For example, a 30-day cliff with a 180-day duration means nothing unlocks for 30 days, then tokens unlock bit by bit until day 180.</p>
             </div>
           )}
           {scheduleErr ? (
@@ -243,8 +252,6 @@ export function CreateVaultForm({ initialToken }: { initialToken: string }) {
           <h2 className="text-[14px] font-semibold text-white">How it works</h2>
           <HowItWorks />
         </section>
-
-        <NoAdminWarning />
 
         {/* Actions */}
         <div className="glass-card space-y-3 p-4 sm:p-5">

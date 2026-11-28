@@ -58,6 +58,9 @@ export function MintPanel({ c, now }: { c: NftCollection; now: number | null }) 
             <h2 className="text-[15px] font-semibold text-white">Commit</h2>
             {now != null && <span className="font-mono text-[12px] text-white/60">Ends in {formatCountdown(Number(c.commitEnd) - now)}</span>}
           </div>
+          <p className="text-[12px] leading-relaxed text-white/60">
+            Commit means you pay now to reserve NFTs. If too many people commit, you may get fewer NFTs than you paid for — the rest is refunded when you claim. You can withdraw until the window ends.
+          </p>
           <div className="space-y-1.5">
             <Row k="Committed" v={`${c.totalCommitted.toString()} / ${c.maxSupply.toString()}`} />
             <Row k="Committers" v={c.committerCount.toString()} />
@@ -71,12 +74,15 @@ export function MintPanel({ c, now }: { c: NftCollection; now: number | null }) 
             </div>
           )}
           {!isConnected ? <Connect /> : remainingCommit > 0 ? (
-            <div className="flex items-center gap-2">
-              <Qty value={Math.min(qty, remainingCommit)} onChange={setQty} max={remainingCommit} />
-              <Button className="flex-1 gap-2" disabled={!!pending} onClick={async () => { const n = Math.min(qty, remainingCommit); if (await send('commit', 'commit', [BigInt(n)], c.mintPrice * BigInt(n), 'Committed')) setQty(1); }}>
-                {busy('commit') && <Loader2 className="h-4 w-4 animate-spin" />}
-                Commit {formatEth(c.mintPrice * BigInt(Math.min(qty, remainingCommit)), 6)} ETH
-              </Button>
+            <div>
+              <p className="mb-2 text-[12px] text-white/60">Total: {formatEth(c.mintPrice * BigInt(Math.min(qty, remainingCommit)), 6)} ETH + network fee</p>
+              <div className="flex items-center gap-2">
+                <Qty value={Math.min(qty, remainingCommit)} onChange={setQty} max={remainingCommit} />
+                <Button className="flex-1 gap-2" disabled={!!pending} onClick={async () => { const n = Math.min(qty, remainingCommit); if (await send('commit', 'commit', [BigInt(n)], c.mintPrice * BigInt(n), 'Committed')) setQty(1); }}>
+                  {busy('commit') && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Commit {formatEth(c.mintPrice * BigInt(Math.min(qty, remainingCommit)), 6)} ETH
+                </Button>
+              </div>
             </div>
           ) : (
             <p className="text-[12px] text-white/50">You reached the per-wallet limit of {c.maxPerWallet.toString()}.</p>
@@ -118,19 +124,25 @@ export function MintPanel({ c, now }: { c: NftCollection; now: number | null }) 
       {(st === 'mint' || st === 'claim' || st === 'minted-out') && (
         <div className="space-y-3">
           <h2 className="text-[15px] font-semibold text-white">Mint</h2>
+          <p className="text-[12px] leading-relaxed text-white/60">
+            Mint means you buy the NFT now at the fixed price and it arrives in your wallet right away.
+          </p>
           <Row k="Available now" v={`${c.publicAvailable.toString()} of ${c.maxSupply.toString()}`} />
           {st === 'claim' && <p className="text-[12px] text-white/50">Committers are still claiming. Leftover supply opens once every committer has claimed.</p>}
           {st === 'minted-out' && <p className="text-[12px] text-white/50">Minted out.</p>}
           {st === 'mint' && (!isConnected ? <Connect /> : remainingMint > 0 ? (
-            <div className="flex items-center gap-2">
-              <Qty value={Math.min(qty, remainingMint, Number(c.publicAvailable))} onChange={setQty} max={Math.min(remainingMint, Number(c.publicAvailable))} />
-              <Button className="flex-1 gap-2" disabled={!!pending} onClick={async () => {
-                const n = Math.min(qty, remainingMint, Number(c.publicAvailable));
-                if (await send('mint', 'mint', [BigInt(n)], c.mintPrice * BigInt(n), 'Minted')) setQty(1);
-              }}>
-                {busy('mint') && <Loader2 className="h-4 w-4 animate-spin" />}
-                Mint for {formatEth(c.mintPrice * BigInt(Math.min(qty, remainingMint, Number(c.publicAvailable))), 6)} ETH
-              </Button>
+            <div>
+              <p className="mb-2 text-[12px] text-white/60">Total: {formatEth(c.mintPrice * BigInt(Math.min(qty, remainingMint, Number(c.publicAvailable))), 6)} ETH + network fee</p>
+              <div className="flex items-center gap-2">
+                <Qty value={Math.min(qty, remainingMint, Number(c.publicAvailable))} onChange={setQty} max={Math.min(remainingMint, Number(c.publicAvailable))} />
+                <Button className="flex-1 gap-2" disabled={!!pending} onClick={async () => {
+                  const n = Math.min(qty, remainingMint, Number(c.publicAvailable));
+                  if (await send('mint', 'mint', [BigInt(n)], c.mintPrice * BigInt(n), 'Minted')) setQty(1);
+                }}>
+                  {busy('mint') && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Mint for {formatEth(c.mintPrice * BigInt(Math.min(qty, remainingMint, Number(c.publicAvailable))), 6)} ETH
+                </Button>
+              </div>
             </div>
           ) : (
             <p className="text-[12px] text-white/50">You reached the per-wallet limit of {c.maxPerWallet.toString()}.</p>

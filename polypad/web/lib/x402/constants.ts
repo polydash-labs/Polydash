@@ -10,6 +10,26 @@ export const X402_VERSION = 2;
 export const X402_NETWORK = 'eip155:4663';
 export const X402_CHAIN_ID = 4663;
 
+/**
+ * Base (eip155:8453) / USDC settlement variant — routed through the CDP
+ * facilitator (https://api.cdp.coinbase.com/platform/v2/x402) so the
+ * endpoints can be indexed by Coinbase's Bazaar (Agentic.Market). The
+ * Hood (4663) variant above stays the default; the Base variant is only
+ * selected with ?network=base.
+ */
+export const X402_BASE_NETWORK = 'eip155:8453';
+export const X402_BASE_CHAIN_ID = 8453;
+export const CDP_FACILITATOR_URL = 'https://api.cdp.coinbase.com/platform/v2/x402';
+// Native USDC on Base (Circle). Verified Nov 22, 2026 against CDP docs
+// (docs.cdp.coinbase.com plugin pages list eip155:8453 + this address)
+// and Circle's contract list. NOTE: the address in the original build
+// brief (…029029) is WRONG — a transposed address; never use it.
+export const USDC_BASE_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const;
+/** USDC EIP-712 domain (FiatTokenV2_2): name "USD Coin", version "2". */
+export const USDC_BASE_EIP712 = { name: 'USD Coin', version: '2' } as const;
+/** Square logo served at polypad.family, used as the Bazaar iconUrl. */
+export const X402_ICON_URL = 'https://polypad.family/icon-512.png' as const;
+
 export const USDG_ADDRESS = '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168' as const;
 export const POLYDASH_ADDRESS = '0x319525528f42167eF7fC18b77b889958080568e4' as const;
 export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3' as const;
@@ -17,6 +37,31 @@ export const PERMIT2_PROXY_ADDRESS = '0x402085c248EeA27D92E8b30b2C58ed07f9E20001
 
 /** Where v1 product revenue settles — the Polypad fee wallet. */
 export const X402_PAY_TO = '0x9a21c75aC263cC43125E70200636f6397f8776d0' as const;
+
+/** The facilitator's supported payment kinds — the live /supported
+ * endpoint and the /.well-known/x402 manifest MUST return the same
+ * list (IETF draft-hawkins-x402-dns-discovery-03 calls divergence a
+ * misconfiguration, and consumers must prefer the live endpoint). */
+export const X402_SUPPORTED_KINDS = [
+  {
+    x402Version: X402_VERSION,
+    scheme: 'exact',
+    network: X402_NETWORK,
+    extra: { assetTransferMethod: 'eip3009', asset: USDG_ADDRESS },
+  },
+  {
+    x402Version: X402_VERSION,
+    scheme: 'exact',
+    network: X402_NETWORK,
+    extra: { assetTransferMethod: 'permit2', asset: POLYDASH_ADDRESS },
+  },
+  {
+    x402Version: X402_VERSION,
+    scheme: 'exact',
+    network: X402_BASE_NETWORK,
+    extra: { assetTransferMethod: 'eip3009', asset: USDC_BASE_ADDRESS },
+  },
+] as const;
 
 /** How long a payment authorization stays valid (seconds). */
 export const X402_MAX_TIMEOUT_SECONDS = 120;
@@ -90,16 +135,19 @@ export interface X402Product {
   /** What the agent gets back, in plain language. */
   delivers: string;
   example: string;
+  /** Bazaar discovery tags for the Base-variant listing. */
+  tags: string[];
 }
 
 export const X402_PRODUCTS: X402Product[] = [
   {
     id: 'token-report',
     name: 'Token report',
-    blurb: 'Live on-chain facts for any token launched on Polypad.',
+    blurb: 'Live on-chain facts for any token on Polypad — every launch, plus POLYDASH itself.',
     priceUsd: 0.01,
-    delivers: 'Price, market cap, volume, supply, curve progress, graduation state, creator, and launch details — read straight from Robinhood Chain.',
+    delivers: 'Price, market cap, volume, supply, creator, and — for launches — curve progress, graduation state, and launch details. Read straight from Robinhood Chain.',
     example: 'GET /api/x402/products/token-report?address=0x3Da9…B4B',
+    tags: ['token', 'token-report', 'price', 'robinhood-chain', 'defi'],
   },
   {
     id: 'cto-report',
@@ -108,6 +156,7 @@ export const X402_PRODUCTS: X402Product[] = [
     priceUsd: 0.05,
     delivers: 'Summary, risk, utility, momentum, holder distribution, narrative, sentiment, and conclusion — the same report the token page shows.',
     example: 'GET /api/x402/products/cto-report?launch=0x2B0b…CA9',
+    tags: ['token', 'analysis', 'risk', 'research', 'robinhood-chain'],
   },
   {
     id: 'fund-nav',
@@ -116,5 +165,6 @@ export const X402_PRODUCTS: X402Product[] = [
     priceUsd: 0.01,
     delivers: 'NAV per share and total NAV, shares sold, amount raised, strategy, and the manager with their Agent Credit Score — read straight from the chain.',
     example: 'GET /api/x402/products/fund-nav?fund=0x7c1d…85ef',
+    tags: ['fund', 'nav', 'tokenized-fund', 'robinhood-chain', 'defi'],
   },
 ];

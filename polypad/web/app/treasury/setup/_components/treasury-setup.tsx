@@ -66,6 +66,14 @@ export function TreasurySetup({ initialToken }: { initialToken: string }) {
         A treasury vault you own, with public limits for buybacks, reward pools and airdrops. Your wallet signs every transaction; funds stay in the vault contract.
       </p>
       <TreasuryNote className="mt-4" />
+      <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5" role="note">
+        <h2 className="text-[14px] font-semibold text-white">Who this is for — and what happens</h2>
+        <ul className="mt-2 space-y-1.5 text-[13px] leading-relaxed text-white/70">
+          <li><span className="text-white">Who can set rules:</span> only the wallet that launched the token. If you did not launch this token, you cannot set its rules — you will see that message below instead of the form. POLYDASH itself cannot have treasury rules.</li>
+          <li><span className="text-white">What the waiting period means:</span> after these rules are set, any change — withdrawals, new limits, new agents, airdrop rounds — waits out a delay (default 2 days) before it takes effect. Nothing changes instantly, so holders can see it coming.</li>
+          <li><span className="text-white">What happens if…:</span> if you set the daily buyback limit to 0, buybacks are off. If a reward pool&apos;s claim fee is set, that fee is taken from rewards when someone claims — for example, a 1% claim fee takes 1 out of every 100 reward tokens at claim time.</li>
+        </ul>
+      </div>
 
       {!initialToken && (
         <div className="mt-6">
@@ -101,6 +109,11 @@ export function TreasurySetup({ initialToken }: { initialToken: string }) {
               </div>
             </section>
 
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-[12px] leading-relaxed text-white/65">
+              <p className="font-semibold text-white">Words used in the form below</p>
+              <p className="mt-1"><span className="text-white">Max slippage %:</span> the most the price may move while a buyback runs. If it moves more, that buyback stops instead of paying a bad price.</p>
+              <p className="mt-1"><span className="text-white">Pool claim fee %:</span> taken from rewards when you claim. For example, a 1% fee takes 1 out of every 100 reward tokens at claim time.</p>
+            </div>
             <RulesFields s={s} set={set} errors={shownErrors} symbol={d.symbol} />
 
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
@@ -119,10 +132,10 @@ export function TreasurySetup({ initialToken }: { initialToken: string }) {
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-              <h3 className="text-[14px] font-semibold text-white">Timelock</h3>
-              <p className="mt-1 text-[12px] text-white/55">Withdrawals, rule changes, new agents and airdrop rounds wait this long before they take effect.</p>
+              <h3 className="text-[14px] font-semibold text-white">Waiting period before changes take effect (timelock)</h3>
+              <p className="mt-1 text-[12px] leading-relaxed text-white/55">Withdrawals, rule changes, new agents and airdrop rounds wait this long before they take effect. Nothing changes instantly — everyone can see a change coming while it waits.</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <Field label="Timelock delay (hours)" hint="Default 48 hours. 24 hours to 30 days." error={submitted ? delayError : undefined}>
+                <Field label="Waiting period (hours)" hint="Default 48 hours (2 days). 24 hours to 30 days." error={submitted ? delayError : undefined}>
                   <input className={inputCls} inputMode="decimal" value={delayHours} onChange={(e) => setDelayHours(e.target.value)} />
                 </Field>
               </div>

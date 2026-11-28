@@ -6,7 +6,7 @@ import { isHiddenLaunch } from '@/lib/hidden-launches';
 export const dynamic = 'force-dynamic';
 
 const BASE = 'https://polypad.family';
-const STATIC_PATHS = ['/', '/about', '/agents', '/agents/launch', '/create', '/portfolio', '/leaderboard', '/nfts', '/stake', '/risk', '/terms', '/privacy', '/contracts', '/contact', '/brand'];
+const STATIC_PATHS = ['/', '/about', '/agents', '/agents/launch', '/agents/scores', '/agents/receipts', '/agents/accounts', '/build', '/docs', '/docs/tools', '/docs/rules', '/docs/sdks', '/docs/langchain', '/docs/vercel-ai-sdk', '/docs/sign-loop', '/docs/case-studies', '/x402', '/security', '/audits', '/audits/reports/agent-wallets-v2', '/audits/reports/agent-wallets-v2-final', '/audits/reports/agent-wallets-v2-phase3', '/audits/reports/agent-wallets-v2-phase4', '/create', '/portfolio', '/leaderboard', '/nfts', '/stake', '/risk', '/terms', '/privacy', '/contracts', '/contact', '/brand', '/pulse', '/status', '/changelog', '/pricing'];
 
 const within = <T,>(p: Promise<T>, ms: number, fallback: T) =>
   Promise.race([p.catch(() => fallback), new Promise<T>((r) => setTimeout(() => r(fallback), ms))]);

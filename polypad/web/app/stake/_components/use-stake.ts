@@ -17,15 +17,20 @@ async function getJson<T>(url: string): Promise<T | { pending: true }> {
   return j as T;
 }
 
-export function useStakePools(token?: string | null) {
+export function useStakePools(token?: string | null, initial?: PoolsResponse) {
   return useQuery({
     queryKey: ['stake-pools', token ?? ''],
     queryFn: () => getJson<PoolsResponse>(`/api/stake/pools${token ? `?token=${token}` : ''}`),
+    // First-paint pools (server-read, from the /stake page, unfiltered
+    // only): the list renders with real figures immediately; the 30s
+    // staleTime avoids a redundant refetch the moment the page mounts. A
+    // token-filtered view has a different query key and fetches as before.
+    initialData: !token && initial ? initial : undefined,
+    staleTime: !token && initial ? 30_000 : 15_000,
     refetchInterval: (q) => {
       const d = q.state.data as any;
       return !d || d.pending || d.analyticsPending || d.totals?.stakers == null ? 4_000 : 60_000;
     },
-    staleTime: 15_000,
   });
 }
 

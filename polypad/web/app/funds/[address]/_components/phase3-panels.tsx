@@ -56,6 +56,7 @@ export function DistributionsCard({ fund, tx }: { fund: Phase3Detail; tx: Tx }) 
   const paidRounds = fund.rounds.filter((r) => r.perUnit > 0n);
   return (
     <Card title="Distributions" subtitle="ETH the manager sends back to holders. You collect it when you want.">
+      <p className="-mt-1 mb-3 text-[13px] leading-relaxed text-white/60">The manager decides when to pay out; fees are collected weekly at most and you claim them here. Nothing is automatic, and payouts may be zero.</p>
       {!tx.account ? (
         <div className="space-y-2"><p className="text-[13px] text-white/55">Connect your wallet to see what you can collect.</p><ConnectButton /></div>
       ) : (
@@ -138,7 +139,7 @@ export function ManagerView({ fund, tx, now }: { fund: Phase3Detail; tx: Tx; now
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-3">
           <h3 className="text-[13px] font-medium text-white">Your stake</h3>
-          <Row label="Required shares" tip="The shares you must buy with your own ETH before others can join. They cannot be transferred until the unlock date." value={`${fund.managerMinted.toString()} of ${fund.skinRequired.toString()} bought`} sub={fund.skinUnlockTime ? `Unlocks ${utcDate(fund.skinUnlockTime)}` : undefined} />
+          <Row label="Required shares" tip="The shares you must buy with your own ETH before others can join. They cannot be transferred until the unlock date." value={`${fund.managerMinted.toString()} of ${fund.skinRequired.toString()} bought`} sub={fund.skinUnlockTime ? (now > 0 && fund.skinUnlockTime <= now ? `Unlocked ${utcDate(fund.skinUnlockTime)}` : `Unlocks ${utcDate(fund.skinUnlockTime)}`) : undefined} />
           {skinLeft > 0n && raising ? (
             <TxButton tx={tx} id="skin" primary label={`Lock stake: buy ${skinLeft.toString()} share${skinLeft === 1n ? '' : 's'} for ${formatFundEth(skinLeft * fund.mintPrice)} ETH`}
               onClick={() => tx.send({ key: 'skin', address: fund.address, abi: NFT, functionName: 'mint', args: [skinLeft], value: skinLeft * fund.mintPrice, working: 'Locking your stake', success: 'Stake locked. The tokenized fund is open to everyone.' })} />

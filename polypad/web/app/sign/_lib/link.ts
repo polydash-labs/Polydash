@@ -2,15 +2,16 @@
  * Parses a /sign link. The link carries intent only (an action and its parameters), never calldata.
  * Every value is validated again by the API; this only rejects links that are clearly malformed.
  */
-export const SIGN_ACTIONS = ['buy', 'sell', 'nft-buy', 'nft-mint', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
+export const SIGN_ACTIONS = ['buy', 'sell', 'nft-buy', 'nft-mint', 'nft-create', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
 export type SignAction = (typeof SIGN_ACTIONS)[number];
 
-const COMMON = ['v', 'a', 'f', 'ref', 'c', 'h'];
+const COMMON = ['v', 'a', 'f', 'ref', 'c', 'h', 'r'];
 const PARAMS: Record<SignAction, string[]> = {
   buy: ['t', 'amt', 'sl'],
   sell: ['t', 'amt', 'pct', 'sl'],
   'nft-buy': ['l'],
   'nft-mint': ['col', 'q'],
+  'nft-create': ['n', 's', 'img', 'd', 'bu', 'ms', 'mp', 'rb', 'mw', 'cw', 'fb'],
   'fund-create': ['fx', 'tpl', 'n', 's', 'mp', 'rc', 'ef', 'sk', 'rd', 'img', 'bu'],
   'fund-mint': ['fund', 'q'],
   'fund-redeem': ['fund', 'ids'],
@@ -29,6 +30,8 @@ export type ParsedLink =
       client: string | null;
       chatCode: string | null;
       preparedFor: string | null;
+      /** Optional https:// link back to the agent's flow, shown after the transaction confirms. */
+      returnUrl: string | null;
       /** Addresses named in the link itself. */
       linkAddresses: string[];
     }
@@ -38,6 +41,22 @@ const ADDR = /^0x[0-9a-fA-F]{40}$/;
 const UINT = /^\d{1,40}$/;
 const REF = /^[a-z0-9_-]{1,24}$/;
 const CLIENT = /^[A-Za-z0-9._:-]{1,64}$/;
+
+/**
+ * A return link is only ever an https:// URL, at most 2048 characters. Same rule as the API's
+ * validReturnUrl — anything else is rejected with the link, so a bad return address can never
+ * smuggle the user somewhere unexpected. Shared with the /sign?connect=1 flow.
+ */
+export function validReturnUrlParam(v: string | null | undefined): string | null {
+  if (v === null || v === undefined) return null;
+  if (v.length === 0 || v.length > 2048 || /\s/.test(v)) return null;
+  try {
+    const u = new URL(v);
+    return u.protocol === 'https:' && !!u.hostname ? v : null;
+  } catch {
+    return null;
+  }
+}
 const KEY_NAME = /priv|secret|seed|mnemonic|phrase|keystore|pk$|^key$|_key|key_/i;
 const KEY_VALUE = /^(0x)?[0-9a-fA-F]{64}$/;
 
@@ -90,6 +109,10 @@ export function parseSignLink(sp: URLSearchParams): ParsedLink {
   if (client !== null && !CLIENT.test(client)) return bad('c');
   const h = get('h') ?? null;
   if (h !== null && !/^[0-9a-fA-F]{12}$/.test(h)) return bad('h');
+  // Return link: https:// only, same rule as the API's validReturnUrl. Anything else is rejected
+  // with the link, so a bad return address can never smuggle the user somewhere unexpected.
+  const r = get('r') ?? null;
+  if (r !== null && validReturnUrlParam(r) === null) return bad('r');
   const f = get('f') ?? null;
   if (f !== null && !ADDR.test(f)) return bad('f');
 
@@ -157,6 +180,46 @@ export function parseSignLink(sp: URLSearchParams): ParsedLink {
         const n = intIn(q, 1, 50);
         if (n === null) return bad('q');
         body.quantity = n;
+      }
+      break;
+    }
+    case 'nft-create': {
+      const n = get('n');
+      const s = get('s');
+      if (!n || n.length > 64) return bad('n');
+      if (!s || s.length > 10) return bad('s');
+      body.name = n;
+      body.symbol = s;
+      const img = get('img');
+      if (!img || img.length > 512 || !/^(https:\/\/|ipfs:\/\/)/.test(img)) return bad('img');
+      body.imageUri = img;
+      const d = get('d');
+      if (d !== undefined) {
+        if (d.length > 500) return bad('d');
+        body.description = d;
+      }
+      const bu = get('bu');
+      if (bu !== undefined) {
+        if (bu.length > 512 || !/^(https:\/\/|ipfs:\/\/)/.test(bu)) return bad('bu');
+        body.baseURI = bu;
+      }
+      const ms = get('ms');
+      if (ms !== undefined) {
+        const x = intIn(ms, 1, 10_000);
+        if (x === null) return bad('ms');
+        body.maxSupply = x;
+      }
+      const mp = get('mp');
+      if (mp !== undefined) {
+        if (!UINT.test(mp)) return bad('mp');
+        body.mintPriceWei = mp;
+      }
+      for (const [k, field, max] of [['rb', 'royaltyBps', 1500], ['mw', 'maxPerWallet', 1000], ['cw', 'commitWindow', 2_592_000], ['fb', 'floorBps', 5000]] as const) {
+        const v = get(k);
+        if (v === undefined) continue;
+        const x = intIn(v, 0, max);
+        if (x === null) return bad(k);
+        body[field] = x;
       }
       break;
     }
@@ -242,5 +305,5 @@ export function parseSignLink(sp: URLSearchParams): ParsedLink {
     }
   }
 
-  return { ok: true, action, path, body, ref, client, chatCode: h ? h.toLowerCase() : null, preparedFor: f, linkAddresses };
+  return { ok: true, action, path, body, ref, client, chatCode: h ? h.toLowerCase() : null, preparedFor: f, returnUrl: r, linkAddresses };
 }

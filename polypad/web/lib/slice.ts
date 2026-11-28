@@ -46,10 +46,10 @@ export const FOOTER = 'Distributions depend on creator opt-in and are not promis
 export const VALUE_NOTE = 'Received tokens may have no value. This is a voluntary distribution by creators, not a return on POLYDASH. Amounts vary and can be zero.';
 export const AUTOCLAIM_NOTE = 'Weekly auto-claim may send these to your wallet for you; you never have to claim.';
 export const CREATE_SUB = 'Set aside a share of your token for POLYDASH stakers. It is released automatically over the period you choose.';
-export const STAKER_SUB = 'Polypad creators can set aside part of their token for POLYDASH Rewards Pool stakers. Each week, what was released is shared by stake size and time staked.';
+export const STAKER_SUB = 'Some creators give a small share of their new token to people who stake POLYDASH. If you qualify, it appears here each week. You usually don\'t need to do anything.';
 export const HOW_IT_WORKS = [
-  'A creator commits 0.25% to 1% of their token (up to 5% in total) to the slice escrow; it cannot be withdrawn.',
-  'The escrow releases it evenly over 30 to 365 days; anyone can trigger releases.',
+  'A creator sets aside 0.25% to 1% of their token (up to 5% in total) in a locked holding account (escrow); it cannot be withdrawn.',
+  'The holding account releases it evenly over 30 to 365 days; anyone can trigger a release.',
   "Every week (from Sunday 00:00 UTC), each wallet's share is based on its POLYDASH Rewards Pool stake multiplied by time staked. A stake counts after 7 days staked.",
   'The weekly list is published with its data and proposed on-chain; after a 24-hour review window it becomes claimable. The Polydash fee wallet can only cancel a pending list; nobody can move slice tokens.',
   'Claims never expire. Small remainders roll into the next week.',

@@ -80,13 +80,28 @@ export async function tryRead<T>(address: Address, abi: any, functionName: strin
 
 export async function tokenMeta(address: Address) {
   return cached(`meta:${address}`, async () => {
-    const [symbol, decimals] = await Promise.all([
-      tryRead<string>(address, erc20ReadAbi, 'symbol'),
-      tryRead<number>(address, erc20ReadAbi, 'decimals'),
-    ]);
+    const read = () =>
+      Promise.all([
+        tryRead<string>(address, erc20ReadAbi, 'symbol'),
+        tryRead<number>(address, erc20ReadAbi, 'decimals'),
+      ]);
+    let [symbol, decimals] = await read();
+    // One retry: a single flaky RPC read must not poison the 5-minute cache
+    // with 'n/a' (round 5: /stake showed "N/A" for POLYDASH after one failed read).
+    if (symbol == null) [symbol, decimals] = await read();
+    const known = KNOWN_META[address.toLowerCase()];
+    if (symbol == null && known) return { symbol: known.symbol, decimals: known.decimals, decimalsKnown: true };
     return { symbol: symbol ?? 'n/a', decimals: decimals == null ? 18 : Number(decimals), decimalsKnown: decimals != null };
   }, 300_000);
 }
+
+// Tokens the site itself depends on: their symbol/decimals are known, so a
+// flaky RPC read must never render them as "N/A".
+const KNOWN_META: Record<string, { symbol: string; decimals: number }> = {
+  '0x319525528f42167ef7fc18b77b889958080568e4': { symbol: 'POLYDASH', decimals: 18 },
+  '0x0bd7d308f8e1639fab988df18a8011f41eacad73': { symbol: 'WETH', decimals: 18 },
+  '0x5fc5360d0400a0fd4f2af552add042d716f1d168': { symbol: 'USDG', decimals: 6 },
+};
 
 // ---------- Poly Agent: staking ----------
 export type PoolVersion = 'v2';

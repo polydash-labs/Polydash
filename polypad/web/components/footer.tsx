@@ -9,32 +9,48 @@ const columns: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: 'Explore', href: '/' },
       { label: 'Create', href: '/create' },
-      { label: 'Funds', href: '/funds' },
+      { label: 'Tokenized Funds', href: '/funds' },
+      { label: 'Bonds', href: '/bond' },
+      { label: 'Treasury', href: '/treasury' },
       { label: 'Stake', href: '/stake' },
       { label: 'NFTs', href: '/nfts' },
+      { label: 'Pulse', href: '/pulse' },
     ],
   },
   {
-    title: 'More',
+    title: 'Agents',
     links: [
+      { label: 'Agents', href: '/agents' },
+      { label: 'Agent Accounts', href: '/agents/accounts' },
+      { label: 'Agent Wallets', href: '/agents/wallets' },
+      { label: 'Build', href: '/build' },
       { label: 'Docs', href: '/docs' },
+      { label: 'Contracts', href: '/contracts' },
+      { label: 'Security', href: '/security' },
+      { label: 'Audits', href: '/audits' },
+    ],
+  },
+  {
+    title: 'Activity',
+    links: [
       { label: 'Portfolio', href: '/portfolio' },
       { label: 'Leaderboard', href: '/leaderboard' },
       { label: 'Buybacks', href: '/buybacks' },
       { label: 'POLYDASH Rewards Pool', href: '/rewards-pool' },
       { label: 'Airdrop slice', href: '/slice' },
-      { label: 'About', href: '/about' },
-      { label: 'How it works', href: '/about#how-it-works' },
-      { label: 'FAQ', href: '/about#faq' },
-      { label: 'Contracts', href: '/contracts' },
-      { label: 'Agents', href: '/agents' },
-      { label: 'Brand kit', href: '/brand' },
-      { label: 'Contact', href: '/contact' },
+      { label: 'Status', href: '/status' },
+      { label: 'Changelog', href: '/changelog' },
+      { label: 'Pricing', href: '/pricing' },
     ],
   },
   {
-    title: 'Legal',
+    title: 'Company',
     links: [
+      { label: 'About', href: '/about' },
+      { label: 'How it works', href: '/about#how-it-works' },
+      { label: 'FAQ', href: '/about#faq' },
+      { label: 'Brand kit', href: '/brand' },
+      { label: 'Contact', href: '/contact' },
       { label: 'Terms', href: '/terms' },
       { label: 'Privacy', href: '/privacy' },
       { label: 'Risk disclosure', href: '/risk' },
@@ -53,21 +69,21 @@ function XIcon({ className }: { className?: string }) {
 export function Footer() {
   return (
     <footer className="border-t border-white/10 bg-[#0A0A0A] text-white">
-      <div className="mx-auto max-w-container px-5 py-12 sm:px-8 sm:py-16">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
-          <div className="col-span-2 sm:col-span-3 lg:col-span-1">
+      <div className="mx-auto max-w-container px-5 py-8 sm:px-8 sm:py-10">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+          <div className="col-span-2 lg:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2">
               <Image src="/polydash-mark-white.png" alt="Polypad logo" width={26} height={26} className="h-[26px] w-[26px]" />
               <span className="text-lg font-semibold tracking-tight">Polypad</span>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/65">
-              Launch, trade and stake tokens, and create tokenized funds, on Robinhood Chain. Fair bonding curves, locked liquidity, non-custodial.
+            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-white/65">
+              Launch, trade and stake tokens, and create tokenized funds, on Robinhood Chain.
             </p>
             <a
               href="https://x.com/Polydash_"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 px-3 text-sm text-white/80 transition-colors hover:border-white/25 hover:text-white"
+              className="mt-4 inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 px-3 text-[13px] text-white/80 transition-colors hover:border-white/25 hover:text-white"
               aria-label="Polypad on X (@Polydash_)"
             >
               <XIcon className="h-3.5 w-3.5" />
@@ -76,11 +92,11 @@ export function Footer() {
           </div>
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title}>
-              <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-white/55">{col.title}</h2>
-              <ul className="space-y-1">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/55">{col.title}</h2>
+              <ul className="space-y-0.5">
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="inline-flex min-h-9 items-center text-sm text-white/70 transition-colors hover:text-white">
+                    <Link href={l.href} className="inline-flex min-h-7 items-center text-[13px] text-white/70 transition-colors hover:text-white">
                       {l.label}
                     </Link>
                   </li>
@@ -89,7 +105,7 @@ export function Footer() {
             </nav>
           ))}
         </div>
-        <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between sm:text-[13px]">
+        <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between sm:text-[13px]">
           <p>© 2026 Polypad</p>
           <p>Not financial advice. Scans are not audits.</p>
         </div>

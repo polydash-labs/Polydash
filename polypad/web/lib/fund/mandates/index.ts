@@ -2,6 +2,8 @@ import { TEMPLATE2_MANDATE_TEXT } from './template2';
 import { TEMPLATE3_MANDATE_TEXT } from './template3';
 import { TEMPLATE4_MANDATE_TEXT } from './template4';
 import { TEMPLATE5_MANDATE_TEXT } from './template5';
+import { TEMPLATE10_MANDATE_TEXT } from './template10';
+import { TEMPLATE11_MANDATE_TEXT } from './template11';
 
 /** Site copies keyed by CID. Shown only when no IPFS gateway serves the file; IPFS stays the source of truth. */
 const BUNDLED_BY_CID: Record<string, string> = {
@@ -9,6 +11,8 @@ const BUNDLED_BY_CID: Record<string, string> = {
   bafybeiec5tvugkpmzhrnzsx4dgbbsnfxh4t4cqqnetca6xeoetm6liquhm: TEMPLATE3_MANDATE_TEXT,
   bafybeicug6lgvloamdsg5eju3hk23efvah5yuiqteuyrxstjx2fma2g4hy: TEMPLATE4_MANDATE_TEXT,
   bafybeibvdjvhttfrgsxpuwosgqbvsimvuppzsg562kbv26lfzk5vqan5r4: TEMPLATE5_MANDATE_TEXT,
+  bafybeigtntgj2obsl2u6tmm2zm7vhvyukz6tlh34mxn6pup7bwn6da4dpi: TEMPLATE10_MANDATE_TEXT,
+  bafybeiflq7wbtpdvvyqbzsgtfbolzv5mxtbfyalstpt35qgyqms7awwvl4: TEMPLATE11_MANDATE_TEXT,
 };
 
 /** CIDs whose site copy is derived rather than the exact published file. Empty: every bundled copy is the exact file. */

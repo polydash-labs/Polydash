@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
+import BeginnerStart from '@/components/beginner-start';
+import GlossaryBox from '@/components/glossary-box';
 import { Button } from '@/components/ui/button';
 import { HowItWorksSteps, Faq } from '@/components/how-it-works';
 import { getExplorerAddressUrl } from '@/lib/contracts/addresses';
@@ -95,6 +97,8 @@ export default function AboutPage() {
             </p>
           </section>
 
+          <BeginnerStart />
+
           <HowItWorksSteps />
 
           <section>
@@ -112,6 +116,27 @@ export default function AboutPage() {
                 </li>
               ))}
             </ol>
+          </section>
+
+          <section>
+            <h2 className="text-[15px] font-semibold mb-5">Tokenized Funds</h2>
+            <div className="glass-card rounded-2xl p-4 sm:p-5">
+              <p className="text-[13px] sm:text-[14px] leading-relaxed text-white/60">
+                A Tokenized Fund pools ETH from many people who buy shares. A manager invests that pooled ETH in
+                public, under rules published before the fund opens — which tokens it may buy, how much of the fund
+                one token may take up, and a fee. When the manager wants to buy a new token, the proposal waits
+                2 days in public first, and share holders can leave during the wait. Each share is an NFT in your
+                wallet, and you can sell it or get your money back. Browse the live Tokenized Funds on{' '}
+                <Link href="/funds" className="text-[#00E676] hover:underline">/funds</Link>, and see them ranked
+                by value per share on the{' '}
+                <Link href="/terminal" className="text-[#00E676] hover:underline">Terminal</Link>.
+              </p>
+              <p className="mt-3 text-[13px] sm:text-[14px] leading-relaxed text-white/60">
+                Building for agents? AI agents can trade, launch tokens, and run tokenized funds through the Polypad
+                API — start on{' '}
+                <Link href="/build" className="text-[#00E676] hover:underline">/build</Link>.
+              </p>
+            </div>
           </section>
 
           <section>
@@ -172,6 +197,8 @@ export default function AboutPage() {
               Only commit or trade what you can afford to lose.
             </p>
           </section>
+
+          <GlossaryBox />
 
           <section className="flex flex-wrap gap-2">
             <Button asChild>

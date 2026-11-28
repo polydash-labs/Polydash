@@ -43,8 +43,16 @@ export function Phase6Section({ fund, isManager, tx, ethUsd: ethUsdProp, v3 }: {
   const assets = useFundAssets(true);
   const ownEthUsd = useEthPrice().data;
   const ethUsd = ethUsdProp ?? ownEthUsd;
+  // V3 pages (Polyfund and other Strategy #6–#9 funds) show the strategy
+  // asset's own cap first; the 30% default for newly proposed assets is a
+  // separate line so both figures are visible (round 1 filtered the 30%
+  // line out here entirely, leaving only the 80%).
   const guardrails = v3
-    ? [`At most ${pct(fund.maxPositionBps)} of the tokenized fund in POLYDASH (this Strategy's own per-asset cap)`, ...P6_COPY.guardrails.filter((g) => !/30%/.test(g))]
+    ? [
+        `At most ${pct(fund.maxPositionBps)} of the tokenized fund in POLYDASH (this Strategy's own per-asset cap)`,
+        'A newly proposed asset is capped at 30% of the tokenized fund by default.',
+        ...P6_COPY.guardrails.filter((g) => !/30%/.test(g)),
+      ]
     : P6_COPY.guardrails;
   const symbols = useMemo(() => {
     const m = new Map<string, string>();
@@ -143,7 +151,7 @@ export function Phase6Section({ fund, isManager, tx, ethUsd: ethUsdProp, v3 }: {
         {!v3 && <ContractLink label="Swap module (V2)" address={FUND_SWAP_FACET_V2} />}
         <ContractLink label="Uniswap V4 router adapter" address={UNIV4_ROUTER_ADAPTER} />
         <ContractLink label="POLYDASH price feed (TWAP)" address={POLYDASH_TWAP_FEED} />
-        {!v3 && <ContractLink label="FundPhase5 (V2 funds)" address={FUND_PHASE5_V2} />}
+        {!v3 && <ContractLink label="FundPhase5" address={FUND_PHASE5_V2} />}
       </div>
       <p className="text-[12px] text-white/45">{P6_COPY.nfa}</p>
     </section>

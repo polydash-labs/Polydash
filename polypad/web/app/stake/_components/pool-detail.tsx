@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, BarChart3, History, SearchX, Users } from 'lucide-react';
+import { ArrowDownToLine, ArrowLeft, ArrowUpRight, BarChart3, Coins, History, SearchX, Users, Wallet } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { getExplorerAddressUrl, getExplorerTxUrl } from '@/lib/contracts/addresses';
 import { cn } from '@/lib/utils';
@@ -10,6 +10,7 @@ import { elapsedFrac, fmtApr, fmtDuration, fmtNum, fmtUsd, type DayPoint, type F
 import { AprLabel, EmptyState, FOOTER_NOTE, PairLabel, ProgressBar, Shimmer, StatusPill, TokenPair, sym, useNowSec } from './primitives';
 import { ActionPanel } from './action-panel';
 import { usePoolDetail } from './use-stake';
+import { DARK_CARD, FlowDiagram, PLAIN_CARD, SectionHead } from '@/lib/ui/template';
 
 type Range = '7d' | '30d' | 'all';
 /** `share` is already a percent (0..100). */
@@ -29,10 +30,10 @@ function ExtLink({ href, children, className }: { href: string; children: React.
 
 function KV({ k, v, sub }: { k: React.ReactNode; v: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <div className="min-w-0 rounded-xl bg-white/[0.025] p-3 ring-1 ring-white/[0.05]">
+    <div className={cn(PLAIN_CARD, 'min-w-0 p-3')}>
       <div className="text-[11.5px] text-white/50">{k}</div>
       <div className="mt-1 truncate text-[15px] font-medium tabular-nums text-white">{v}</div>
-      {sub && <div className="mt-0.5 truncate text-[11px] text-white/45">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[11px] leading-snug text-white/45">{sub}</div>}
     </div>
   );
 }
@@ -71,7 +72,7 @@ function Charts({ series, pool, pending, timedOut, onRetry }: { series: DayPoint
   const S = sym(pool.stake);
   const axis = { stroke: 'rgba(255,255,255,0.35)', fontSize: 11, tickLine: false, axisLine: false } as const;
   return (
-    <section className="stk-glass p-4 sm:p-5" aria-labelledby="charts-h">
+    <section className={DARK_CARD} aria-labelledby="charts-h">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="charts-h" className="text-[15px] font-semibold text-white">Total staked</h2>
         <div role="tablist" aria-label="Chart range" className="inline-flex rounded-xl border border-white/[0.08] bg-white/[0.03] p-1">
@@ -132,6 +133,12 @@ const FLOW_LABEL: Record<FlowItem['type'], string> = { stake: 'Stake', withdraw:
 export function PoolDetail({ address }: { address: string }) {
   const q = usePoolDetail(address);
   const now = useNowSec(30_000);
+  // Deep link from the pool list: /stake/<addr>?action=unstake opens the panel on Withdraw.
+  const [actionParam, setActionParam] = useState<'stake' | 'unstake' | 'claim' | null>(null);
+  useEffect(() => {
+    const a = new URLSearchParams(window.location.search).get('action');
+    if (a === 'unstake' || a === 'claim' || a === 'stake') setActionParam(a);
+  }, []);
   const d = q.data && !('pending' in q.data) ? q.data : null;
   // Never show skeletons forever: after CHART_TIMEOUT_MS of pending analytics, show a clean empty state.
   const [timedOut, setTimedOut] = useState(false);
@@ -159,7 +166,8 @@ export function PoolDetail({ address }: { address: string }) {
   const remaining = p && d ? Math.max(0, p.totalRewards - d.emitted) : 0;
 
   return (
-    <div className="mx-auto w-full max-w-container px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-16">
+    <div className="bg-black text-white">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-16">
       <Link href="/stake" className="inline-flex h-10 items-center gap-1.5 text-[13px] text-white/60 hover:text-white"><ArrowLeft className="h-4 w-4" strokeWidth={1.5} />All pools</Link>
 
       {/* header */}
@@ -192,23 +200,23 @@ export function PoolDetail({ address }: { address: string }) {
       <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* action panel: first on mobile, sticky right column on desktop */}
         <div id="stake-panel" className="scroll-mt-24 lg:order-2">
-          <div className="lg:sticky lg:top-24">{p ? <ActionPanel pool={p} /> : <Shimmer className="h-[460px] w-full rounded-2xl" />}</div>
+          <div className="lg:sticky lg:top-24">{p ? <ActionPanel pool={p} initialTab={actionParam ?? undefined} /> : <Shimmer className="h-[460px] w-full rounded-2xl" />}</div>
         </div>
 
         <div className="min-w-0 space-y-6 lg:order-1">
           {/* stats */}
-          <section className="stk-glass p-4 sm:p-5" aria-labelledby="stats-h">
+          <section className={DARK_CARD} aria-labelledby="stats-h">
             <h2 id="stats-h" className="text-[15px] font-semibold text-white">Pool stats</h2>
             {p && d ? (
               <>
                 <div className="mt-4 grid grid-cols-2 gap-2.5 md:grid-cols-3">
-                  <KV k="Total staked" v={`${fmtNum(p.totalStaked)} ${S}`} sub={p.maxTotalStake > 0 ? `Cap ${fmtNum(p.maxTotalStake)} ${S}` : 'No cap'} />
+                  <KV k="Total staked" v={`${fmtNum(p.totalStaked)} ${S}`} sub={p.tvlUsd != null ? fmtUsd(p.tvlUsd) : p.maxTotalStake > 0 ? `Cap ${fmtNum(p.maxTotalStake)} ${S}` : 'No cap'} />
                   <KV k="TVL" v={p.tvlUsd != null ? fmtUsd(p.tvlUsd) : `${fmtNum(p.totalStaked)} ${S}`} sub={p.tvlUsd == null ? 'Price unknown' : undefined} />
-                  <KV k="Rewards per day" v={`${p.status === 'ended' ? '0' : fmtNum(p.rewardsPerDay)} ${R}`} />
-                  <KV k="Total rewards" v={`${fmtNum(p.totalRewards)} ${R}`} />
-                  <KV k="Rewards paid" v={`${fmtNum(p.totalRewardsPaid)} ${R}`} sub={`${(distributed * 100).toLocaleString('en-US', { maximumFractionDigits: 1 })}% of rewards distributed`} />
+                  <KV k="Rewards per day" v={`${p.status === 'ended' ? '0' : fmtNum(p.rewardsPerDay)} ${R}`} sub={p.reward.priceUsd != null && p.reward.priceUsd > 0 ? fmtUsd((p.status === 'ended' ? 0 : p.rewardsPerDay) * p.reward.priceUsd) : undefined} />
+                  <KV k="Total rewards" v={`${fmtNum(p.totalRewards)} ${R}`} sub={p.reward.priceUsd != null && p.reward.priceUsd > 0 ? fmtUsd(p.totalRewards * p.reward.priceUsd) : undefined} />
+                  <KV k="Rewards paid" v={`${fmtNum(p.totalRewardsPaid)} ${R}`} sub={`${(distributed * 100).toLocaleString('en-US', { maximumFractionDigits: 1 })}% of rewards distributed${p.reward.priceUsd != null && p.reward.priceUsd > 0 ? ` · ${fmtUsd(p.totalRewardsPaid * p.reward.priceUsd)}` : ''}`} />
                   <KV k="Active stakers" v={fmtNum(p.stakerCount)} sub="Wallets with a stake now" />
-                  <KV k="Released by schedule" v={`${fmtNum(d.emitted)} ${R}`} sub={`${fmtNum(remaining)} ${R} still to come`} />
+                  <KV k="Released by schedule" v={`${fmtNum(d.emitted)} ${R}`} sub={`${fmtNum(remaining)} ${R} still to come${p.reward.priceUsd != null && p.reward.priceUsd > 0 ? ` · ${fmtUsd(d.emitted * p.reward.priceUsd)} released` : ''}`} />
                   <KV k="Claim fee" v={`${(p.claimFeeBps / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}%`} sub="Taken from rewards when you claim" />
                   <KV k="Time left" v={now ? fmtDuration(p.endTime - now) : '-'} sub={`Ends ${dayLabel(p.endTime)}`} />
                 </div>
@@ -228,11 +236,11 @@ export function PoolDetail({ address }: { address: string }) {
           </section>
 
           {p && d ? <Charts series={d.series} pool={p} pending={d.analyticsPending} timedOut={timedOut} onRetry={() => { setTimedOut(false); q.refetch(); }} />
-            : timedOut ? <section className="stk-glass p-4 sm:p-5"><h2 className="text-[15px] font-semibold text-white">Total staked</h2><ChartEmpty text="Chart data is taking longer than usual." onRetry={() => { setTimedOut(false); q.refetch(); }} /></section>
+            : timedOut ? <section className={DARK_CARD}><h2 className="text-[15px] font-semibold text-white">Total staked</h2><ChartEmpty text="Chart data is taking longer than usual." onRetry={() => { setTimedOut(false); q.refetch(); }} /></section>
             : <Shimmer className="h-[440px] w-full rounded-2xl" />}
 
           {/* top stakers */}
-          <section className="stk-glass p-4 sm:p-5" aria-labelledby="top-h">
+          <section className={DARK_CARD} aria-labelledby="top-h">
             <h2 id="top-h" className="flex items-center gap-2 text-[15px] font-semibold text-white"><Users className="h-4 w-4 text-white/50" strokeWidth={1.5} />Top stakers</h2>
             {(p && p.totalStaked <= 0) || (d && !d.analyticsPending && d.top.length === 0) ? <p className="mt-4 text-[13px] text-white/60">No stakes yet. Be the first.</p>
               : !d || d.analyticsPending ? (timedOut ? <p className="mt-4 text-[13px] text-white/60">Staker list is still loading. Check back in a moment.</p> : <div className="mt-4 space-y-2">{[0, 1, 2].map((i) => <Shimmer key={i} className="h-9" />)}</div>) : (
@@ -253,12 +261,28 @@ export function PoolDetail({ address }: { address: string }) {
           </section>
 
           {/* history */}
-          <section className="stk-glass p-4 sm:p-5" aria-labelledby="hist-h">
+          <section className={DARK_CARD} aria-labelledby="hist-h">
             <h2 id="hist-h" className="flex items-center gap-2 text-[15px] font-semibold text-white"><History className="h-4 w-4 text-white/50" strokeWidth={1.5} />History</h2>
             {!d || d.analyticsPending ? (timedOut ? <p className="mt-4 text-[13px] text-white/60">{p && p.totalStaked <= 0 ? 'No activity yet.' : 'History is still loading. Check back in a moment.'}</p> : <div className="mt-4 space-y-2">{[0, 1, 2, 3].map((i) => <Shimmer key={i} className="h-9" />)}</div>)
               : d.flows.length === 0 ? <p className="mt-4 text-[13px] text-white/60">No activity yet.</p> : (
-                <div className="mt-3 overflow-x-auto">
-                  <table className="w-full min-w-[480px] text-[13px]">
+                <>
+                  {/* mobile: stacked cards instead of a sideways-scrolling table */}
+                  <ul className="mt-3 space-y-2 sm:hidden">
+                    {d.flows.map((f) => (
+                      <li key={`${f.tx}-${f.type}-${f.user}`} className="rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/[0.05]">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={cn('text-[13px] font-medium', f.type === 'stake' ? 'text-polydash-green' : f.type === 'claim' ? 'text-white/80' : 'text-sky-300')}>{FLOW_LABEL[f.type]}</span>
+                          <span className="tabular-nums text-[13px] text-white/85">{fmtNum(f.amount)} {f.type === 'claim' ? R : S}</span>
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between gap-2 text-[12px]">
+                          <ExtLink href={getExplorerAddressUrl(f.user)} className="font-mono text-[12px]">{short(f.user)}</ExtLink>
+                          <ExtLink href={getExplorerTxUrl(f.tx)} className="tabular-nums text-[12px]">{f.ts ? timeLabel(f.ts) : 'tx'}</ExtLink>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-3 hidden overflow-x-auto sm:block">
+                    <table className="w-full min-w-[480px] text-[13px]">
                     <thead className="text-[11px] uppercase tracking-wide text-white/40"><tr><th className="py-2 text-left font-medium">Action</th><th className="py-2 text-left font-medium">Wallet</th><th className="py-2 text-right font-medium">Amount</th><th className="py-2 text-right font-medium">Time (UTC)</th></tr></thead>
                     <tbody>
                       {d.flows.map((f) => (
@@ -271,11 +295,43 @@ export function PoolDetail({ address }: { address: string }) {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                  </div>
+                </>
               )}
           </section>
         </div>
       </div>
+
+      {/* How this pool works — flow diagram */}
+      {p && (
+        <section className="mt-14">
+          <SectionHead
+            kicker="How this pool works"
+            title="Stake. Earn. Claim."
+            sub={`Stake ${S}, earn ${R} every second while the pool is running, then claim anytime — or withdraw your stake when you like.`}
+          />
+          <FlowDiagram
+            layers={[
+              {
+                title: `Stake ${S}`,
+                body: 'Approve once, then stake. You sign everything.',
+                icon: <ArrowDownToLine className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+              {
+                title: `Earn ${R} every second`,
+                body: 'Rewards add up every second while a pool is running. The current APR is variable — it changes as people stake or withdraw.',
+                icon: <Coins className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+              {
+                title: 'Claim anytime — or withdraw',
+                body: 'Withdraw when you like. When a pool ends, rewards stop — but your stake is still there to withdraw.',
+                emerald: true,
+                icon: <Wallet className="mx-auto h-6 w-6 text-emerald-400" />,
+              },
+            ]}
+          />
+        </section>
+      )}
 
       <p className="mt-14 border-t border-white/[0.06] pt-6 text-center text-[12px] leading-relaxed text-white/45">{FOOTER_NOTE}</p>
 
@@ -288,6 +344,7 @@ export function PoolDetail({ address }: { address: string }) {
           </button>
         </div>
       )}
+    </div>
     </div>
   );
 }

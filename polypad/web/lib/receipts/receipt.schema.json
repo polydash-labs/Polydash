@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polypad.family/receipts/receipt.schema.json",
+  "title": "Polypad agent action receipt",
+  "description": "A public, verifiable record of one agent action on Polypad (Robinhood Chain). A receipt proves what happened on-chain. It is not a guarantee, reimbursement, or insurance promise. Every field must trace to a live on-chain read or a verified transaction; a field may only appear if Polypad already records it.",
+  "type": "object",
+  "required": ["receiptFormat", "receiptId", "chain", "action", "identity", "authority", "approval", "settlement", "disclaimer"],
+  "additionalProperties": false,
+  "properties": {
+    "receiptFormat": { "const": "polypad.agent-receipt/1" },
+    "receiptId": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Stable id: <action-type>-<key>-block-<settlement block number>."
+    },
+    "chain": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "const": 4663 },
+        "name": { "const": "Robinhood Chain" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["type", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["agent-score-posted", "allowlist-executed"] },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "description": "Verifiable intent (Nov 24, 2026): the pre-captured authorization this action executed under — what was allowed, by whom, within what bounds, and the on-chain record of that authorization. Together with the action and the settlement, the receipt shows intent → action → settlement. Optional: receipts written before Nov 24, 2026 do not have it.",
+      "required": ["authorizedBy", "authorization", "authorizationHash", "authorizationHashKind", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "authorizedBy": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$", "description": "The address that authorized the action (proposer / registered updater)." },
+        "authorization": { "type": "string", "minLength": 1, "description": "Plain-language: what was allowed." },
+        "bounds": { "type": "string", "minLength": 1, "description": "Plain-language bounds: cap, allowlist, expiry, price band, wait." },
+        "authorizationHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$", "description": "The record of the authorization: the propose transaction hash (allowlist) or the score inputs hash (score-posted)." },
+        "authorizationHashKind": { "enum": ["transaction", "inputs-hash"] },
+        "authorizedAtIso": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "minLength": 1, "description": "On-chain source of the authorization." }
+      }
+    },
+    "identity": { "type": "object" },
+    "authority": {
+      "type": "object",
+      "required": ["rule", "contract", "source"],
+      "properties": {
+        "rule": { "type": "string", "minLength": 1 },
+        "contract": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "required": ["rule", "source"],
+      "properties": {
+        "rule": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    },
+    "settlement": {
+      "type": "object",
+      "required": ["transactionHash", "blockNumber", "blockTimestamp", "from", "to", "status"],
+      "properties": {
+        "transactionHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+        "blockNumber": { "type": "string", "pattern": "^[0-9]+$" },
+        "blockTimestamp": { "type": "string", "pattern": "^[0-9]+$" },
+        "from": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+        "to": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+        "status": { "const": 1 }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Blockscout links for the contracts, wallets and transactions in the receipt. Links are convenience only; verification never depends on the explorer.",
+      "additionalProperties": { "type": "string", "format": "uri" }
+    },
+    "disclaimer": {
+      "const": "This receipt records what happened on-chain. It is not a guarantee, reimbursement, or insurance promise."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "action": { "properties": { "type": { "const": "agent-score-posted" } } } } },
+      "then": {
+        "properties": {
+          "identity": {
+            "required": ["agentId", "name", "wallet", "agentAccount", "stakePolydash", "registeredAt", "active", "registry"],
+            "properties": {
+              "agentId": { "type": "integer", "minimum": 1 },
+              "name": { "type": "string", "minLength": 1 },
+              "wallet": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "agentAccount": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "stakePolydash": { "type": "string", "pattern": "^[0-9]+$" },
+              "registeredAt": { "type": "string", "pattern": "^[0-9]+$" },
+              "active": { "const": true },
+              "registry": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" }
+            }
+          },
+          "authority": {
+            "required": ["updater"],
+            "properties": {
+              "updater": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" }
+            }
+          },
+          "approval": {
+            "required": ["components", "weightedScore", "inputsHash"],
+            "properties": {
+              "components": {
+                "type": "object",
+                "required": ["performance", "history", "activity", "stake", "conduct"],
+                "additionalProperties": false,
+                "properties": {
+                  "performance": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                  "history": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                  "activity": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                  "stake": { "type": "integer", "minimum": 0, "maximum": 1000 },
+                  "conduct": { "type": "integer", "minimum": 0, "maximum": 1000 }
+                }
+              },
+              "weightedScore": { "type": "integer", "minimum": 300, "maximum": 850 },
+              "inputsHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" }
+            }
+          },
+          "settlement": {
+            "required": ["score", "band", "updatedAt", "event"],
+            "properties": {
+              "score": { "type": "integer", "minimum": 300, "maximum": 850 },
+              "band": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "updatedAt": { "type": "string", "pattern": "^[0-9]+$" },
+              "event": { "const": "ScoreUpdated" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "action": { "properties": { "type": { "const": "allowlist-executed" } } } } },
+      "then": {
+        "properties": {
+          "identity": {
+            "required": ["executor"],
+            "properties": {
+              "executor": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" }
+            }
+          },
+          "approval": {
+            "required": ["proposalId", "target", "feed", "maxStaleSeconds", "minPriceX18", "maxPriceX18", "proposedBy", "proposeTransactionHash", "proposedAt", "readyAt", "delaySeconds", "executedAt", "waitElapsedSeconds"],
+            "properties": {
+              "proposalId": { "type": "integer", "minimum": 1 },
+              "target": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "feed": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "maxStaleSeconds": { "type": "string", "pattern": "^[0-9]+$" },
+              "minPriceX18": { "type": "string", "pattern": "^[0-9]+$" },
+              "maxPriceX18": { "type": "string", "pattern": "^[0-9]+$" },
+              "proposedBy": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "proposeTransactionHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+              "proposedAt": { "type": "string", "pattern": "^[0-9]+$" },
+              "readyAt": { "type": "string", "pattern": "^[0-9]+$" },
+              "delaySeconds": { "type": "string", "pattern": "^[0-9]+$" },
+              "executedAt": { "type": "string", "pattern": "^[0-9]+$" },
+              "waitElapsedSeconds": { "type": "string", "pattern": "^[0-9]+$" }
+            }
+          },
+          "settlement": {
+            "required": ["executed", "canceled", "assetAllowed", "feedStored", "events"],
+            "properties": {
+              "executed": { "const": true },
+              "canceled": { "const": false },
+              "assetAllowed": { "const": true },
+              "feedStored": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+              "events": { "type": "array", "contains": { "const": "Executed" } }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

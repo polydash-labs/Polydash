@@ -405,7 +405,8 @@ export function fundTxError(message: string): string {
   if (m.includes('soldout')) return 'Not enough shares are left at that quantity.';
   if (m.includes('notraising')) return 'This raise is closed.';
   if (m.includes('notallowlisted') || m.includes('notinmandate')) return 'That token or trading route is not on the approved list (the allowlist).';
-  if (m.includes('slippage')) return 'The vault would receive less than the minimum you set.';
+  if (m.includes('insufficient')) return 'You don\u2019t have enough ETH \u2014 you need the share price plus a little extra for the network fee (gas).';
+  if (m.includes('slippage')) return 'The price moved too far while your transaction was waiting. Try again.';
   if (m.includes('notinvesting')) return 'Investing is not open on this fund.';
   if (m.includes('notauthorized')) return 'Only the manager or an authorized wallet can do that.';
   if (m.includes('notclosed')) return 'The raise is still open.';

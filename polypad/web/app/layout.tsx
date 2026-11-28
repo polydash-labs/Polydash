@@ -5,13 +5,13 @@ import { Toaster } from '@/components/ui/sonner'
 import { ChunkLoadErrorHandler } from '@/components/chunk-load-error-handler'
 import { TelegramWebApp } from '@/components/telegram-webapp'
 import { Web3Providers } from '@/components/providers'
+import { SiteAssistant } from '@/components/site-assistant/site-assistant'
 import type { Metadata, Viewport } from 'next'
 import { SITE_SHARE, SITE_URL } from '@/lib/seo'
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: 'cover',
   themeColor: '#0A0A0A',
 }
@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mon
 
 export const metadata: Metadata = {
   title: 'Polypad',
-  description: 'Launch your token on Robinhood Chain',
+  description: 'The premiere agentic marketplace. Create your agent, give it a secure wallet, then launch, invest, stake, and pay per call — all on Robinhood Chain.',
   icons: {
     icon: [
       { url: '/favicon.ico?v=2', sizes: '16x16 32x32 48x48' },
@@ -61,6 +61,7 @@ export default function RootLayout({
             {children}
             <Toaster />
             <ChunkLoadErrorHandler />
+            <SiteAssistant />
           </Web3Providers>
         </ThemeProvider>
       </body>

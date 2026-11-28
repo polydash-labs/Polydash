@@ -2,7 +2,7 @@
 import { factoryAddress, validateLaunchBody, encodeCreateLaunch } from '../../agent-launch';
 import { WORDING } from './config';
 import { ApiError, assertNotFeeWallet, bodyGuard, ethDisplay, type Ctx, type Meta } from './core';
-import { finishPrepared } from './prepared';
+import { finishPrepared, validReturnUrl } from './prepared';
 
 export async function prepareTokenLaunch(ctx: Ctx, rawInput: unknown, meta: Meta) {
   const input = bodyGuard(rawInput);
@@ -24,6 +24,7 @@ export async function prepareTokenLaunch(ctx: Ctx, rawInput: unknown, meta: Meta
     signParams: { p },
     from: value.from!,
     meta,
+    returnUrl: validReturnUrl(input.returnUrl),
     allowTargets: [to],
     steps: [{ kind: 'create_launch', description: 'Create the token launch on the Polypad factory. The sending wallet becomes the creator.', to, data, value: value.devBuyEth, simulate: true }],
     summary: {

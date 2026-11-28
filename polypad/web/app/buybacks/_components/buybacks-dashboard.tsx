@@ -21,7 +21,6 @@ const ethStr = (s?: string | null) => (s ? Number(s).toLocaleString('en-US', { m
 const factoryName = (a?: string) => (sameAddress(a, LAUNCH_FACTORIES[0]) ? 'Launch factory A' : sameAddress(a, LAUNCH_FACTORIES[1]) ? 'Launch factory B' : 'Factory');
 
 function StakersPanel({ s }: { s: any }) {
-  const tx = useBuybackTx();
   const now = useNow();
   const { data: pool } = usePoolSummary();
   const vault = vaultAddress();
@@ -29,7 +28,6 @@ function StakersPanel({ s }: { s: any }) {
   const t = s?.target;
   const held = BigInt(s?.polyHeld ?? '0');
   const status = !t?.address ? 'No target' : t.active ? 'Active' : 'Ended';
-  const burnDue = live && !t?.active && held > BigInt(0) && t?.burnableAt && now != null && now >= t.burnableAt;
   const pendingAt = Number(s?.pending?.executeAfter ?? 0);
   return (
     <Card title="Stakers">
@@ -54,20 +52,35 @@ function StakersPanel({ s }: { s: any }) {
           <Link href="/rewards-pool" className="mt-1 inline-block text-[12px] text-polydash-green hover:underline">Open the Rewards Pool</Link>
         </div>
       )}
-      {live && (held > BigInt(0)) && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <ConnectOr>
-            {t?.active && (
-              <TxButton busy={tx.pending === 'release'} onClick={() => tx.send({ key: 'release', address: vault!, abi: 'vault', functionName: 'releaseToTarget', success: 'Released to stakers' })}>Release to stakers</TxButton>
-            )}
-            {burnDue && (
-              <TxButton variant="outline" busy={tx.pending === 'burnHeld'} onClick={() => tx.send({ key: 'burnHeld', address: vault!, abi: 'vault', functionName: 'burnHeldStaking', success: 'Held POLYDASH burned' })}>Burn held POLYDASH</TxButton>
-            )}
-          </ConnectOr>
-        </div>
+      {live && held > BigInt(0) && (
+        <p className="mt-3 text-[12px] text-white/55">Releasing the held POLYDASH to stakers (or burning it once the target has been gone 30 days) is a helper action — see “Help run Polypad” below.</p>
       )}
-      {tx.lastHash && <p className="mt-2 text-[12px] text-white/55">Tx: <TxLink hash={tx.lastHash.hash} /></p>}
     </Card>
+  );
+}
+
+/** Keeper buttons for the stakers' share: release to the target, or burn what was held with no target. */
+function StakerHelperActions({ s }: { s: any }) {
+  const tx = useBuybackTx();
+  const now = useNow();
+  const vault = vaultAddress();
+  const live = !!s?.live && !!vault;
+  const t = s?.target;
+  const held = BigInt(s?.polyHeld ?? '0');
+  const burnDue = live && !t?.active && held > BigInt(0) && t?.burnableAt && now != null && now >= t.burnableAt;
+  if (!live || held === BigInt(0) || (!t?.active && !burnDue)) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      <ConnectOr>
+        {t?.active && (
+          <TxButton busy={tx.pending === 'release'} onClick={() => tx.send({ key: 'release', address: vault!, abi: 'vault', functionName: 'releaseToTarget', success: 'Released to stakers' })}>Release to stakers</TxButton>
+        )}
+        {burnDue && (
+          <TxButton variant="outline" busy={tx.pending === 'burnHeld'} onClick={() => tx.send({ key: 'burnHeld', address: vault!, abi: 'vault', functionName: 'burnHeldStaking', success: 'Held POLYDASH burned' })}>Burn held POLYDASH</TxButton>
+        )}
+      </ConnectOr>
+      {tx.lastHash && <p className="w-full text-[12px] text-white/55">Tx: <TxLink hash={tx.lastHash.hash} /></p>}
+    </div>
   );
 }
 
@@ -134,31 +147,42 @@ export function BuybacksDashboard() {
       </div>
 
       <Card title="Cumulative totals by day">
-        {points.length ? <BuybackChart data={points} /> : <p className="py-10 text-center text-[12px] text-white/55">No data yet.</p>}
+        {points.length ? <BuybackChart data={points} /> : (
+          <p className="py-10 text-center text-[12px] leading-relaxed text-white/55">
+            No data yet. This chart will show cumulative buyback totals by day — ETH spent, POLYDASH burned, and POLYDASH sent to stakers — once the first buyback runs.
+          </p>
+        )}
       </Card>
 
       <BuyTable items={items} hasMore={!!hist.hasNextPage} onMore={() => hist.fetchNextPage()} loadingMore={hist.isFetchingNextPage} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RunBuyback s={s} />
-        <CollectFees live={live} />
-      </div>
+      <details className="rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3 sm:px-5">
+        <summary className="cursor-pointer text-[13px] font-medium text-white">
+          Help run Polypad (optional — costs you a network fee, you get nothing back)
+        </summary>
+        <p className="pt-2 text-[12px] text-white/55">These buttons run the buyback for everyone. The caller pays the network fee and receives nothing back.</p>
+        <div className="mt-4 grid gap-6 lg:grid-cols-2">
+          <RunBuyback s={s} />
+          <CollectFees live={live} />
+        </div>
+        <div className="mt-4"><StakerHelperActions s={s} /></div>
+      </details>
 
       <Card title="Configuration">
         <Row label="Buyback vault">{vault ? <AddrLink address={vault} /> : 'Not deployed'}</Row>
         <Row label="Max ETH per buy">{LIMITS.maxBuyEth} ETH</Row>
-        <Row label="Price band vs recorded price">{LIMITS.priceBandBps / 100}%</Row>
-        <Row label="Max slippage">{LIMITS.maxSlippageBps / 100}%</Row>
+        <Row label="Price band vs recorded price"><span title={`${LIMITS.priceBandBps} bps`}>{LIMITS.priceBandBps / 100}%</span></Row>
+        <Row label="Max slippage"><span title={`${LIMITS.maxSlippageBps} bps`}>{LIMITS.maxSlippageBps / 100}%</span></Row>
         <Row label="Cooldown between buys">{LIMITS.cooldownMinutes} min</Row>
         <Row label="Price record valid">{LIMITS.observeDelayMinutes}-{LIMITS.observeMaxAgeMinutes} min after recording</Row>
-        <Row label="Burned / stakers share of each buy">{LIMITS.burnShareOfVaultBps / 100}% / {LIMITS.stakersShareOfVaultBps / 100}%</Row>
+        <Row label="Burned / stakers share of each buy"><span title={`${LIMITS.burnShareOfVaultBps} / ${LIMITS.stakersShareOfVaultBps} bps`}>{LIMITS.burnShareOfVaultBps / 100}% / {LIMITS.stakersShareOfVaultBps / 100}%</span></Row>
         <Row label="Target change timelock">{LIMITS.targetTimelockHours} hours</Row>
         <Row label="Burn held POLYDASH after no target">{LIMITS.noTargetBurnDays} days</Row>
         <div className="mt-3 space-y-2" data-testid="factory-settings">
           {factories.map((f) => (
             <div key={f.address} className="rounded-xl bg-white/[0.04] p-3">
               <p className="text-[12px] font-medium text-white/80">{factoryName(f.address)} <AddrLink address={f.address} /></p>
-              <Row label="Buyback">{f.enabled ? 'Enabled' : 'Disabled'}, {f.bps} bps ({f.bps / 100}%)</Row>
+              <Row label="Buyback">{f.enabled ? 'Enabled' : 'Disabled'}, <span title={`${f.bps} bps`}>{f.bps / 100}%</span></Row>
               <Row label="Buyback contract">{f.contract && !isZeroAddr(f.contract) ? <AddrLink address={f.contract} /> : 'None'}</Row>
             </div>
           ))}
@@ -169,7 +193,7 @@ export function BuybacksDashboard() {
             items={configItems}
             empty={live ? 'No changes yet.' : 'Listed once the vault is live.'}
             render={(i) =>
-              i.type === 'BuybackConfigSet' ? `${factoryName(i.factory)} set ${i.enabled ? 'enabled' : 'disabled'}, ${i.bps} bps` :
+              i.type === 'BuybackConfigSet' ? `${factoryName(i.factory)} set ${i.enabled ? 'enabled' : 'disabled'}, ${i.bps / 100}%` :
               i.type === 'TargetProposed' ? `Target proposed: ${isZeroAddr(i.target) ? 'no target' : i.target}` :
               i.type === 'TargetCancelled' ? 'Target proposal cancelled' : `Target changed to ${isZeroAddr(i.target) ? 'no target' : i.target}`
             }

@@ -29,7 +29,27 @@ export function BuyTable({ items, hasMore, onMore, loadingMore }: { items: any[]
       title="Buybacks"
       action={<Button variant="outline" size="sm" className="rounded-full" disabled={!buys.length} onClick={() => downloadCsv(buys)}><Download className="mr-1.5 h-3.5 w-3.5" /> CSV</Button>}
     >
-      <div className="overflow-x-auto">
+      {/* Mobile: stacked cards. Desktop: the table below. */}
+      <div className="space-y-2 sm:hidden">
+        {buys.length === 0 && (
+          <p className="py-6 text-center text-[12px] text-white/55">No buybacks yet.</p>
+        )}
+        {buys.map((b) => (
+          <div key={`${b.txHash}-${b.logIndex}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-[12px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-white/70">{fmtPT(b.time)}</span>
+              <TxLink hash={b.txHash} />
+            </div>
+            <dl className="mt-2 space-y-1 font-mono text-white">
+              <div className="flex justify-between gap-2"><dt className="font-sans text-white/55">ETH in</dt><dd>{fmtToken(b.ethIn, 5)}</dd></div>
+              <div className="flex justify-between gap-2"><dt className="font-sans text-white/55">Burned</dt><dd>{fmtToken(b.polyBurned)}</dd></div>
+              <div className="flex justify-between gap-2"><dt className="font-sans text-white/55">To stakers</dt><dd>{fmtToken(b.polyToStakers)}</dd></div>
+              <div className="flex justify-between gap-2"><dt className="font-sans text-white/55">Caller</dt><dd><AddrLink address={b.caller} /></dd></div>
+            </dl>
+          </div>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[640px] text-left text-[12px]">
           <thead className="text-white/55">
             <tr>

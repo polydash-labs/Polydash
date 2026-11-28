@@ -13,7 +13,7 @@ import {
   type Addr, type Ctx, type Meta,
 } from './core';
 import { resolveLaunch, type LaunchInfo } from './launches';
-import { finishPrepared, type StepInput } from './prepared';
+import { finishPrepared, validReturnUrl, type StepInput } from './prepared';
 
 const BPS = 10_000n;
 
@@ -212,6 +212,7 @@ export async function prepareBuy(ctx: Ctx, rawInput: unknown, meta: Meta) {
 
   return finishPrepared(ctx, {
     action: 'buy', signParams, from, steps: [step], meta, allowTargets: [l.launch],
+    returnUrl: validReturnUrl(input.returnUrl),
     summary: { headline, lines, youPay: `${ethDisplay(amount)} ETH`, youReceiveAtLeast: q.venue === 'commit_window' ? undefined : `${unitsDisplay(q.minAmountOut)} ${l.symbol}`, fees: q.fees, slippageBps: slip, risks: RISKS },
     warnings,
     extra: { token: { name: l.name, symbol: l.symbol, token: l.token, launch: l.launch, phase: l.phaseName }, quote: viewQuote(l, q) },
@@ -290,6 +291,7 @@ export async function prepareSell(ctx: Ctx, rawInput: unknown, meta: Meta) {
     action: 'sell',
     signParams: input.percentOfBalance ? { t: l.launch, pct: String(input.percentOfBalance), sl: slip } : { t: l.launch, amt: amount.toString(), sl: slip },
     from, steps, meta, allowTargets: [l.launch, l.token],
+    returnUrl: validReturnUrl(input.returnUrl),
     summary: { headline, lines, youPay: `${unitsDisplay(amount)} ${l.symbol}`, youReceiveAtLeast: `${ethDisplay(q.minAmountOut)} ETH`, fees: q.fees, slippageBps: slip, risks: RISKS },
     extra: { token: { name: l.name, symbol: l.symbol, token: l.token, launch: l.launch, phase: l.phaseName }, quote: viewQuote(l, q) },
   });

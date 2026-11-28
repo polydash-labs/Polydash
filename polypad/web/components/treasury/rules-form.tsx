@@ -153,7 +153,7 @@ export function RulesFields({ s, set, errors, symbol, includeExecution = false }
         <Field label="Pool duration (days)" hint="1 to 3650 days" error={errors.poolDays}>
           <input className={inputCls} inputMode="numeric" value={s.poolDays} onChange={(e) => set({ poolDays: e.target.value })} />
         </Field>
-        <Field label="Pool claim fee %" hint="1% to 5%" error={errors.poolFeePct}>
+        <Field label="Pool claim fee %" hint="1% taken from rewards when you claim. Between 1% and 5%." error={errors.poolFeePct}>
           <input className={inputCls} inputMode="decimal" value={s.poolFeePct} onChange={(e) => set({ poolFeePct: e.target.value })} />
         </Field>
         <Field label="Minimum time between reward pools" error={errors.poolMinIntervalSec}>
