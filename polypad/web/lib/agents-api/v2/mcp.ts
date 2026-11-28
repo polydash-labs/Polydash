@@ -28,6 +28,7 @@ import { errorBody } from './router';
 import { resolveApiKey, type ApiTier, type KeyResolution } from './keys';
 import { FREE_KEY_ID, kindOf, recordUsage } from './usage';
 import { TOOLS, runTool, type Tool } from './tools';
+import { isLongbowPrepareTool, longbowPrepareEnabled } from './longbow';
 import { SKILLS, findSkillByUri, skillEntry, skillMd, skillUri, SKILL_CACHE_SCOPE, SKILL_TTL_MS } from './skills';
 import {
   approvalElicitation, createTask, expireIfNeeded, findTaskByElicitationId, fundWatchChanged, fundWatchSnapshot,
@@ -49,8 +50,10 @@ const fail = (id: Rpc['id'], code: number, message: string, data?: unknown): Rpc
 /** Caching hints (SEP-2549) on complete list/read results: public docs, fresh for 1h. */
 const cacheHints = { resultType: 'complete', ttlMs: SKILL_TTL_MS, cacheScope: SKILL_CACHE_SCOPE };
 
+/** Phase 2 Longbow prepares stay out of tools/list until LONGBOW_PREPARE_ENABLED is on. The registry (and tools_v2.json) always lists all of them. */
 export function listTools() {
-  return TOOLS.map((t) => ({
+  const shown = longbowPrepareEnabled() ? TOOLS : TOOLS.filter((t) => !isLongbowPrepareTool(t.name));
+  return shown.map((t) => ({
     name: t.name, title: t.title, description: t.description, inputSchema: t.inputSchema,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: t.kind === 'read', openWorldHint: true, title: t.title },
   }));

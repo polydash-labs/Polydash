@@ -1139,6 +1139,604 @@
       "x-method": "POST",
       "x-path": "agent-chat",
       "x-kind": "read"
+    },
+    {
+      "name": "polypad_longbow_markets",
+      "title": "Longbow lending markets",
+      "description": "Longbow lending markets on Robinhood Chain (Morpho Blue): collateral, loan token, price, LLTV, oracle, borrow and supply APR, utilization, and whether the market is live. Read-only; Longbow settles on Morpho Blue and its own contracts are not published as audited.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Filter by category: Stocks, Memes, RWA, Crypto, or Stables."
+          },
+          "oracleType": {
+            "type": "string",
+            "description": "Filter by oracle: chainlink, twap, or api3.",
+            "enum": [
+              "chainlink",
+              "twap",
+              "api3"
+            ]
+          },
+          "liveOnly": {
+            "type": "boolean",
+            "description": "Only markets that are live and enabled. Default true."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "How many to return, 1 to 100. Default 50.",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "longbow/markets",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_longbow_market",
+      "title": "Longbow market details",
+      "description": "One Longbow market: price, LLTV, oracle, rates, utilization, and its on-chain Morpho totals, plus whether it passes the prepare screen (Chainlink-priced, LLTV within the limit). Read-only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          }
+        },
+        "required": [
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "longbow/market",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_longbow_position",
+      "title": "Longbow position",
+      "description": "A wallet’s position in one Longbow market: collateral posted, debt, supply and borrow shares, health factor, and liquidation price. Read-only. The health factor uses Longbow’s price and Morpho’s stored totals, which are stale since the market’s last interaction.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          },
+          "address": {
+            "type": "string",
+            "description": "Wallet address (0x...)."
+          }
+        },
+        "required": [
+          "market",
+          "address"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "longbow/position",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_longbow_vaults",
+      "title": "Longbow vaults",
+      "description": "Longbow’s three ERC-4626 vaults (Core, Frontier, ETH): asset, TVL, APY, risk, performance fee, and the markets each one supplies. Read-only. APY is a reading, not a promise.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "longbow/vaults",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_longbow_plan_multiply",
+      "title": "Plan a Longbow multiply",
+      "description": "Leverage analysis for a Longbow multiply: borrow USDG against WETH collateral, swap it for more WETH on Uniswap V4, post it as collateral — one atomic bundle, no flash loan. Returns whether it is feasible at the 1.15 health-factor floor, the maximum borrow, the swap quote, the resulting health factor, liquidation price, and leverage. Read-only; the prepare tool is gated until the legal review is complete.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId. Multiply needs a WETH-collateral market."
+          },
+          "collateralAmountEth": {
+            "type": "string",
+            "description": "New WETH collateral to post, as a decimal such as 0.1. Omit it to borrow against collateral already posted."
+          },
+          "collateralAmount": {
+            "type": "string",
+            "description": "Same in WETH base units (18 decimals). Use instead of collateralAmountEth."
+          },
+          "borrowAmountUsdg": {
+            "type": "string",
+            "description": "USDG to borrow, as a decimal such as 100."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in USDG base units (6 decimals). Use instead of borrowAmountUsdg."
+          },
+          "address": {
+            "type": "string",
+            "description": "Wallet address, to include its existing collateral and debt in the plan."
+          },
+          "slippageBps": {
+            "type": "integer",
+            "description": "Slippage limit in basis points. Default 100, maximum 1000.",
+            "minimum": 0,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "GET",
+      "x-path": "longbow/plan-multiply",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_prepare_longbow_supply",
+      "title": "Prepare a Longbow vault deposit",
+      "description": "Prepares depositing USDG (Core / Frontier vault) or WETH (ETH vault) into a Longbow ERC-4626 vault. Adds the exact-amount approval step if needed, simulates step 1, and returns unsigned transactions, a summary, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "vault": {
+            "type": "string",
+            "description": "Vault key: core, frontier, or eth (or the vault address)."
+          },
+          "amountUsdg": {
+            "type": "string",
+            "description": "USDG to supply, as a decimal such as 100. USDG vaults only."
+          },
+          "amountEth": {
+            "type": "string",
+            "description": "WETH to supply, as a decimal such as 0.1. ETH vault only."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in base units (6 decimals for USDG, 18 for WETH). Use instead of amountUsdg / amountEth."
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "vault"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-supply",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_borrow",
+      "title": "Prepare a Longbow borrow",
+      "description": "Prepares borrowing USDG against collateral in a Longbow market, optionally posting new collateral in the same action. Refuses when the market fails the screen (Chainlink-priced, LLTV within the limit) or the resulting health factor would fall below 1.15. Returns unsigned transactions, the resulting health factor and liquidation price, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          },
+          "amountUsdg": {
+            "type": "string",
+            "description": "USDG to borrow, as a decimal such as 100."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in USDG base units (6 decimals). Use instead of amountUsdg."
+          },
+          "collateralAmountEth": {
+            "type": "string",
+            "description": "New WETH collateral to post, as a decimal such as 0.1. WETH-collateral markets only."
+          },
+          "collateralAmount": {
+            "type": "string",
+            "description": "New collateral in base units. Use instead of collateralAmountEth."
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-borrow",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_repay",
+      "title": "Prepare a Longbow repayment",
+      "description": "Prepares repaying USDG debt in a Longbow market, in part or in full (all: true burns the borrow shares, so it stays correct as interest accrues). Returns unsigned transactions, the debt left after, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          },
+          "amountUsdg": {
+            "type": "string",
+            "description": "USDG to repay, as a decimal such as 100."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in USDG base units (6 decimals). Use instead of amountUsdg."
+          },
+          "all": {
+            "type": "boolean",
+            "description": "Repay the whole debt. Use instead of an amount."
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-repay",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_add_collateral",
+      "title": "Prepare adding Longbow collateral",
+      "description": "Prepares posting more collateral in a Longbow market. Adds the exact-amount approval step if needed, simulates step 1, and returns unsigned transactions, the health factor after, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          },
+          "amountEth": {
+            "type": "string",
+            "description": "Collateral to post, as a decimal such as 0.1. WETH-collateral markets only."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in base units. Use instead of amountEth."
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-add-collateral",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_withdraw_collateral",
+      "title": "Prepare withdrawing Longbow collateral",
+      "description": "Prepares withdrawing collateral from a Longbow market, in part or in full (all: true). Refuses when the health factor after would fall below 1.15. Returns the unsigned transaction, the health factor after, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          },
+          "amountEth": {
+            "type": "string",
+            "description": "Collateral to withdraw, as a decimal such as 0.1. WETH-collateral markets only."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in base units. Use instead of amountEth."
+          },
+          "all": {
+            "type": "boolean",
+            "description": "Withdraw all posted collateral. Use instead of an amount."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-withdraw-collateral",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_close",
+      "title": "Prepare closing a Longbow position",
+      "description": "Prepares closing a Longbow position: repays the whole debt (by burning the borrow shares) and withdraws all posted collateral. Returns unsigned transactions and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-close",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_multiply",
+      "title": "Prepare a Longbow multiply",
+      "description": "Prepares a Longbow multiply in one atomic Bundler3 bundle: borrow USDG against WETH collateral, swap it for more WETH on Uniswap V4, post the WETH as more collateral. No flash loan — the borrow is sized so the position stays above the 1.15 health-factor floor before the swap. WETH-collateral markets only. Returns unsigned transactions, the resulting health factor, liquidation price, and leverage, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "market": {
+            "type": "string",
+            "description": "Market key (ETH, NVDA, SPY), symbol, name, or marketId. WETH-collateral markets only."
+          },
+          "borrowAmountUsdg": {
+            "type": "string",
+            "description": "USDG to borrow, as a decimal such as 100."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in USDG base units (6 decimals). Use instead of borrowAmountUsdg."
+          },
+          "collateralAmountEth": {
+            "type": "string",
+            "description": "New WETH collateral to post, as a decimal such as 0.1. Omit it to borrow against collateral already posted."
+          },
+          "collateralAmount": {
+            "type": "string",
+            "description": "Same in WETH base units (18 decimals). Use instead of collateralAmountEth."
+          },
+          "slippageBps": {
+            "type": "integer",
+            "description": "Slippage limit in basis points. Default 100, maximum 1000.",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "market"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-multiply",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_stake_bow",
+      "title": "Prepare staking BOW",
+      "description": "Prepares staking BOW in Longbow’s staking contract to earn USDG (borrower interest and a share of BOW trading fees, streamed per second). No lock, no cooldown. Adds the exact-amount approval step if needed, simulates step 1, and returns unsigned transactions, a summary, and a signing link. Never signs. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "amountBow": {
+            "type": "string",
+            "description": "BOW to stake, as a decimal such as 100."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Same in BOW base units (18 decimals). Use instead of amountBow."
+          },
+          "confirmLarge": {
+            "type": "boolean",
+            "description": "Set true only after the user confirmed an amount above 1 ETH."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-stake-bow",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_longbow_claim_rebate",
+      "title": "Prepare claiming a Longbow borrow rebate",
+      "description": "Claims a Longbow borrow rebate for one epoch from the Merkle distributor. Currently refuses: the distributor is verified on-chain, but the exact claim function and the per-epoch Merkle proof source are not, so no claim transaction can be built correctly yet. Claim from Longbow’s staking page until this tool is completed. Built but gated: it refuses until LONGBOW_PREPARE_ENABLED is on.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "epoch": {
+            "type": "integer",
+            "description": "The rebate epoch to claim.",
+            "minimum": 1
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "epoch"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/longbow-claim-rebate",
+      "x-kind": "prepare"
     }
   ]
 }
