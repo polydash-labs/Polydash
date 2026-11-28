@@ -7,7 +7,8 @@
     "start": "next start",
     "postinstall": "prisma generate",
     "docs:tools": "tsx scripts/generate-tool-reference.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --import tsx --test lib/logo-upload.test.ts lib/agent-launch.test.ts lib/agent-mark.test.ts lib/fund/model.test.ts lib/fund/invest.test.ts lib/fund/visibility.test.ts lib/fund/phase3.test.ts lib/fund/phase4.test.ts lib/fund/phase5.test.ts lib/fund/phase6.test.ts"
   },
   "prisma": {
     "seed": "tsx --require dotenv/config scripts/safe-seed.ts"

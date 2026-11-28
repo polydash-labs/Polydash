@@ -42,7 +42,11 @@
           },
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           },
           "ref": {
             "type": "string",
@@ -110,7 +114,7 @@
     {
       "name": "polypad_get_token",
       "title": "Token details",
-      "description": "One token: price reading, bonding-curve progress, creator, fees, and links. Accepts a symbol, name, token address, or launch address.",
+      "description": "One token: price reading, bonding-curve progress, creator, fees, and links. Accepts a symbol, name, token address, or launch address. POLYDASH itself works too — it is not a launch, so it has no curve or launch contract.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -206,7 +210,7 @@
           },
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "amountEth": {
             "type": "string",
@@ -229,6 +233,14 @@
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -254,7 +266,7 @@
           },
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "amount": {
             "type": "string",
@@ -275,6 +287,14 @@
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -372,7 +392,7 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "listingId": {
             "type": "integer",
@@ -400,6 +420,14 @@
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -409,6 +437,100 @@
       },
       "x-method": "POST",
       "x-path": "prepare/nft-buy",
+      "x-kind": "prepare"
+    },
+    {
+      "name": "polypad_prepare_nft_create",
+      "title": "Prepare an NFT collection creation",
+      "description": "Creates a fixed-price NFT collection on the Polypad NFT factory: name, symbol, artwork, max supply, mint price, and creator royalty. The caller signs once in their own wallet and pays gas only — creating a collection costs no ETH beyond gas. Only allowlisted business API keys can call it (used by Major League Operator Card Studio). Returns unsigned transactions, a summary, and a signing link.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
+          },
+          "name": {
+            "type": "string",
+            "description": "Collection name, 1 to 64 characters."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Collection symbol, 1 to 10 characters, uppercased."
+          },
+          "imageUri": {
+            "type": "string",
+            "description": "Artwork URL (https:// or ipfs://). Shown as the collection image."
+          },
+          "description": {
+            "type": "string",
+            "description": "Plain description, up to 500 characters."
+          },
+          "baseURI": {
+            "type": "string",
+            "description": "Metadata base URI (https:// or ipfs://). Optional."
+          },
+          "maxSupply": {
+            "type": "integer",
+            "description": "How many editions to mint, 1 to 10000. Default 25.",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "mintPriceEth": {
+            "type": "string",
+            "description": "Mint price per edition in ETH as a plain decimal, above 0 to 10. Default 0.001. The factory does not allow a zero mint price. Use mintPriceWei instead for raw wei."
+          },
+          "mintPriceWei": {
+            "type": "string",
+            "description": "Mint price per edition in wei. Use instead of mintPriceEth."
+          },
+          "royaltyBps": {
+            "type": "integer",
+            "description": "Creator royalty in basis points, 0 to 1500 (10% = 1000). Default 1000. Paid to the creator on every resale.",
+            "minimum": 0,
+            "maximum": 1500
+          },
+          "maxPerWallet": {
+            "type": "integer",
+            "description": "Max mints per wallet, 1 to 100. Default 5.",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "commitWindow": {
+            "type": "integer",
+            "description": "Commitment window in seconds, 1 hour to 30 days. Default 86400 (24 hours). Buyers commit first, then mint.",
+            "minimum": 3600,
+            "maximum": 2592000
+          },
+          "floorBps": {
+            "type": "integer",
+            "description": "Share of mint price kept in the collection floor vault, in basis points, 2000 to 8000. Default 2000 (20%).",
+            "minimum": 2000,
+            "maximum": 8000
+          },
+          "ref": {
+            "type": "string",
+            "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
+          }
+        },
+        "required": [
+          "from",
+          "name",
+          "symbol",
+          "imageUri"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "prepare/nft-create",
       "x-kind": "prepare"
     },
     {
@@ -461,12 +583,13 @@
           },
           "factory": {
             "type": "string",
-            "description": "phase6, phase3, phase2, or phase1a.",
+            "description": "phase6, phase3, phase2, phase1a, or v3.",
             "enum": [
               "phase6",
               "phase3",
               "phase2",
-              "phase1a"
+              "phase1a",
+              "v3"
             ]
           },
           "q": {
@@ -527,7 +650,7 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "templateId": {
             "type": "integer",
@@ -589,15 +712,24 @@
           },
           "factory": {
             "type": "string",
-            "description": "phase6 (default) or phase3.",
+            "description": "phase6 (default), phase3, or v3.",
             "enum": [
               "phase6",
-              "phase3"
+              "phase3",
+              "v3"
             ]
           },
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -620,7 +752,7 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "fund": {
             "type": "string",
@@ -638,6 +770,14 @@
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -659,7 +799,7 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "fund": {
             "type": "string",
@@ -680,6 +820,14 @@
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -701,7 +849,7 @@
         "properties": {
           "from": {
             "type": "string",
-            "description": "The wallet address that will sign (0x...). Never a private key."
+            "description": "The wallet address that will sign (0x...). Never a private key. Omit it when a walletToken is passed — the wallet is resolved from the token instead."
           },
           "name": {
             "type": "string",
@@ -751,6 +899,14 @@
           "ref": {
             "type": "string",
             "description": "Attribution tag for traffic measurement. Default \"grok\"."
+          },
+          "returnUrl": {
+            "type": "string",
+            "description": "Optional https:// link back to your agent flow. The signing page shows it as a button after the transaction confirms, with ?tx=<hash>&status=confirmed added. Anything that is not an https:// URL is ignored."
+          },
+          "walletToken": {
+            "type": "string",
+            "description": "A wallet token from /sign?connect=1: connect once, store the token, and pass it instead of from on every prepare call. The wallet is resolved from the token (signature-checked, 90-day expiry). When both are passed they must name the same wallet."
           }
         },
         "required": [
@@ -819,6 +975,64 @@
       },
       "x-method": "GET",
       "x-path": "stats",
+      "x-kind": "read"
+    },
+    {
+      "name": "polypad_agent_chat",
+      "title": "Business agent chat",
+      "description": "Run a business agent chat completion through Polypad: send a system prompt and messages, get the assistant reply. Only allowlisted business API keys can call it — every call is metered as API usage. The model is fixed (gpt-4o-mini) and the caller never sees the OpenAI key. Prompt and reply content is never logged.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "description": "The system prompt for the business agent, 1 to 12000 characters."
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "assistant"
+                  ]
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role",
+                "content"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Chat messages, oldest first. 1 to 20 messages; each content 1 to 12000 characters."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Sampling temperature. Default 0.7."
+          },
+          "maxTokens": {
+            "type": "integer",
+            "description": "Max reply tokens, 1 to 2000. Default 600.",
+            "minimum": 1,
+            "maximum": 2000
+          }
+        },
+        "required": [
+          "systemPrompt",
+          "messages"
+        ],
+        "additionalProperties": false
+      },
+      "x-method": "POST",
+      "x-path": "agent-chat",
       "x-kind": "read"
     }
   ]

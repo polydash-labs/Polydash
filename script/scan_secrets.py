@@ -110,6 +110,12 @@ def scan_text(rel: str, text: str) -> list[str]:
             # pattern, not a value. Neither belongs in this file.
             if value.startswith("process.env") or value.startswith("/"):
                 continue
+            # A code expression (property access, call, optional chaining,
+            # trailing semicolon) is a runtime value, not a literal secret.
+            # e.g. const API_KEY = keyRes.json?.apiKey; — the key is issued
+            # by the API at runtime and never appears in the file.
+            if any(c in value for c in "?(;="):
+                continue
             # An ALL_CAPS identifier is a variable reference (e.g. a
             # constant imported from another module), not a literal secret.
             # A leaked token is a quoted or mixed-case literal, not a
