@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { CreateFundWizard } from './_components/create-fund-wizard';
 import { CreatePhase3Wizard } from './_components/create-phase3-wizard';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Create a tokenized fund | Polypad',
   description: 'Create a tokenized fund on Robinhood Chain. Pick a strategy, set fees and your own stake, then sign 1 transaction in your wallet. New contract, not audited. Not financial advice.',
-};
+  path: '/funds/create',
+  noindex: true,
+});
 
 export default async function CreateFundPage({ searchParams }: { searchParams: Promise<{ phase?: string | string[] }> }) {
   const query = await searchParams;

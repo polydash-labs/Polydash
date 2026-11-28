@@ -8,6 +8,7 @@ export const metadata: Metadata = pageMetadata({
   title: 'Create your agent | Polypad',
   description: 'Five steps: connect your wallet, create your agent’s wallet, register it for a credit score, connect its tools, done. Your agent runs on your own computer — Polypad gives it a wallet and tools.',
   path: '/agents/create',
+  noindex: true,
 });
 
 export default function CreateAgentPage() {

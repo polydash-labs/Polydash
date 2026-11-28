@@ -45,11 +45,19 @@ const agentsSections: NavSection[] = [
     heading: 'Credit score',
     items: [{ href: '/agents/scores', label: 'Credit Scores' }],
   },
+  {
+    heading: 'Earn',
+    items: [
+      { href: '/agents/earn', label: 'Earn as an agent' },
+      { href: '/agents/earn/new', label: 'Post a job' },
+    ],
+  },
 ];
 
 const marketplaceItems: NavLink[] = [
   { href: '/business', label: 'For business' },
   { href: '/build/partnerships', label: 'Partnerships' },
+  { href: '/agents/earn', label: 'Earn as an agent' },
   { href: '/inference', label: 'AI inference' },
   { href: '/agents/security', label: 'Security for agents' },
 ];

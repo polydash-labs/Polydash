@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { DeployFactory } from './_components/deploy-factory';
 
 export const metadata: Metadata = {
-  title: 'Deploy NFT staking factory | Polypad',
+  title: 'Deploy NFT staking factory',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

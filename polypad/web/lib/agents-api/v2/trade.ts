@@ -156,7 +156,7 @@ export function encodeV4Swap(l: LaunchInfo, zeroForOne: boolean, amountIn: bigin
   return encodeFunctionData({ abi: universalRouterAbi, functionName: 'execute', args: ['0x10', [input], deadline] });
 }
 
-const RISKS = [
+export const RISKS = [
   'Token prices can fall to zero. You can lose everything you put in.',
   'Slippage limits one trade. It does not limit loss.',
   WORDING.notAudited,

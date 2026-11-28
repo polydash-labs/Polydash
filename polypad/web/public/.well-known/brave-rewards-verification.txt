@@ -1,0 +1,4 @@
+This is a Brave Creators publisher verification file.
+
+Domain: polypad.family
+Token: 5a1facdc9577f703b28f680bdc017eb77e1f14efa07f4dfa7e3ddd1c4ff1efe4

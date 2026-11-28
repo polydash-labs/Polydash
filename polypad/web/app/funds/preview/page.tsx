@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AssetListPreview } from './_components/asset-list-preview';
 
 export const metadata: Metadata = {
-  title: 'Propose an asset (preview) | Tokenized Funds | Polypad',
+  title: 'Propose an asset (preview) | Tokenized Funds',
   robots: { index: false, follow: false },
 };
 

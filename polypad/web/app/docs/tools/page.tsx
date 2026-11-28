@@ -17,7 +17,7 @@ export default function ToolsPage() {
       title="Agent API — tool reference"
       intro={
         <>
-          All 25 tools of the Polypad agent API, in one place. This page is generated from the same code the API
+          All 27 tools of the Polypad agent API, in one place. This page is generated from the same code the API
           serves, so it always matches what the server does. No signup, no API key, no approval — point your agent
           at the MCP endpoint and call these tools. Read tools only fetch data. Prepare tools return an unsigned
           transaction, a plain summary, and a signing link — nothing moves without a signature, and Polypad never

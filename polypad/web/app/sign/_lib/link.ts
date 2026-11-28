@@ -2,13 +2,14 @@
  * Parses a /sign link. The link carries intent only (an action and its parameters), never calldata.
  * Every value is validated again by the API; this only rejects links that are clearly malformed.
  */
-export const SIGN_ACTIONS = ['buy', 'sell', 'nft-buy', 'nft-mint', 'nft-create', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
+export const SIGN_ACTIONS = ['buy', 'sell', 'swap', 'nft-buy', 'nft-mint', 'nft-create', 'fund-create', 'fund-mint', 'fund-redeem', 'token-launch'] as const;
 export type SignAction = (typeof SIGN_ACTIONS)[number];
 
 const COMMON = ['v', 'a', 'f', 'ref', 'c', 'h', 'r'];
 const PARAMS: Record<SignAction, string[]> = {
   buy: ['t', 'amt', 'sl'],
   sell: ['t', 'amt', 'pct', 'sl'],
+  swap: ['ti', 'to', 'amt', 'sl', 'ag'],
   'nft-buy': ['l'],
   'nft-mint': ['col', 'q'],
   'nft-create': ['n', 's', 'img', 'd', 'bu', 'ms', 'mp', 'rb', 'mw', 'cw', 'fb'],
@@ -162,6 +163,23 @@ export function parseSignLink(sp: URLSearchParams): ParsedLink {
       if (sl === null) return bad('sl');
       body.token = t;
       if (sl !== undefined) body.slippageBps = sl;
+      break;
+    }
+    case 'swap': {
+      // path stays 'swap' -> POST /api/agents/v2/prepare/swap. The venue is
+      // pinned in the link (ag) so the page rebuilds this same route.
+      const ti = addr('ti');
+      if (!ti) return bad('ti');
+      const to = addr('to');
+      if (!to) return bad('to');
+      if (ti.toLowerCase() === to.toLowerCase()) return bad('ti and to are the same token');
+      const amt = get('amt');
+      if (!amt || !UINT.test(amt) || BigInt(amt) === 0n) return bad('amt');
+      const sl = slip();
+      if (sl === null) return bad('sl');
+      const ag = get('ag');
+      if (ag !== undefined && ag !== 'velora' && ag !== 'kyberswap' && ag !== 'bitget' && ag !== 'uniswap') return bad('ag');
+      Object.assign(body, { tokenIn: ti, tokenOut: to, amountIn: amt }, sl !== undefined ? { slippageBps: sl } : {}, ag !== undefined ? { aggregator: ag } : {});
       break;
     }
     case 'nft-buy': {

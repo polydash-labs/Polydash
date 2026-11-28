@@ -5,7 +5,7 @@ import { Footer } from '@/components/footer';
 import { SignFlow } from './_components/sign-flow';
 
 export const metadata: Metadata = {
-  title: 'Sign with your wallet | Polypad',
+  title: 'Sign with your wallet',
   description: 'Review an action prepared by a chat agent and sign it in your own wallet on Robinhood Chain.',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };

@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { DeployBond } from './_components/deploy-bond';
 
 export const metadata: Metadata = {
-  title: 'Deploy bond factory | Polypad',
+  title: 'Deploy bond factory',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

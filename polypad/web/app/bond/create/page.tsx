@@ -7,6 +7,7 @@ export const metadata = pageMetadata({
   title: 'Post a creator bond | Polypad',
   description: 'Post an ETH bond against a token balance floor for registered wallets. New contract. Security-scanned with Bevor. Not a formal audit. Not financial advice.',
   path: '/bond/create',
+  noindex: true,
 });
 
 export default async function CreateBondPage({ searchParams }: { searchParams: Promise<{ token?: string | string[] }> }) {

@@ -7,6 +7,7 @@ export const metadata = pageMetadata({
   title: 'Portfolio | Polypad',
   description: 'Your Polypad token balances, commitments and created tokens on Robinhood Chain. Connect a wallet to view.',
   path: '/portfolio',
+  noindex: true,
 });
 
 export default function PortfolioPage() {

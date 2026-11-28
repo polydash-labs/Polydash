@@ -575,6 +575,62 @@ model DemoRequest {
 /// type: Integration | Staking | NFT launch | Growth fund | Strategic | Other.
 /// emailSent: true once the notification email to jon@dasheco.xyz went out;
 /// false (emailPending) when ZOHO_SMTP_PASSWORD was not set at submit time.
+/// Agent-earn pilot jobs (Nov 27, 2026). One row per market-research job.
+/// The escrow contract is the source of truth for money (lock state,
+/// amounts, fee snapshot, settlement); this row is the board's paper trail:
+/// the brief, the screening decision, the deliverable, the dispute and the
+/// panel ballots. A job is only visible on the public board once screened-in
+/// AND locked on-chain. status is the board flow state; the on-chain lock
+/// state is read live from AgentEarnEscrow.getLock(jobId) and wins on any
+/// disagreement. timeline is the append-only transition log the receipt
+/// renders (each entry: {type, at, txHash?, note?}).
+model AgentEarnJob {
+  /// jobId = keccak256(poster, nonce) — unpredictable by construction.
+  id                  String   @id
+  poster              String
+  posterNonce         String
+  title               String
+  topic               String
+  researchQuestions   String
+  format              String
+  sourceConstraints   String
+  acceptanceCriteria  String
+  /// Job price in USDG smallest units (6 decimals). $10 = 10_000_000.
+  priceUsdg           BigInt
+  deadline            DateTime
+  status              String   @default("pending_screening")
+  screeningReason     String?
+  screenedAt          DateTime?
+  lockTxHash          String?
+  claimTxHash         String?
+  claimedByAgentId    Int?
+  claimedByWallet     String?
+  deliverTxHash       String?
+  deliverableHash     String?
+  deliverableText     String?
+  deliveredAt         DateTime?
+  disputeReasons      String?
+  disputedAt          DateTime?
+  panelSeed           String?
+  panelPool           Json?
+  panelDrawn          Json?
+  panelDrawnAt        DateTime?
+  ballots             Json?
+  panelOutcome        String?
+  panelSplitBps       Int?
+  panelTxHash         String?
+  releaseTxHash       String?
+  refundTxHash        String?
+  settledAt           DateTime?
+  timeline            Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([poster])
+  @@index([claimedByWallet])
+}
+
 model PartnerInquiry {
   id        String   @id @default(cuid())
   name      String

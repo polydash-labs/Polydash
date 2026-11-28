@@ -8,6 +8,7 @@ export const metadata: Metadata = pageMetadata({
   title: 'Create an agent wallet | Polypad',
   description: 'Three steps, about two minutes: name it, add money, set limits, plug your agent in. Your agent gets its own Safe wallet on Robinhood Chain.',
   path: '/agents/wallets/new',
+  noindex: true,
 });
 
 export default function NewAgentWalletPage() {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Bot, ChevronDown, Lock, Wallet, Zap } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, ArrowUpRight, Bot, ChevronDown, Lock, Wallet, Zap } from 'lucide-react';
 import { AGENTS } from '@/lib/agents/prompts';
 import type { AgentId } from '@/lib/agents/tools';
 import { Button } from '@/components/ui/button';
@@ -65,7 +65,7 @@ export function AgentsContent({ initialAgent, initialToken, initialStake }: { in
           </div>
           <StatTiles
             items={[
-              { value: '25', label: 'MCP tools', note: 'Trade, launch, funds, staking, NFTs' },
+              { value: '27', label: 'MCP tools', note: 'Trade, launch, funds, staking, NFTs' },
               { value: '5', label: 'Agent skills', note: 'Guided workflows over MCP' },
               { value: '300–850', label: 'Agent credit score', note: 'From on-chain behavior only' },
               { value: 'Safe', label: 'Agent wallets', note: 'Per-payment and daily caps, with expiry' },
@@ -97,9 +97,15 @@ export function AgentsContent({ initialAgent, initialToken, initialStake }: { in
             },
             {
               title: 'It acts on-chain inside its limits',
-              body: 'Trade, launch, and run tokenized funds through 25 MCP tools — no signup, no API key.',
-              pills: ['25 MCP tools', '5 skills'],
+              body: 'Trade, launch, and run tokenized funds through 27 MCP tools — no signup, no API key.',
+              pills: ['27 MCP tools', '5 skills'],
               icon: <Zap className="mx-auto h-6 w-6 text-emerald-400" />,
+            },
+            {
+              title: 'It swaps at the best price',
+              body: 'Before any swap, your agent compares routes across Velora, KyberSwap and Uniswap on Robinhood Chain — Bitget Wallet joins once its API key lands — and executes the best one, inside the wallet’s limits.',
+              pills: ['Best route wins', 'Inside wallet limits'],
+              icon: <ArrowLeftRight className="mx-auto h-6 w-6 text-emerald-400" />,
             },
             {
               title: 'Freeze or revoke anytime',
@@ -130,7 +136,7 @@ export function AgentsContent({ initialAgent, initialToken, initialStake }: { in
             </span>
           </Link>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Link href="/agents/scores" className={cn(EMERALD_CARD, 'group p-4 transition-colors hover:border-emerald-500/40 sm:p-5')}>
               <h2 className="text-[15px] font-semibold">Give your agent a score</h2>
               <p className="mt-1 text-[13px] text-white/60">A 300–850 credit score from on-chain behavior only — so others can check it before trusting it with money.</p>
@@ -143,6 +149,13 @@ export function AgentsContent({ initialAgent, initialToken, initialStake }: { in
               <p className="mt-1 text-[13px] text-white/60">An identity, money in a vault it can spend, and limits you control — per payment, per day, until an expiry date.</p>
               <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-emerald-300">
                 Agent Accounts <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={1.75} />
+              </span>
+            </Link>
+            <Link href="/docs/tools" className={cn(EMERALD_CARD, 'group p-4 transition-colors hover:border-emerald-500/40 sm:p-5')}>
+              <h2 className="text-[15px] font-semibold">Swap at the best price</h2>
+              <p className="mt-1 text-[13px] text-white/60">Your agent compares swap routes across Velora, KyberSwap and Uniswap on Robinhood Chain, then executes the best one — inside the wallet’s limits. Bitget Wallet joins once its API key lands.</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-emerald-300">
+                Swap tools <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={1.75} />
               </span>
             </Link>
             <Link href="/build" className={cn(EMERALD_CARD, 'group p-4 transition-colors hover:border-emerald-500/40 sm:p-5')}>

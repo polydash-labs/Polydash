@@ -107,7 +107,7 @@ const tiers = [
       'The customized suite for a business that is scaling — every tool your agents need to do real work.',
     includes: [
       'Agent wallets with daily spending caps you set',
-      '25 MCP tools in one API — launch, trade, stake, funds',
+      '27 MCP tools in one API — launch, trade, stake, funds',
       'Agent payments — pay per call, pennies at a time',
       'x402 AI inference — reports from $0.01',
       'Agent security — firewall, caps, verifiable receipts',
@@ -163,8 +163,8 @@ const packages = [
     icon: Wallet,
   },
   {
-    t: '25 MCP tools',
-    d: 'One API with 25 tools — launch tokens, trade, stake, join funds, and pay. Connect your agent in one command.',
+    t: '27 MCP tools',
+    d: 'One API with 27 tools — launch tokens, trade, stake, join funds, and pay. Connect your agent in one command.',
     icon: Plug,
   },
   {
@@ -203,7 +203,7 @@ const packages = [
  * competitor prices or numbers. */
 const compareRows: { label: string; us: string; them: string }[] = [
   { label: 'Agent wallets with spending caps', us: 'Included', them: 'Partial' },
-  { label: 'MCP tools in one API', us: '25 tools', them: 'Fewer tools, separate APIs' },
+  { label: 'MCP tools in one API', us: '27 tools', them: 'Fewer tools, separate APIs' },
   { label: 'Tokenized funds under a locked mandate', us: 'Included', them: 'Not offered' },
   { label: 'x402 pay-per-call pricing', us: 'From $0.01 per call', them: 'Monthly plans' },
   { label: 'Agent security with verifiable receipts', us: 'Included', them: 'Add-on' },
@@ -408,7 +408,7 @@ export function BusinessContent({ receiptCount }: { receiptCount: number }) {
             {
               title: 'Agent infrastructure does the work',
               body: 'Your agent connects once and gets everything — wallets, tools, payments, security.',
-              pills: ['REST API', 'SDK', 'MCP · 25 tools'],
+              pills: ['REST API', 'SDK', 'MCP · 27 tools'],
               icon: <Layers className="mx-auto h-6 w-6 text-emerald-400" />,
               emerald: true,
             },

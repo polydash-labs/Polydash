@@ -2,7 +2,7 @@
  * Optional API keys for the v2 agent API (MCP + REST): the Pro tier.
  *
  * A key buys higher per-minute limits (10x the free limits — "Pro free while growing",
- * decided by Jon Nov 18, 2026) and nothing else: same 25 tools, same 25 ETH per-action
+ * decided by Jon Nov 18, 2026) and nothing else: same 27 tools, same 25 ETH per-action
  * cap, same 1 ETH confirmLarge rule. Keys are optional — a call with no key works exactly
  * as before, at the free limits. A call with a bad key gets a 401.
  *

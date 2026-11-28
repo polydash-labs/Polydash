@@ -7,7 +7,8 @@ import { TelegramWebApp } from '@/components/telegram-webapp'
 import { Web3Providers } from '@/components/providers'
 import { SiteAssistant } from '@/components/site-assistant/site-assistant'
 import type { Metadata, Viewport } from 'next'
-import { SITE_SHARE, SITE_URL } from '@/lib/seo'
+import { SITE_SHARE, SITE_URL, ORGANIZATION_JSON_LD, WEBSITE_JSON_LD } from '@/lib/seo'
+import { siteVerification } from '@/lib/seo/verification'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -22,8 +23,13 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
-  title: 'Polypad',
+  title: {
+    default: 'Polypad — The Premiere Agentic Marketplace',
+    template: '%s | Polypad',
+  },
   description: 'The premiere agentic marketplace. Create your agent, give it a secure wallet, then launch, invest, stake, and pay per call — all on Robinhood Chain.',
+  robots: { index: true, follow: true },
+  verification: siteVerification(),
   icons: {
     icon: [
       { url: '/favicon.ico?v=2', sizes: '16x16 32x32 48x48' },
@@ -48,6 +54,8 @@ export default function RootLayout({
       <head>
         <script src="https://apps.abacus.ai/chatllm/appllm-lib.js" />
         <script src="https://telegram.org/js/telegram-web-app.js" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSON_LD) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSON_LD) }} />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <TelegramWebApp />

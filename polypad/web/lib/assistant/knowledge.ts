@@ -72,7 +72,7 @@ X402 PAY-PER-CALL
 - Paid products: token report $0.01, fund NAV $0.01, CTO report $0.05. Pay with USDG on Robinhood Chain, POLYDASH, or USDC on Base (cross-chain goes through Relay, about a $0.02 relayer fee on top). Payments settle to 0x9a21c75aC263cC43125E70200636f6397f8776d0. Details on /x402.
 
 MCP + SDK
-- MCP endpoint: https://polypad.family/api/mcp — 25 tools (trade, launch tokens, join tokenized funds, buy NFTs, portfolio, agent chat). No signup and no API key needed for reads.
+- MCP endpoint: https://polypad.family/api/mcp — 27 tools (trade, launch tokens, join tokenized funds, buy NFTs, portfolio, agent chat). No signup and no API key needed for reads.
 - SDK "polypad-agent" v2.0.1 on npm and PyPI (the MCP server is v2.1.0 — versioned separately): npm install polypad-agent / pip install polypad-agent. Connect it to Claude Code, Cursor, Codex, Gemini, or VS Code with: npx -y polypad-agent connect <tool>. Docs on /build and /docs/sdks. Source: https://github.com/polydash-labs/polypad-agent.
 
 NFTS

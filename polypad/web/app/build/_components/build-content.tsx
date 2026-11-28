@@ -708,7 +708,7 @@ function McpPlayground() {
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button variant={choice === 'list' ? 'default' : 'outline'} size="sm" onClick={() => { setChoice('list'); void run('list'); }}>
-          List the 25 tools
+          List the 27 tools
         </Button>
         <Button variant={choice === 'stats' ? 'default' : 'outline'} size="sm" onClick={() => { setChoice('stats'); void run('stats'); }}>
           Get live stats
@@ -787,7 +787,7 @@ export function BuildContent() {
           <McpStatusDot />
           <StatTiles
             items={[
-              { value: '25', label: 'MCP tools', note: 'Trade, launch, funds, NFTs, read & pay' },
+              { value: '27', label: 'MCP tools', note: 'Trade, launch, funds, NFTs, read & pay' },
               { value: '5', label: 'Agent skills', note: 'Installable skills for Claude Code' },
               { value: '~2 min', label: 'To connect', note: 'One command, no signup' },
               { value: '4663', label: 'Robinhood Chain', note: 'Fast, low-cost settlement' },
@@ -919,10 +919,10 @@ export function BuildContent() {
           </div>
           <pre className="mt-2 overflow-x-auto rounded-xl bg-black/40 p-3 font-mono text-[12px] leading-relaxed text-white/80">{MCP_CONFIG}</pre>
           <p className="mt-2 text-[12px] text-white/50">
-            Endpoint: <span className="font-mono text-emerald-400">https://polypad.family/api/mcp</span> · 25 tools · your agent signs in its own wallet
+            Endpoint: <span className="font-mono text-emerald-400">https://polypad.family/api/mcp</span> · 27 tools · your agent signs in its own wallet
           </p>
           <p className="mt-2 text-[12px] leading-relaxed text-white/60">
-            What success looks like: your client lists 25 tools starting with <span className="font-mono">polypad_</span> — ask it “What tokens launched today?” and it answers from live data.
+            What success looks like: your client lists 27 tools starting with <span className="font-mono">polypad_</span> — ask it “What tokens launched today?” and it answers from live data.
           </p>
           <p className="mt-2 text-[12px] text-white/50">
             Works in: Grok (live) · Muse connector (live) · Server v2.0.0
@@ -949,7 +949,7 @@ export function BuildContent() {
           <p className="mt-3 text-[13px] font-medium text-white">Claude Code — install the plugin</p>
           <p className="mt-1 text-[13px] leading-relaxed text-white/60">
             In a Claude Code session, add the marketplace once, then install the plugin. It connects the
-            Polypad server and adds a skill that explains the 25 tools.
+            Polypad server and adds a skill that explains the 27 tools.
           </p>
           <div className="mt-2 space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -965,7 +965,7 @@ export function BuildContent() {
             Plugin live — add the marketplace once, then install.
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-white/60">
-            What success looks like: <span className="font-mono">/plugin</span> lists polypad, and your agent can call the 25 tools.
+            What success looks like: <span className="font-mono">/plugin</span> lists polypad, and your agent can call the 27 tools.
           </p>
           <p className="mt-3 text-[13px] font-medium text-white">Prefer the terminal?</p>
           <div className="mt-2 space-y-2">
@@ -1006,7 +1006,7 @@ export function BuildContent() {
           </div>
         </div>
         <details className="mt-5 rounded-xl border border-white/10 bg-black/40 p-4">
-          <summary className="cursor-pointer text-[13px] font-medium text-white">See all 25 tools — what each one does</summary>
+          <summary className="cursor-pointer text-[13px] font-medium text-white">See all 27 tools — what each one does</summary>
           <div className="mt-3 space-y-4">
           {MCP_TOOLS.map((g) => (
             <div key={g.group}>

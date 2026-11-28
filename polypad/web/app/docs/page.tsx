@@ -138,7 +138,7 @@ export default function DocsPage() {
             </div>
             <StatTiles
               items={[
-                { value: '25', label: 'MCP tools', note: 'Generated from the code itself' },
+                { value: '27', label: 'MCP tools', note: 'Generated from the code itself' },
                 { value: '5', label: 'Agent skills', note: 'SDKs: TypeScript + Python' },
                 { value: '4663', label: 'Robinhood Chain', note: 'Every response includes the chain id' },
                 { value: '0', label: 'Signup needed', note: 'No key, no approval to start' },

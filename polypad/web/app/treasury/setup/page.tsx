@@ -6,7 +6,7 @@ import { treasuryLive } from '@/lib/treasury';
 import { TreasurySetup } from './_components/treasury-setup';
 
 export const metadata: Metadata = {
-  title: 'Set up treasury rules | Polypad',
+  title: 'Set up treasury rules',
   robots: { index: false, follow: true },
 };
 

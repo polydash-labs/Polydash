@@ -8,6 +8,7 @@ export const metadata: Metadata = pageMetadata({
   title: 'Launch with your agent | Polypad',
   description: 'Non-custodial agent API for Polypad on Robinhood Chain. Build an unsigned createLaunch transaction, sign it with your own wallet, then register it.',
   path: '/agents/launch',
+  noindex: true,
 });
 
 export default function AgentLaunchPage() {

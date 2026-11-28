@@ -525,7 +525,7 @@ function ConnectStep() {
           <Button variant="outline" size="sm" onClick={copy}>{copied ? 'Copied' : 'Copy'}</Button>
         </div>
         <pre className="mt-2 overflow-x-auto rounded-xl bg-black/40 p-3 font-mono text-[12px] leading-relaxed text-white/80">{MCP_CONFIG}</pre>
-        <p className="mt-2 text-[12px] text-white/50">Endpoint: <span className="font-mono text-polydash-green">https://polypad.family/api/mcp</span> · 25 tools · your agent signs in its own wallet</p>
+        <p className="mt-2 text-[12px] text-white/50">Endpoint: <span className="font-mono text-polydash-green">https://polypad.family/api/mcp</span> · 27 tools · your agent signs in its own wallet</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild variant="outline"><Link href="/pricing">Pricing</Link></Button>
@@ -626,7 +626,7 @@ export function ApiKeysStep() {
       <h2 className="text-[15px] font-semibold">Pro keys — higher limits, $0 while growing</h2>
       <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/60">
         A Pro key raises your API limits to 10x the free tier — reads 1,200/min, prepares 300/min,
-        prepares per wallet 120/min, intent 400/min. Same 25 tools, same 25 ETH cap per action. Free
+        prepares per wallet 120/min, intent 400/min. Same 27 tools, same 25 ETH cap per action. Free
         and $0 while growing; see <Link href="/pricing" className="text-polydash-green hover:underline">Pricing</Link>.
         An API key only identifies your calls — it never moves money. Spending from your vault is
         governed by the spending keys in step 3, which are separate.

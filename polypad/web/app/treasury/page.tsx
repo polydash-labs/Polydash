@@ -5,7 +5,7 @@ import { Footer } from '@/components/footer';
 import { TreasuryNote, TreasuryNotLive } from '@/components/treasury/notes';
 import { treasuryLive } from '@/lib/treasury';
 
-export const metadata: Metadata = { title: 'Treasury rules | Polypad', robots: { index: false, follow: true } };
+export const metadata: Metadata = { title: 'Treasury rules', robots: { index: false, follow: true } };
 
 export default function TreasuryPage() {
   return (

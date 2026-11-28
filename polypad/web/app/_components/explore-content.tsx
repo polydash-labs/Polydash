@@ -339,7 +339,7 @@ export function ExploreContent({ initial, intro }: { initial?: LaunchToken[] | n
         </section>
 
         {/* API & SDK — on the homepage so builders don't have to hunt for it.
-            Facts from the codebase: MCP endpoint + 25 tools, polypad-agent SDK
+            Facts from the codebase: MCP endpoint + 27 tools, polypad-agent SDK
             v2.0.1, npm + pip install. Links to /build and /docs/sdks. */}
         <div className="relative mx-auto max-w-container px-5 pb-10 sm:px-8 sm:pb-16">
           <div className={EMERALD_CARD_STRONG}>
@@ -360,7 +360,7 @@ export function ExploreContent({ initial, intro }: { initial?: LaunchToken[] | n
                 </div>
               </div>
               <div className="w-full shrink-0 lg:max-w-md">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-white/40">MCP endpoint · 25 tools</p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-white/40">MCP endpoint · 27 tools</p>
                 <p className="mt-1.5 break-all rounded-lg border border-white/10 bg-black/40 px-3 py-2 font-mono text-[12px] text-emerald-400 sm:text-[13px]">https://polypad.family/api/mcp</p>
                 <p className="mt-3 text-[11px] font-medium uppercase tracking-wide text-white/40">SDK · polypad-agent v2.0.1</p>
                 <div className="mt-1.5 space-y-1.5">

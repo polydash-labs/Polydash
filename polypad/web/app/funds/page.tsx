@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 import { FundsList } from './_components/funds-list';
 import { getInitialFundsWire, getInitialTvl } from '@/lib/first-paint';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Tokenized Funds | Polypad',
   description: 'Start your own on-chain fund on Polypad: raise from anyone, invest in public under a locked mandate, and prove it live on the terminal.',
-};
+  path: '/funds',
+});
 
 /**
  * First paint carries real figures: the server component reads the live

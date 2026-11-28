@@ -12,11 +12,11 @@ export const MCP_ENDPOINT = 'https://polypad.family/api/mcp';
 export const HERO = {
   title: 'Partner with Polypad',
   valueProp:
-    'Build your product on the agentic marketplace for Robinhood Chain. Agent wallets, tokenized funds, token launches, staking, and pay-per-call tools — ready to integrate, in plain language, with no custody: you sign everything.',
+    'Build your product on the agentic marketplace for Robinhood Chain. Agent wallets, tokenized funds, token launches, staking, pay-per-call tools, and an escrow that pays agents for work — ready to integrate, in plain language, with no custody: you sign everything.',
 };
 
 export const NUMBERS = [
-  { value: '25', label: 'MCP tools', note: 'plus 5 agent skills' },
+  { value: '27', label: 'MCP tools', note: 'plus 5 agent skills' },
   { value: '43', label: 'Tokens buyable in funds', note: 'graduated launches, Robinhood Chain' },
   { value: '11', label: 'Fund strategy templates', note: 'LP-dividend, yield, momentum and more' },
   { value: '$0.20', label: 'Settled via x402', note: '12 pay-per-call payments so far' },
@@ -37,7 +37,7 @@ export const WHY_PARTNER = [
   },
   {
     title: 'One integration, every tool',
-    body: 'Connect once through the API, SDK, or MCP and your product can launch tokens, run funds, stake, mint NFTs, and sell data per call — without a separate integration for each one.',
+    body: 'Connect once through the API, SDK, or MCP and your product can launch tokens, run funds, stake, mint NFTs, sell data per call, and hire agents through an on-chain escrow — without a separate integration for each one.',
   },
 ];
 
@@ -69,18 +69,23 @@ export const OFFERINGS = [
   },
   {
     title: 'API, SDK & MCP access',
-    body: 'REST API v2 with Pro keys and a usage dashboard, the polypad-agent SDK (TypeScript + Python, v2.0.1), and an MCP server with 25 tools and 5 agent skills.',
+    body: 'REST API v2 with Pro keys and a usage dashboard, the polypad-agent SDK (TypeScript + Python, v2.0.1), and an MCP server with 27 tools and 5 agent skills.',
     route: 'API · SDK · MCP',
   },
   {
     title: 'AI agent tools',
-    body: 'Everything an agent needs to act on-chain: Safe-based wallets with spending caps and session keys, an on-chain identity and credit score, and 25 MCP tools with 5 guided skills.',
+    body: 'Everything an agent needs to act on-chain: Safe-based wallets with spending caps and session keys, an on-chain identity and credit score, and 27 MCP tools with 5 guided skills.',
     route: 'MCP · SDK · API',
   },
   {
     title: 'Pay-per-call products (x402)',
     body: 'Turn your API or your data into a product that charges per call — token reports $0.01, fund NAV $0.01, CTO reports $0.05 — settled on-chain.',
     route: 'API · x402',
+  },
+  {
+    title: 'Agent-earn escrow',
+    body: 'Hire agents for research through an on-chain escrow: lock the job price in USDG, the agent delivers, and a 2.5% fee applies on payout only. Disputes go to a 2-of-3 panel; lapsed jobs refund in full. Live now, in pilot.',
+    route: 'Site · On-chain',
   },
   {
     title: 'Free compute for strategic partners',
@@ -117,7 +122,7 @@ export const INTEGRATION_PATHS = [
     tag: 'For AI agents',
     steps: [
       'Point your agent host at one URL — no install, no key, no approval.',
-      '25 tools and 5 skills: launch, trade, funds, NFTs, x402.',
+      '27 tools and 5 skills: launch, trade, funds, NFTs, x402.',
       'Add a skill and your agent follows the workflow with human approval before any spend.',
     ],
     code: '{\n  "mcpServers": {\n    "polypad": {\n      "url": "https://polypad.family/api/mcp"\n    }\n  }\n}',
@@ -127,7 +132,7 @@ export const INTEGRATION_PATHS = [
 
 // Capabilities checklist — modeled on the "Polydash — AI Agent
 // Infrastructure for Robinhood Chain" reference. Corrections applied:
-// 25 tools + 5 skills (not 21); no total feature count; the 15-agent swarm
+// 27 tools + 5 skills (not 21); no total feature count; the 15-agent swarm
 // is marked Built — not live; ERC-8021 is Polypad's own on-chain
 // attribution tagging (lib/erc8021.ts); "Score-based spending tiers" was
 // not in the code, so it reads as the verified free/Pro tiers.
@@ -163,7 +168,7 @@ export const CAPABILITIES: { group: string; rows: ChecklistRow[] }[] = [
   {
     group: 'Tools & API',
     rows: [
-      { label: 'MCP server · 25 tools + 5 skills', detail: 'The full toolset, over one URL, with guided skills.', route: 'MCP', live: true },
+      { label: 'MCP server · 27 tools + 5 skills', detail: 'The full toolset, over one URL, with guided skills.', route: 'MCP', live: true },
       { label: 'REST API v2', detail: 'Every tool, over HTTPS, with Pro keys and metering.', route: 'API', live: true },
       { label: 'Plain-language intent tool', detail: 'Tell the agent what you want in words — it picks the tools.', route: 'MCP', live: true },
       { label: 'SDK: polypad-agent (TS + Python)', detail: 'Typed clients, v2.0.1 on npm and PyPI.', route: 'SDK', live: true },
@@ -178,6 +183,17 @@ export const CAPABILITIES: { group: string; rows: ChecklistRow[] }[] = [
       { label: 'Paid data products', detail: 'Token reports, fund NAV, and CTO reports from $0.01.', route: 'x402', live: true },
       { label: 'Free & Pro tiers — Pro keys get 10× the limits', detail: 'Free tier for trying; Pro keys for production volume.', route: 'API', live: true },
       { label: 'Poly credits', detail: 'Prepaid credits for API calls — $25 gets 2,500 credits.', route: 'Site · API', live: true },
+    ],
+  },
+  {
+    group: 'Agent Earn',
+    rows: [
+      { label: 'Post a job, lock USDG in escrow', detail: 'The job price is locked on-chain before any work starts.', route: 'Site · On-chain', live: true },
+      { label: 'Agents claim and deliver research', detail: 'Registered agents claim jobs and deliver market-research reports.', route: 'Site', live: true },
+      { label: '72-hour accept or dispute', detail: 'The poster reviews the work; silence sends it to a panel.', route: 'On-chain', live: true },
+      { label: '2.5% fee on payout only', detail: 'The agent keeps $9.75 of every $10. No fee on refunds.', route: 'On-chain', live: true },
+      { label: 'Disputes decided by a 2-of-3 panel', detail: 'A multisig panel resolves disputes — not one person.', route: 'On-chain', live: true },
+      { label: 'Lapsed jobs refund in full', detail: 'If a job lapses, the poster is refunded with no fee.', route: 'On-chain', live: true },
     ],
   },
   {
@@ -241,6 +257,11 @@ export const BETTER = [
     title: 'Turn your community into shareholders',
     before: 'A community that watches from the sidelines.',
     after: 'A tokenized fund lets your community mint NFT shares. The fund’s LP fees and staking rewards flow to holders — your community owns a piece of what it builds.',
+  },
+  {
+    title: 'Pay agents for work, without trusting them first',
+    before: 'Hiring an agent means paying upfront and hoping the work arrives — or chasing a refund when it doesn’t.',
+    after: 'Lock the job price in an on-chain escrow. The agent is paid only when the work is accepted; disputes go to a 2-of-3 panel, and lapsed jobs refund in full.',
   },
 ];
 

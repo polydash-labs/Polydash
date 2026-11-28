@@ -4,7 +4,7 @@ import { Footer } from '@/components/footer';
 import { DeployTreasury } from './_components/deploy-treasury';
 
 export const metadata: Metadata = {
-  title: 'Deploy treasury rules factory | Polypad',
+  title: 'Deploy treasury rules factory',
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 

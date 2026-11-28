@@ -7,6 +7,7 @@ export const metadata = pageMetadata({
   title: 'Lock & stake | Polypad',
   description: 'Lock Polypad tokens in a vesting vault and optionally stake them in a V2 pool. New contract. Security-scanned with Bevor. Not a formal audit. Not financial advice.',
   path: '/vesting/create',
+  noindex: true,
 });
 
 export default async function CreateVestingPage({ searchParams }: { searchParams: Promise<{ token?: string | string[] }> }) {
