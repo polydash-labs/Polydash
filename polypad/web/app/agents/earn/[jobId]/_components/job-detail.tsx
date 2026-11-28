@@ -2,7 +2,8 @@
 
 // Job detail actions — every board write, in one place.
 //   lock     poster approves USDG, then locks the full price (screened-in only)
-//   claim    registered agent with a session-key wallet, first claim wins
+//            and names the assigned agent (v2 — only that wallet can claim)
+//   claim    assigned agent only (v2), from its session-key wallet
 //   deliver  claiming agent submits the report; the board hashes it and
 //            calls deliver(jobId, hash) — submission is NOT complete until
 //            the Delivered event lands (brief §2.2)
@@ -65,6 +66,8 @@ export function JobDetail({ job, lock, status }: { job: JobJson; lock: LockJson 
   const price = BigInt(job.priceUsdg);
   const isPoster = !!address && address.toLowerCase() === job.poster.toLowerCase();
   const isAgent = !!lock && lock.agent !== ZERO && !!address && address.toLowerCase() === lock.agent.toLowerCase();
+  const isAssignee =
+    !!job.assignedAgentWallet && !!address && address.toLowerCase() === job.assignedAgentWallet.toLowerCase();
 
   // USDG allowance for the lock flow.
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -98,6 +101,12 @@ export function JobDetail({ job, lock, status }: { job: JobJson; lock: LockJson 
   const doLock = async () => {
     setError(null);
     setNotice(null);
+    // v2: the lock names the assigned agent — without one the job can never
+    // be claimed. Jobs created before v2 have no assignee; they cannot lock.
+    if (!job.assignedAgentWallet) {
+      setError('This job has no assigned agent — it was created before the v2 escrow. Ask Atlas to re-create it with an assigned agent.');
+      return;
+    }
     if (allowanceBig < price) {
       const hash = await call({
         key: 'approve', address: AGENT_EARN_TOKEN, abi: Erc20ApproveABI, functionName: 'approve',
@@ -112,9 +121,9 @@ export function JobDetail({ job, lock, status }: { job: JobJson; lock: LockJson 
     }
     const hash = await call({
       key: 'lock', address: AGENT_EARN_ESCROW_ADDRESS, abi: AgentEarnEscrowABI, functionName: 'lock',
-      args: [job.id as Hex, price],
+      args: [job.id as Hex, price, job.assignedAgentWallet as Hex],
       confirmLabel: 'Lock the full job price in escrow…',
-      success: 'Locked — the job is now open for agents to claim.',
+      success: 'Locked — the job is now open for the assigned agent to claim.',
     });
     if (!hash) return;
     const r = await recordEvent(job.id, { event: 'locked', txHash: hash });
@@ -227,6 +236,12 @@ export function JobDetail({ job, lock, status }: { job: JobJson; lock: LockJson 
         <div className="mt-4 grid gap-2 text-[13px] sm:grid-cols-2">
           <p className="text-white/60">Poster <AddrLink address={job.poster} /></p>
           <p className="text-white/60">Deadline {new Date(job.deadline).toLocaleString()}</p>
+          {job.assignedAgentWallet ? (
+            <p className="text-white/60">
+              Assigned agent <AddrLink address={job.assignedAgentWallet} />
+              {job.assignedAgentId ? ` (Agent #${job.assignedAgentId})` : ''}
+            </p>
+          ) : null}
           {lock && lock.agent !== ZERO ? <p className="text-white/60">Claiming agent <AddrLink address={lock.agent} /></p> : null}
           {job.claimedByAgentId ? <p className="text-white/60">Agent #{job.claimedByAgentId}</p> : null}
         </div>
@@ -289,8 +304,9 @@ export function JobDetail({ job, lock, status }: { job: JobJson; lock: LockJson 
         <div className={EMERALD_CARD}>
           <p className="text-[15px] font-semibold">Claim this job</p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-white/60">
-            First valid claim wins — one uncompleted claim per agent. Claim from the agent&apos;s
-            wallet with spending limits. The claiming wallet is the only address that can ever receive the payout.
+            This job is assigned to one agent — only that agent&apos;s wallet can claim it.
+            Claim from the agent&apos;s wallet with spending limits. The claiming wallet is
+            the only address that can ever receive the payout.
           </p>
           {!address ? (
             <p className="mt-3 text-[13px] text-amber-200">Connect the agent&apos;s wallet (top right) to claim.</p>
@@ -299,6 +315,11 @@ export function JobDetail({ job, lock, status }: { job: JobJson; lock: LockJson 
           ) : !eligibility.eligible ? (
             <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-200">
               {eligibility.reason}
+            </p>
+          ) : !isAssignee ? (
+            <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-[13px] leading-relaxed text-white/70">
+              This job is assigned to {job.assignedAgentId ? `Agent #${job.assignedAgentId}` : 'another agent'} — only that
+              agent&apos;s wallet can claim it.
             </p>
           ) : (
             <>

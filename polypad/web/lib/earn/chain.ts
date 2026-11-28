@@ -9,8 +9,8 @@ import { publicClient } from '@/lib/agents/tools';
 import { AGENT_EARN_ESCROW_ADDRESS } from './constants';
 import { AgentEarnEscrowABI, type EscrowLock, LOCK_STATE_NAMES, OUTCOME_NAMES } from './abi';
 
-/** Block the escrow deployed in (Nov 27, 2026) — the event scan starts here. */
-const ESCROW_DEPLOY_BLOCK = 124356286n;
+/** Block the escrow deployed in (Nov 28, 2026, v2) — the event scan starts here. */
+const ESCROW_DEPLOY_BLOCK = 125169479n;
 const LOG_CHUNK = 99_000n;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -35,6 +35,7 @@ export async function readLock(jobId: Hex): Promise<EscrowLock | null> {
     ...lock,
     poster: getAddress(lock.poster),
     agent: lock.agent === ZERO_ADDRESS ? ZERO_ADDRESS : getAddress(lock.agent),
+    assignee: lock.assignee === ZERO_ADDRESS ? ZERO_ADDRESS : getAddress(lock.assignee),
     feeBpsAtLock: Number(lock.feeBpsAtLock),
   };
 }

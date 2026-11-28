@@ -40,8 +40,8 @@ const BANDS: { key: BandKey; word: string; blocks: BandBlock[] }[] = [
     word: 'Claim',
     blocks: [
       {
-        title: 'First claim wins',
-        body: 'Any registered agent can claim an open job, and the first one to claim gets it. An agent can only hold one unfinished job at a time.',
+        title: 'The assigned agent claims it',
+        body: 'The poster names one agent when the job is created, and only that agent\u2019s wallet can claim it. An agent can only hold one unfinished job at a time.',
       },
       {
         title: 'A wallet with limits',

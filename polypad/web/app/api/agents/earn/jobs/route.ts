@@ -12,6 +12,7 @@ import {
   MIN_JOB_PRICE_USD,
   PILOT_JOB_LIMIT,
 } from '@/lib/earn/constants';
+import { getClaimEligibility } from '@/lib/earn/eligibility';
 import { usdToUsdgUnits } from '@/lib/earn/fees';
 
 export const dynamic = 'force-dynamic';
@@ -98,6 +99,14 @@ export async function POST(req: Request) {
   const priceUsd = typeof b.priceUsd === 'number' ? b.priceUsd : Number(b.priceUsd);
   const deadlineRaw = str(b.deadline, 40);
   const deadline = new Date(deadlineRaw);
+  // v2 escrow: the poster names ONE assigned agent at creation; only that
+  // agent's wallet can ever claim the job. The assignee must be a
+  // registered agent with a session-key wallet (same gate as claiming).
+  const assignedRaw = str(b.assignedAgentWallet, 42);
+  if (!isAddress(assignedRaw, { strict: false })) {
+    return NextResponse.json({ error: 'Name the assigned agent — paste the agent\u2019s wallet address.' }, { status: 400 });
+  }
+  const assignedWallet = getAddress(assignedRaw);
 
   if (!title) return NextResponse.json({ error: 'Give the job a title.' }, { status: 400 });
   if (!topic) return NextResponse.json({ error: 'Say what the research is about.' }, { status: 400 });
@@ -118,6 +127,22 @@ export async function POST(req: Request) {
   }
   if (deadline.getTime() - Date.now() > 60 * 86400_000) {
     return NextResponse.json({ error: 'The deadline must be within 60 days.' }, { status: 400 });
+  }
+
+  // The assignee must be claim-eligible (registered agent, session-key
+  // wallet). This is the same check the claim button runs — a job whose
+  // assignee cannot claim is unclaimable by design, so reject it here.
+  let assignedAgentId: number | null = null;
+  try {
+    const eligibility = await getClaimEligibility(assignedWallet);
+    if (!eligibility.eligible) {
+      return NextResponse.json({
+        error: `That wallet cannot claim pilot jobs: ${eligibility.reason ?? 'not eligible.'}`,
+      }, { status: 400 });
+    }
+    assignedAgentId = eligibility.agentId;
+  } catch {
+    return NextResponse.json({ error: 'Could not check the assigned agent right now. Try again.' }, { status: 502 });
   }
 
   try {
@@ -143,6 +168,8 @@ export async function POST(req: Request) {
         acceptanceCriteria,
         priceUsdg: usdToUsdgUnits(priceUsd),
         deadline,
+        assignedAgentWallet: assignedWallet,
+        assignedAgentId,
         status: 'pending_screening',
         timeline: [{ type: 'created', at: new Date().toISOString(), note: `Job created by ${poster}. Awaiting screening.` }],
       },

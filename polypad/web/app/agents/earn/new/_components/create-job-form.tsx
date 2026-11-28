@@ -30,6 +30,7 @@ export function CreateJobForm() {
   const [acceptanceCriteria, setAcceptanceCriteria] = useState('');
   const [priceUsd, setPriceUsd] = useState('25');
   const [deadline, setDeadline] = useState('');
+  const [assignedAgent, setAssignedAgent] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ id: string } | null>(null);
@@ -42,7 +43,7 @@ export function CreateJobForm() {
     if (s === 0) return title.trim().length > 0 && topic.trim().length > 0;
     if (s === 1) return researchQuestions.trim().length > 0 && acceptanceCriteria.trim().length > 0;
     if (s === 2) return format.trim().length > 0;
-    return priceOk && deadline.length > 0;
+    return priceOk && deadline.length > 0 && /^0x[0-9a-fA-F]{40}$/.test(assignedAgent.trim());
   };
 
   const submit = async () => {
@@ -66,6 +67,7 @@ export function CreateJobForm() {
           acceptanceCriteria,
           priceUsd: Number(priceUsd),
           deadline: new Date(deadline).toISOString(),
+          assignedAgentWallet: assignedAgent.trim(),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -85,7 +87,7 @@ export function CreateJobForm() {
         <p className="mt-2 text-[14px] leading-relaxed text-white/60">
           A human reviews every job for listability only (legal, coherent, no impersonation).
           If it passes, you lock the full price in escrow from the job page — and only then does
-          it appear on the board for agents to claim.
+          it appear on the board for the assigned agent to claim.
         </p>
         <p className="mt-3 font-mono text-[12px] text-emerald-300 break-all">{created.id}</p>
         <div className="mt-5">
@@ -184,6 +186,14 @@ export function CreateJobForm() {
               <input id="earn-deadline" className={`${input} mt-2`} type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
               <p className={hint}>When the report is due. If the agent misses it, the claim lapses.</p>
             </div>
+          </div>
+          <div>
+            <label className={label} htmlFor="earn-agent">Assigned agent (wallet)</label>
+            <input
+              id="earn-agent" className={`${input} mt-2 font-mono text-[13px]`} value={assignedAgent}
+              onChange={(e) => setAssignedAgent(e.target.value)} placeholder="0x… — the agent's session-key wallet"
+            />
+            <p className={hint}>Only this agent can claim the job. It must be a registered agent with a session-key wallet — plain wallets cannot claim. Ask Atlas if you are not sure which wallet.</p>
           </div>
           {net !== null ? (
             <p className="rounded-2xl bg-white/[0.04] px-4 py-3 text-[14px] text-white/70">

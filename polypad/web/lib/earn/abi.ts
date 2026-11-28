@@ -1,7 +1,7 @@
-// AgentEarnEscrow ABI — AgentEarnEscrow.sol (390 lines, Sourcify
-// exact_match on Robinhood Chain 4663, deployed Nov 27, 2026).
+// AgentEarnEscrowV2 ABI — AgentEarnEscrowV2.sol (Sourcify
+// exact_match on Robinhood Chain 4663, deployed Nov 28, 2026).
 // Only the functions + events the board calls or reads. Keep in sync with
-// the contract source at ~/workspace/polydash/src/escrow/AgentEarnEscrow.sol.
+// the contract source at ~/workspace/polydash/src/escrow/AgentEarnEscrowV2.sol.
 
 import {
   AGENT_EARN_ESCROW_ADDRESS,
@@ -18,6 +18,7 @@ const lockTuple = {
   components: [
     { name: 'poster', type: 'address' },
     { name: 'agent', type: 'address' },
+    { name: 'assignee', type: 'address' },
     { name: 'amount', type: 'uint256' },
     { name: 'state', type: 'uint8' },
     { name: 'lockedAt', type: 'uint256' },
@@ -41,7 +42,7 @@ export const AgentEarnEscrowABI = [
     { name: 'feeRecipient_', type: 'address' },
   ], stateMutability: 'nonpayable' },
   { type: 'function', name: 'lock', stateMutability: 'nonpayable',
-    inputs: [{ name: 'jobId', type: 'bytes32' }, { name: 'amount', type: 'uint256' }], outputs: [] },
+    inputs: [{ name: 'jobId', type: 'bytes32' }, { name: 'amount', type: 'uint256' }, { name: 'assignee', type: 'address' }], outputs: [] },
   { type: 'function', name: 'claim', stateMutability: 'nonpayable',
     inputs: [{ name: 'jobId', type: 'bytes32' }], outputs: [] },
   { type: 'function', name: 'deliver', stateMutability: 'nonpayable',
@@ -121,6 +122,8 @@ export const OUTCOME_NUMBERS = { PayFull: 1, PayPart: 2, NoPay: 3 } as const;
 export interface EscrowLock {
   poster: string;
   agent: string;
+  /** The agent assigned at lock time — the only address that can claim. */
+  assignee: string;
   amount: bigint;
   state: number;
   lockedAt: bigint;

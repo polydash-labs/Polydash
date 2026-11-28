@@ -1,6 +1,8 @@
 // Agent-earn eligibility — server-side, on-chain reads only.
 // Two gates, both enforced off-chain BEFORE a transaction reaches the
-// contract (the contract itself only enforces first-claim-wins):
+// contract (the contract itself enforces the assigned-agent rule in v2 —
+// only the agent the poster named at lock time can claim; the checks here
+// are the second gate):
 //
 // 1. Claim gate (brief §1.2): the claiming wallet must belong to a
 //    REGISTERED agent with a v2 session-key wallet. No score floor.
